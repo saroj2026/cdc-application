@@ -1,0 +1,912 @@
+"use client"
+
+import { useState, useEffect, useRef, useMemo } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Plus, Settings, Play, Pause, Square, Trash2, AlertCircle, Clock, Loader2, Edit2, Database, GitBranch, Activity, Workflow, ChevronLeft, ChevronRight } from "lucide-react"
+import { PageHeader } from "@/components/ui/page-header"
+import { Badge } from "@/components/ui/badge"
+import { PipelineModal } from "@/components/pipelines/pipeline-modal"
+import { PipelineWizard } from "@/components/pipelines/pipeline-wizard"
+import { PipelineDetail } from "@/components/pipelines/pipeline-detail"
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks"
+import {
+  fetchPipelines,
+  createPipeline,
+  updatePipeline,
+  deletePipeline,
+  triggerPipeline,
+  pausePipeline,
+  stopPipeline,
+  setSelectedPipeline,
+} from "@/lib/store/slices/pipelineSlice"
+import { fetchReplicationEvents } from "@/lib/store/slices/monitoringSlice"
+import { formatDistanceToNow } from "date-fns"
+import { ProtectedPage } from "@/components/auth/ProtectedPage"
+
+export default function PipelinesPage() {
+  const dispatch = useAppDispatch()
+  const { pipelines, isLoading, error } = useAppSelector((state) => state.pipelines)
+  const { connections } = useAppSelector((state) => state.connections)
+  const { events } = useAppSelector((state) => state.monitoring)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingPipeline, setEditingPipeline] = useState<any>(null)
+  const [selectedPipelineId, setSelectedPipelineId] = useState<number | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pipelinesPerPage = 8
+
+  const hasFetchedRef = useRef(false)
+
+  useEffect(() => {
+    // Prevent multiple simultaneous calls
+    if (hasFetchedRef.current || isLoading) return
+
+    hasFetchedRef.current = true
+
+    // Fetch pipelines
+    dispatch(fetchPipelines())
+    
+    // Fetch replication events to calculate real progress
+    dispatch(fetchReplicationEvents({ limit: 1000, todayOnly: false }))
+
+    // Also fetch connections for pipeline wizard (only if not already loaded)
+    if (connections.length === 0) {
+      import("@/lib/store/slices/connectionSlice").then(({ fetchConnections }) => {
+        dispatch(fetchConnections())
+      })
+    }
+  }, [dispatch, isLoading, connections.length])
+  
+  // Auto-refresh events every 5 seconds to update progress bars in real-time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(fetchReplicationEvents({ limit: 10000, todayOnly: false }))
+    }, 5000) // Refresh every 5 seconds
+    
+    return () => clearInterval(interval)
+  }, [dispatch])
+  
+  // Helper function to calculate replication stats for a pipeline
+  const getPipelineReplicationStats = (pipelineId: string | number) => {
+    const pipelineIdStr = String(pipelineId)
+    const pipelineEvents = events.filter(e => String(e.pipeline_id) === pipelineIdStr)
+    const totalEvents = pipelineEvents.length
+    const successEvents = pipelineEvents.filter(e => e.status === 'applied' || e.status === 'success').length
+    const failedEvents = pipelineEvents.filter(e => e.status === 'failed' || e.status === 'error').length
+    const successRate = totalEvents > 0 ? Math.round((successEvents / totalEvents) * 100) : 0
+    
+    return {
+      totalEvents,
+      successEvents,
+      failedEvents,
+      successRate
+    }
+  }
+
+  // Helper function to parse table name (handles schema.table format)
+  const parseTableName = (tableName: string): { schema?: string; table: string } => {
+    if (!tableName) return { table: tableName }
+
+    // Check if table name contains a dot (schema.table format)
+    const parts = tableName.split('.')
+    if (parts.length === 2) {
+      const schema = parts[0].trim()
+      const table = parts[1].trim()
+      // Don't treat "undefined" as a valid schema name
+      if (schema && schema !== "undefined") {
+        return {
+          schema: schema,
+          table: table
+        }
+      }
+      // If schema is "undefined", treat as no schema
+      return { table: table }
+    }
+    return { table: tableName.trim() }
+  }
+
+  const handleAddPipeline = async (pipelineData: any) => {
+    try {
+      // Find connection IDs by name
+      const sourceConn = connections.find(c => c.name === pipelineData.sourceConnection)
+      const targetConn = connections.find(c => c.name === pipelineData.targetConnection)
+
+      if (!sourceConn || !targetConn) {
+        alert("Please select valid source and target connections")
+        return
+      }
+
+      // Parse table mappings - handle both tableMapping array and tables array
+      const tableMappings = []
+
+      if (pipelineData.tableMapping && Array.isArray(pipelineData.tableMapping)) {
+        // Use tableMapping if available
+        for (const tm of pipelineData.tableMapping) {
+          const sourceName = tm.source || tm.sourceTable || ""
+          const targetName = tm.target || tm.targetTable || sourceName
+
+          if (!sourceName || !targetName) {
+            console.warn("Skipping invalid table mapping:", tm)
+            continue
+          }
+
+          const sourceParsed = parseTableName(sourceName)
+          const targetParsed = parseTableName(targetName)
+
+          if (!sourceParsed.table || !targetParsed.table) {
+            console.warn("Skipping table mapping with empty table name:", { sourceParsed, targetParsed })
+            continue
+          }
+
+          const mapping: any = {
+            source_table: sourceParsed.table,
+            target_table: targetParsed.table,
+          }
+
+          // Only include schema if it exists
+          if (sourceParsed.schema) {
+            mapping.source_schema = sourceParsed.schema
+          }
+          if (targetParsed.schema) {
+            mapping.target_schema = targetParsed.schema
+          }
+
+          tableMappings.push(mapping)
+        }
+      } else if (pipelineData.tables && Array.isArray(pipelineData.tables)) {
+        // Fallback to tables array if tableMapping is not available
+        for (const tableName of pipelineData.tables) {
+          if (!tableName) {
+            console.warn("Skipping empty table name")
+            continue
+          }
+
+          const sourceParsed = parseTableName(tableName)
+          // Use tableMapping object if available, otherwise use same name
+          const targetName = pipelineData.tableMapping?.[tableName] || tableName
+          const targetParsed = parseTableName(targetName)
+
+          if (!sourceParsed.table || !targetParsed.table) {
+            console.warn("Skipping table mapping with empty table name:", { sourceParsed, targetParsed })
+            continue
+          }
+
+          const mapping: any = {
+            source_table: sourceParsed.table,
+            target_table: targetParsed.table,
+          }
+
+          // Only include schema if it exists
+          if (sourceParsed.schema) {
+            mapping.source_schema = sourceParsed.schema
+          }
+          if (targetParsed.schema) {
+            mapping.target_schema = targetParsed.schema
+          }
+
+          tableMappings.push(mapping)
+        }
+      }
+
+      if (tableMappings.length === 0) {
+        alert("Please select at least one table for replication")
+        return
+      }
+
+      // Validate all table mappings have required fields
+      const invalidMappings = tableMappings.filter(tm => !tm.source_table || !tm.target_table)
+      if (invalidMappings.length > 0) {
+        console.error("[Pipeline] Invalid table mappings found:", invalidMappings)
+        alert(`Invalid table mappings detected. Please check:\n- All mappings must have source_table and target_table\n- Table names cannot be empty`)
+        return
+      }
+
+      // Build payload with validated data
+      const pipelinePayload = {
+        name: (pipelineData.name || "").trim(),
+        description: (pipelineData.description || "").trim(),
+        source_connection_id: String(sourceConn.id), // Ensure it's a string (MongoDB ObjectId)
+        target_connection_id: String(targetConn.id), // Ensure it's a string (MongoDB ObjectId)
+        full_load_type: pipelineData.mode === "full_load" ? "overwrite" :
+          pipelineData.mode === "cdc_only" ? "append" : "overwrite",
+        cdc_enabled: pipelineData.mode !== "full_load",
+        cdc_filters: pipelineData.cdc_filters || [],
+        table_mappings: tableMappings.map(tm => {
+          const mapping: { source_schema?: string; source_table: string; target_schema?: string; target_table: string } = {
+            source_table: tm.source_table.trim(),
+            target_table: tm.target_table.trim(),
+          }
+          // Only include schema if it exists, is not empty, and is not "undefined"
+          if (tm.source_schema && tm.source_schema.trim() !== "" && tm.source_schema.trim() !== "undefined") {
+            mapping.source_schema = tm.source_schema.trim()
+          }
+          if (tm.target_schema && tm.target_schema.trim() !== "" && tm.target_schema.trim() !== "undefined") {
+            mapping.target_schema = tm.target_schema.trim()
+          }
+          return mapping
+        }),
+      }
+
+      // Validate payload before sending
+      if (!pipelinePayload.name || pipelinePayload.name.trim() === "") {
+        alert("Pipeline name is required")
+        return
+      }
+
+      console.log("[Pipeline] Creating pipeline with validated payload:", {
+        name: pipelinePayload.name,
+        source_connection_id: pipelinePayload.source_connection_id,
+        target_connection_id: pipelinePayload.target_connection_id,
+        table_mappings_count: pipelinePayload.table_mappings.length,
+        table_mappings: pipelinePayload.table_mappings,
+      })
+
+      await dispatch(createPipeline(pipelinePayload)).unwrap()
+      setIsModalOpen(false)
+    } catch (err: any) {
+      // Define pipelinePayload in catch scope for error logging
+      let pipelinePayload: any = null
+      try {
+        // Try to reconstruct payload for logging
+        const sourceConn = connections.find(c => c.name === pipelineData?.sourceConnection)
+        const targetConn = connections.find(c => c.name === pipelineData?.targetConnection)
+        if (sourceConn && targetConn) {
+          pipelinePayload = {
+            name: pipelineData?.name,
+            source_connection_id: String(sourceConn.id),
+            target_connection_id: String(targetConn.id),
+          }
+        }
+      } catch { }
+
+      console.error("Failed to create pipeline:", err)
+      console.error("Error type:", typeof err)
+      console.error("Error constructor:", err?.constructor?.name)
+
+      // Handle string errors (from Redux rejectWithValue)
+      const errorString = typeof err === 'string' ? err : err?.message || err?.payload || String(err)
+      console.error("Error string:", errorString)
+
+      console.error("Error details:", {
+        message: typeof err === 'string' ? err : err?.message,
+        name: err?.name,
+        code: err?.code,
+        status: err?.status || err?.response?.status,
+        response: err?.response?.data,
+        payload: pipelinePayload
+      })
+
+      // Extract detailed error message from various possible locations
+      let errorMessage = "Failed to create pipeline"
+
+      // Check Redux error format
+      if (err?.payload) {
+        errorMessage = err.payload
+      }
+      // Check axios response
+      else if (err?.response?.data?.detail) {
+        errorMessage = err.response.data.detail
+      }
+      // Check if error has message
+      else if (err?.message) {
+        errorMessage = err.message
+      }
+      // Check if error is a string
+      else if (typeof err === 'string') {
+        errorMessage = err
+      }
+      // Check for validation errors
+      else if (err?.response?.data?.errors) {
+        const validationErrors = err.response.data.errors.map((e: any) =>
+          `${e.loc?.join('.') || 'field'}: ${e.msg || e.message}`
+        ).join('\n')
+        errorMessage = `Validation errors:\n${validationErrors}`
+      }
+
+      // Show user-friendly error with troubleshooting steps
+      alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. MongoDB is running`)
+    }
+  }
+
+  const handleEditPipeline = async (pipelineData: any) => {
+    if (!editingPipeline) return
+
+    try {
+      // Find connection IDs by name
+      const sourceConn = connections.find(c => c.name === pipelineData.sourceConnection)
+      const targetConn = connections.find(c => c.name === pipelineData.targetConnection)
+
+      if (!sourceConn || !targetConn) {
+        alert("Please select valid source and target connections")
+        return
+      }
+
+      // Parse table mappings - handle both tableMapping array and tables array
+      const tableMappings = []
+
+      if (pipelineData.tableMapping && Array.isArray(pipelineData.tableMapping)) {
+        // Use tableMapping if available
+        for (const tm of pipelineData.tableMapping) {
+          const sourceName = tm.source || tm.sourceTable || ""
+          const targetName = tm.target || tm.targetTable || sourceName
+
+          if (!sourceName || !targetName) {
+            console.warn("Skipping invalid table mapping:", tm)
+            continue
+          }
+
+          const sourceParsed = parseTableName(sourceName)
+          const targetParsed = parseTableName(targetName)
+
+          if (!sourceParsed.table || !targetParsed.table) {
+            console.warn("Skipping table mapping with empty table name:", { sourceParsed, targetParsed })
+            continue
+          }
+
+          const mapping: any = {
+            source_table: sourceParsed.table,
+            target_table: targetParsed.table,
+          }
+
+          // Only include schema if it exists
+          if (sourceParsed.schema) {
+            mapping.source_schema = sourceParsed.schema
+          }
+          if (targetParsed.schema) {
+            mapping.target_schema = targetParsed.schema
+          }
+
+          tableMappings.push(mapping)
+        }
+      } else if (pipelineData.tables && Array.isArray(pipelineData.tables)) {
+        // Fallback to tables array if tableMapping is not available
+        for (const tableName of pipelineData.tables) {
+          if (!tableName) {
+            console.warn("Skipping empty table name")
+            continue
+          }
+
+          const sourceParsed = parseTableName(tableName)
+          // Use tableMapping object if available, otherwise use same name
+          const targetName = pipelineData.tableMapping?.[tableName] || tableName
+          const targetParsed = parseTableName(targetName)
+
+          if (!sourceParsed.table || !targetParsed.table) {
+            console.warn("Skipping table mapping with empty table name:", { sourceParsed, targetParsed })
+            continue
+          }
+
+          const mapping: any = {
+            source_table: sourceParsed.table,
+            target_table: targetParsed.table,
+          }
+
+          // Only include schema if it exists
+          if (sourceParsed.schema) {
+            mapping.source_schema = sourceParsed.schema
+          }
+          if (targetParsed.schema) {
+            mapping.target_schema = targetParsed.schema
+          }
+
+          tableMappings.push(mapping)
+        }
+      }
+
+      if (tableMappings.length === 0) {
+        alert("Please select at least one table for replication")
+        return
+      }
+
+      // Ensure connection IDs are strings (MongoDB ObjectIds)
+      const pipelineDataPayload = {
+        name: pipelineData.name,
+        description: pipelineData.description || "",
+        source_connection_id: String(sourceConn.id),
+        target_connection_id: String(targetConn.id),
+        full_load_type: pipelineData.mode === "full_load" ? "overwrite" :
+          pipelineData.mode === "cdc_only" ? "append" : "overwrite",
+        cdc_enabled: pipelineData.mode !== "full_load",
+        cdc_filters: pipelineData.cdc_filters || [],
+        table_mappings: tableMappings,
+      }
+
+      console.log("Updating pipeline with payload:", {
+        id: editingPipeline.id,
+        data: {
+          ...pipelineDataPayload,
+          table_mappings: tableMappings,
+        }
+      })
+
+      await dispatch(updatePipeline({
+        id: editingPipeline.id,
+        data: pipelineDataPayload,
+      })).unwrap()
+      setIsEditModalOpen(false)
+      setEditingPipeline(null)
+      dispatch(fetchPipelines())
+    } catch (err: any) {
+      console.error("Failed to update pipeline:", err)
+      const errorMessage = err.response?.data?.detail || err.message || "Failed to update pipeline"
+      alert(errorMessage)
+    }
+  }
+
+  const handleOpenEdit = (pipeline: any) => {
+    // Allow editing if pipeline is stopped, paused, or draft
+    const canEdit = pipeline.status === "paused" || pipeline.status === "draft" || pipeline.status === "deleted" || !pipeline.status || pipeline.status !== "active"
+
+    if (!canEdit) {
+      alert("Please stop the pipeline before editing. Running pipelines cannot be modified.")
+      return
+    }
+
+    // Find connection names for the wizard
+    const sourceConn = connections.find(c => c.id === pipeline.source_connection_id)
+    const targetConn = connections.find(c => c.id === pipeline.target_connection_id)
+
+    setEditingPipeline({
+      ...pipeline,
+      sourceConnection: sourceConn?.name || "",
+      targetConnection: targetConn?.name || "",
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeletePipeline = async (id: number) => {
+    if (confirm("Are you sure you want to delete this pipeline?")) {
+      try {
+        await dispatch(deletePipeline(id)).unwrap()
+      } catch (err) {
+        console.error("Failed to delete pipeline:", err)
+      }
+    }
+  }
+
+  const handleTriggerPipeline = async (id: number, runType: string = "full_load") => {
+    try {
+      await dispatch(triggerPipeline({ id, runType })).unwrap()
+    } catch (err) {
+      console.error("Failed to trigger pipeline:", err)
+    }
+  }
+
+  const handlePausePipeline = async (id: number) => {
+    try {
+      await dispatch(pausePipeline(id)).unwrap()
+    } catch (err) {
+      console.error("Failed to pause pipeline:", err)
+    }
+  }
+
+  const handleStopPipeline = async (id: number) => {
+    try {
+      await dispatch(stopPipeline(id)).unwrap()
+    } catch (err) {
+      console.error("Failed to stop pipeline:", err)
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active":
+        return <div className="w-3 h-3 rounded-full bg-success animate-pulse"></div>
+      case "paused":
+        return <Pause className="w-4 h-4 text-warning" />
+      case "error":
+        return <AlertCircle className="w-4 h-4 text-error" />
+      default:
+        return <Clock className="w-4 h-4 text-muted-foreground" />
+    }
+  }
+
+  const getSourceConnectionName = (sourceId: number) => {
+    const conn = connections.find(c => c.id === sourceId)
+    return conn?.name || `Connection ${sourceId}`
+  }
+
+  const getTargetConnectionName = (targetId: number) => {
+    const conn = connections.find(c => c.id === targetId)
+    return conn?.name || `Connection ${targetId}`
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(pipelines.length / pipelinesPerPage)
+  const startIndex = (currentPage - 1) * pipelinesPerPage
+  const endIndex = startIndex + pipelinesPerPage
+  const paginatedPipelines = useMemo(() => {
+    const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
+    return pipelinesArray.slice(startIndex, endIndex)
+  }, [pipelines, startIndex, endIndex])
+
+  // Reset to page 1 when pipelines change
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1)
+    }
+  }, [pipelines.length, totalPages, currentPage])
+
+  if (selectedPipelineId) {
+    const pipeline = pipelines.find((p) => p.id === selectedPipelineId)
+    if (pipeline) {
+      return <PipelineDetail pipeline={pipeline} onBack={() => setSelectedPipelineId(null)} />
+    }
+  }
+
+  return (
+    <ProtectedPage path="/pipelines" requiredPermission="create_pipeline">
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Replication Pipelines"
+        subtitle="Create and manage data replication pipelines"
+        icon={Workflow}
+        action={
+          <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90 text-foreground gap-2">
+            <Plus className="w-4 h-4" />
+            New Pipeline
+          </Button>
+        }
+      />
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-error/10 border border-error/30 rounded-lg">
+          <p className="text-sm text-error">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && pipelines.length === 0 && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
+          <span className="ml-2 text-foreground-muted">Loading pipelines...</span>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && pipelines.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-foreground-muted mb-4">No pipelines found</p>
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-foreground gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Create First Pipeline
+          </Button>
+        </div>
+      )}
+
+      {/* Pipelines Grid */}
+      {pipelines.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {paginatedPipelines.map((pipeline) => (
+            <Card
+              key={pipeline.id}
+              className="bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border-purple-500/20 hover:border-purple-500/40 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group cursor-pointer relative overflow-hidden rounded-lg"
+              onClick={() => setSelectedPipelineId(pipeline.id)}
+            >
+              {/* Animated Green Bar at Top of Card - Always Visible When Running */}
+              {pipeline.status === "active" && (
+                <div 
+                  className="absolute top-0 left-0 right-0 z-50 rounded-t-lg"
+                  style={{ 
+                    height: '5px',
+                    backgroundColor: '#22c55e',
+                    boxShadow: '0 2px 4px rgba(34, 197, 94, 0.4)'
+                  }}
+                >
+                  <div 
+                    className="h-full w-full relative"
+                    style={{ backgroundColor: '#22c55e' }}
+                  >
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        backgroundColor: '#16a34a',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }}
+                    ></div>
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmer 1.5s infinite'
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Header with Status */}
+              <div className="p-4 border-b border-border relative overflow-hidden">
+
+                {/* Pipeline Icon - Top Right */}
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                    <Workflow className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between mb-2 pr-12">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      {getStatusIcon(pipeline.status)}
+                      <h3 className="text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        {pipeline.name}
+                      </h3>
+                    </div>
+                    {pipeline.description && (
+                      <p className="text-xs text-foreground-muted line-clamp-1 mb-2">{pipeline.description}</p>
+                    )}
+                    <div className="flex items-center gap-1.5 flex-nowrap">
+                      {pipeline.status === "active" && (
+                        <Badge className="bg-success/20 text-success border border-success/30 text-xs px-1.5 py-0.5 whitespace-nowrap flex-shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-success mr-1 animate-pulse"></div>
+                          Running
+                        </Badge>
+                      )}
+                      <Badge
+                        className={
+                          `text-xs px-1.5 py-0.5 whitespace-nowrap flex-shrink-0 ${pipeline.full_load_type === "overwrite" && pipeline.cdc_enabled
+                            ? "bg-primary/20 text-primary border border-primary/30"
+                            : pipeline.cdc_enabled
+                              ? "bg-info/20 text-info border border-info/30"
+                              : "bg-warning/20 text-warning border border-warning/30"
+                          }`
+                        }
+                      >
+                        {pipeline.full_load_type === "overwrite" && pipeline.cdc_enabled
+                          ? "Full + CDC"
+                          : pipeline.cdc_enabled
+                            ? "CDC"
+                            : "Full"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Connection Flow */}
+                <div className="flex items-center gap-1.5 text-xs text-foreground-muted mt-2">
+                  <Database className="w-3 h-3 text-primary" />
+                  <span className="truncate flex-1">{getSourceConnectionName(pipeline.source_connection_id)}</span>
+                  <span className="text-info">→</span>
+                  <Database className="w-3 h-3 text-info" />
+                  <span className="truncate flex-1">{getTargetConnectionName(pipeline.target_connection_id)}</span>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="p-4 grid grid-cols-2 gap-3">
+                {(() => {
+                  const stats = getPipelineReplicationStats(pipeline.id)
+                  return (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-primary/10 rounded-md group-hover:bg-primary/20 transition-colors">
+                          <GitBranch className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-foreground-muted">Tables</p>
+                          <p className="text-sm font-semibold text-foreground">{pipeline.table_mappings?.length || 0}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-info/10 rounded-md group-hover:bg-info/20 transition-colors">
+                          <Activity className="w-3.5 h-3.5 text-info" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-foreground-muted">Events</p>
+                          <p className="text-sm font-semibold text-foreground">{stats.totalEvents.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-success/10 rounded-md group-hover:bg-success/20 transition-colors">
+                          <Clock className="w-3.5 h-3.5 text-success" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-foreground-muted">Success</p>
+                          <p className="text-sm font-semibold text-foreground">{stats.successEvents.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-warning/10 rounded-md group-hover:bg-warning/20 transition-colors">
+                          <Database className="w-3.5 h-3.5 text-warning" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-foreground-muted">Rate</p>
+                          <p className="text-sm font-semibold text-foreground">{stats.successRate}%</p>
+                        </div>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+
+              {/* Actions */}
+              <div className="p-3 pt-0 flex items-center justify-between gap-2 border-t border-border">
+                <div className="flex gap-1">
+                  {pipeline.status === "active" ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 bg-transparent border-border hover:bg-surface-hover hover:border-primary/50 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePausePipeline(pipeline.id)
+                        }}
+                        disabled={isLoading}
+                        title="Pause"
+                      >
+                        <Pause className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 bg-transparent border-border hover:bg-surface-hover hover:border-error/50 text-error hover:text-error transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleStopPipeline(pipeline.id)
+                        }}
+                        disabled={isLoading}
+                        title="Stop"
+                      >
+                        <Square className="w-3 h-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 bg-transparent border-border hover:bg-primary/10 hover:border-primary/50 transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleTriggerPipeline(pipeline.id, "full_load")
+                      }}
+                      disabled={isLoading}
+                      title="Run"
+                    >
+                      <Play className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 bg-transparent border-border hover:bg-surface-hover hover:border-primary/50 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleOpenEdit(pipeline)
+                    }}
+                    title="Edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 bg-transparent border-border hover:bg-surface-hover hover:border-primary/50 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSelectedPipelineId(pipeline.id)
+                    }}
+                    title="Details"
+                  >
+                    <Settings className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 bg-transparent border-border hover:bg-surface-hover hover:border-error/50 text-error hover:text-error transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeletePipeline(pipeline.id)
+                    }}
+                    disabled={isLoading}
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-6 border-t border-border">
+              <div className="text-sm text-foreground-muted">
+                Showing <span className="font-semibold text-foreground">{startIndex + 1}</span> to{" "}
+                <span className="font-semibold text-foreground">
+                  {Math.min(endIndex, pipelines.length)}
+                </span>{" "}
+                of <span className="font-semibold text-foreground">{pipelines.length}</span> pipelines
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="border-border hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className={`min-w-[40px] ${
+                            currentPage === page
+                              ? "bg-primary text-white"
+                              : "border-border hover:bg-surface-hover"
+                          }`}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 text-foreground-muted">
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="border-border hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modals */}
+      <PipelineModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleAddPipeline} />
+      <PipelineWizard
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setEditingPipeline(null)
+        }}
+        onSave={handleEditPipeline}
+        editingPipeline={editingPipeline}
+      />
+      </div>
+    </ProtectedPage>
+  )
+}
