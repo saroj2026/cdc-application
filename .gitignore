@@ -46,6 +46,11 @@ logs/
 # Long filename directories (Windows path length limit)
 backend/confluentinc-kafka-connect-s3-11.0.8/
 
+# Next.js build files
+frontend/.next/
+frontend/out/
+frontend/.vercel
+
 # Temporary files
 *.tmp
 *.temp
