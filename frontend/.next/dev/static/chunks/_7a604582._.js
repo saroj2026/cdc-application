@@ -2367,7 +2367,7 @@ function DashboardOverview() {
         columnNumber: 5
     }, this);
 }
-_s(DashboardOverview, "hKXfZi+DAyqtF5RplKvHv2RoLGo=", false, function() {
+_s(DashboardOverview, "u3K+PEDfNFma7pQonF3GONPTsag=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppDispatch"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"],

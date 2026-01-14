@@ -6020,16 +6020,16 @@ function PipelineDetail({ pipeline, onBack }) {
                         className: "space-y-6",
                         children: [
                             replicationProgress?.full_load ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-9757344f6fea6d37" + " " + "space-y-3",
+                                className: "jsx-59ec16a8a6ddde2" + " " + "space-y-3",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "jsx-9757344f6fea6d37" + " " + "flex items-center justify-between",
+                                        className: "jsx-59ec16a8a6ddde2" + " " + "flex items-center justify-between",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex items-center gap-2",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex items-center gap-2",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "text-sm font-medium text-foreground",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "text-sm font-medium text-foreground",
                                                         children: "Full Load"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6064,7 +6064,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent",
                                                 children: replicationProgress.full_load.progress_percent >= 100 ? '100%' : `${replicationProgress.full_load.progress_percent.toFixed(1)}%`
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6078,16 +6078,16 @@ function PipelineDetail({ pipeline, onBack }) {
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "jsx-9757344f6fea6d37" + " " + "relative flex items-center justify-between py-6",
+                                        className: "jsx-59ec16a8a6ddde2" + " " + "relative flex items-center justify-between py-6",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex flex-col items-center gap-3 z-10",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex flex-col items-center gap-3 z-10",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "relative group",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "relative group",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-9757344f6fea6d37" + " " + "p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl border-2 border-blue-500/30 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105",
+                                                                className: "jsx-59ec16a8a6ddde2" + " " + "p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl border-2 border-blue-500/30 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105",
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
                                                                     className: "w-14 h-14 text-blue-400"
                                                                 }, void 0, false, {
@@ -6103,14 +6103,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             replicationProgress.full_load.status === "running" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping"
+                                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                         lineNumber: 1183,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"
+                                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                         lineNumber: 1184,
@@ -6125,7 +6125,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "text-xs font-bold text-foreground text-center max-w-[120px] truncate px-3 py-1.5 bg-surface-hover rounded-lg border border-border",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "text-xs font-bold text-foreground text-center max-w-[120px] truncate px-3 py-1.5 bg-surface-hover rounded-lg border border-border",
                                                         children: sourceConn
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6139,20 +6139,20 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex-1 mx-6 relative",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex-1 mx-6 relative",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "relative h-2.5 bg-gradient-to-r from-border via-border to-border rounded-full overflow-hidden shadow-inner",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "relative h-2.5 bg-gradient-to-r from-border via-border to-border rounded-full overflow-hidden shadow-inner",
                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             style: {
                                                                 width: `${replicationProgress.full_load.progress_percent}%`
                                                             },
-                                                            className: "jsx-9757344f6fea6d37" + " " + "h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 transition-all duration-500 ease-out rounded-full relative",
+                                                            className: "jsx-59ec16a8a6ddde2" + " " + "h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 transition-all duration-500 ease-out rounded-full relative",
                                                             children: replicationProgress.full_load.status === "running" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 style: {
                                                                     backgroundSize: '200% 100%'
                                                                 },
-                                                                className: "jsx-9757344f6fea6d37" + " " + "absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"
+                                                                className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                 lineNumber: 1202,
@@ -6169,7 +6169,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 19
                                                     }, this),
                                                     replicationProgress.full_load.status === "running" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none",
                                                         children: [
                                                             ...Array(5)
                                                         ].map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6178,19 +6178,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     animationDelay: `${i * 0.6}s`,
                                                                     left: '0%'
                                                                 },
-                                                                className: "jsx-9757344f6fea6d37" + " " + "absolute",
+                                                                className: "jsx-59ec16a8a6ddde2" + " " + "absolute",
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                    className: "jsx-9757344f6fea6d37" + " " + "relative",
+                                                                    className: "jsx-59ec16a8a6ddde2" + " " + "relative",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            className: "jsx-9757344f6fea6d37" + " " + "w-7 h-7 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg shadow-xl flex items-center justify-center",
+                                                                            className: "jsx-59ec16a8a6ddde2" + " " + "w-7 h-7 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg shadow-xl flex items-center justify-center",
                                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                                                                 fill: "currentColor",
                                                                                 viewBox: "0 0 20 20",
-                                                                                className: "jsx-9757344f6fea6d37" + " " + "w-4 h-4 text-white",
+                                                                                className: "jsx-59ec16a8a6ddde2" + " " + "w-4 h-4 text-white",
                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                                                                                     d: "M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z",
-                                                                                    className: "jsx-9757344f6fea6d37"
+                                                                                    className: "jsx-59ec16a8a6ddde2"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                                     lineNumber: 1225,
@@ -6207,7 +6207,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            className: "jsx-9757344f6fea6d37" + " " + "absolute inset-0 bg-cyan-400 rounded-lg blur-md opacity-60 animate-pulse"
+                                                                            className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-cyan-400 rounded-lg blur-md opacity-60 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                             lineNumber: 1228,
@@ -6230,7 +6230,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 21
                                                     }, this),
                                                     replicationProgress.full_load.status === "running" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-cyan-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-cyan-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                                                 className: "w-3.5 h-3.5"
@@ -6240,7 +6240,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "jsx-9757344f6fea6d37",
+                                                                className: "jsx-59ec16a8a6ddde2",
                                                                 children: "Transferring Data..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6260,13 +6260,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex flex-col items-center gap-3 z-10",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex flex-col items-center gap-3 z-10",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "relative group",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "relative group",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-9757344f6fea6d37" + " " + `p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${replicationProgress.full_load.status === "completed" ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20' : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'}`,
+                                                                className: "jsx-59ec16a8a6ddde2" + " " + `p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${replicationProgress.full_load.status === "completed" ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20' : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'}`,
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
                                                                     className: `w-14 h-14 transition-colors duration-500 ${replicationProgress.full_load.status === "completed" ? 'text-green-400' : 'text-gray-400'}`
                                                                 }, void 0, false, {
@@ -6282,7 +6282,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             replicationProgress.full_load.status === "completed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute -top-2 -right-2 w-9 h-9 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce",
+                                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-2 -right-2 w-9 h-9 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce",
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                                                             className: "w-6 h-6 text-white"
                                                                         }, void 0, false, {
@@ -6296,7 +6296,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "jsx-9757344f6fea6d37" + " " + "absolute inset-0 bg-green-400 rounded-2xl blur-xl opacity-40 animate-pulse"
+                                                                        className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-green-400 rounded-2xl blur-xl opacity-40 animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                                         lineNumber: 1259,
@@ -6311,7 +6311,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "text-xs font-bold text-foreground text-center max-w-[120px] truncate px-3 py-1.5 bg-surface-hover rounded-lg border border-border",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "text-xs font-bold text-foreground text-center max-w-[120px] truncate px-3 py-1.5 bg-surface-hover rounded-lg border border-border",
                                                         children: targetConn
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6331,17 +6331,17 @@ function PipelineDetail({ pipeline, onBack }) {
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                        id: "9757344f6fea6d37",
+                                        id: "59ec16a8a6ddde2",
                                         children: "@keyframes fileTransfer{0%{opacity:0;left:0%;transform:translateY(0)scale(.5)rotate(0)}10%{opacity:1;transform:translateY(0)scale(1)rotate(0)}50%{transform:translateY(-10px)scale(1.15)rotate(5deg)}90%{opacity:1;transform:translateY(0)scale(1)rotate(0)}to{opacity:0;left:100%;transform:translateY(0)scale(.5)rotate(0)}}@keyframes shimmer{0%{background-position:-200% 0}to{background-position:200% 0}}"
                                     }, void 0, false, void 0, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "jsx-9757344f6fea6d37" + " " + "space-y-2",
+                                        className: "jsx-59ec16a8a6ddde2" + " " + "space-y-2",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex items-center justify-between text-xs text-foreground-muted",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex items-center justify-between text-xs text-foreground-muted",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "jsx-9757344f6fea6d37",
+                                                        className: "jsx-59ec16a8a6ddde2",
                                                         children: [
                                                             replicationProgress.full_load.records_loaded.toLocaleString(),
                                                             " / ",
@@ -6354,7 +6354,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 19
                                                     }, this),
                                                     replicationProgress.full_load.current_table && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "jsx-9757344f6fea6d37" + " " + "text-primary",
+                                                        className: "jsx-59ec16a8a6ddde2" + " " + "text-primary",
                                                         children: [
                                                             "Processing: ",
                                                             replicationProgress.full_load.current_table
@@ -6371,7 +6371,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 columnNumber: 17
                                             }, this),
                                             replicationProgress.full_load.status === "completed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex items-center gap-2 text-sm text-success bg-success/10 p-2 rounded",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex items-center gap-2 text-sm text-success bg-success/10 p-2 rounded",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                                         className: "w-4 h-4"
@@ -6381,7 +6381,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "jsx-9757344f6fea6d37",
+                                                        className: "jsx-59ec16a8a6ddde2",
                                                         children: "Full load completed successfully - 100%"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
@@ -6395,7 +6395,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 columnNumber: 19
                                             }, this),
                                             replicationProgress.full_load.status === "failed" && replicationProgress.full_load.error_message && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "jsx-9757344f6fea6d37" + " " + "flex items-start gap-2 text-sm text-error bg-error/10 p-2 rounded",
+                                                className: "jsx-59ec16a8a6ddde2" + " " + "flex items-start gap-2 text-sm text-error bg-error/10 p-2 rounded",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                         className: "w-4 h-4 mt-0.5"
@@ -6405,7 +6405,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "jsx-9757344f6fea6d37",
+                                                        className: "jsx-59ec16a8a6ddde2",
                                                         children: replicationProgress.full_load.error_message
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
