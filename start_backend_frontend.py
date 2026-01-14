@@ -10,28 +10,21 @@ print("=" * 70)
 print("Starting Backend and Frontend Servers")
 print("=" * 70)
 
-# Step 1: Kill existing Python processes (backend)
-print("\n1. Stopping existing backend processes...")
+# Step 1: Check for existing backend on port 8000
+print("\n1. Checking for existing backend on port 8000...")
 
-if sys.platform == "win32":
-    try:
-        result = subprocess.run(
-            ["taskkill", "/F", "/IM", "python.exe"],
-            capture_output=True,
-            text=True
-        )
-        if "not found" not in result.stderr.lower() and "not found" not in result.stdout.lower():
-            print("   ✅ Killed existing Python processes")
-        else:
-            print("   ℹ️  No Python processes found")
-    except Exception as e:
-        print(f"   ⚠️  Error: {e}")
-else:
-    try:
-        subprocess.run(["pkill", "-9", "python"], capture_output=True)
-        print("   ✅ Killed existing Python processes")
-    except:
-        print("   ℹ️  No Python processes found")
+try:
+    response = requests.get("http://localhost:8000/health", timeout=2)
+    if response.status_code == 200:
+        print("   ⚠️  Backend is already running on port 8000")
+        print("   💡 If you want to restart it, please stop it manually first")
+        print("   ℹ️  Continuing to start frontend...")
+    else:
+        print("   ℹ️  No active backend found on port 8000")
+except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+    print("   ℹ️  No backend found on port 8000 - good to start")
+except Exception as e:
+    print(f"   ℹ️  Could not check port 8000: {e}")
 
 # Wait for processes to terminate
 print("\n2. Waiting 2 seconds...")
