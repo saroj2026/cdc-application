@@ -6,7 +6,9 @@ import logging
 from alembic import command
 from alembic.config import Config
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Add backend directory to path so imports work
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, backend_dir)
 
 from ingestion.database import engine
 from ingestion.database.base import Base

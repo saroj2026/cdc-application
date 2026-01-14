@@ -45,8 +45,9 @@ try:
     
     print("✅ Connected to database")
     
-    # Read migration script
-    with open("migrations/add_user_management_features.sql", "r") as f:
+    # Read migration script (migrations folder is in backend directory)
+    migration_path = os.path.join(os.path.dirname(__file__), "migrations", "add_user_management_features.sql")
+    with open(migration_path, "r") as f:
         migration_sql = f.read()
     
     print("📄 Reading migration script...")

@@ -3,9 +3,9 @@ import sys
 import os
 import subprocess
 
-# Change to the application directory
-app_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(app_dir)
+# Change to the backend directory
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(backend_dir)
 
 print("=" * 70)
 print("Starting Backend Server")
@@ -14,9 +14,9 @@ print(f"Working Directory: {os.getcwd()}")
 print(f"Python: {sys.executable}")
 print()
 
-# Set PYTHONPATH
+# Set PYTHONPATH to backend directory so imports work
 env = os.environ.copy()
-env['PYTHONPATH'] = '.'
+env['PYTHONPATH'] = backend_dir
 
 try:
     print("🚀 Starting uvicorn server...")

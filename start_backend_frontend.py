@@ -40,13 +40,13 @@ time.sleep(2)
 # Step 2: Start Backend
 print("\n3. Starting Backend Server...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
+backend_dir = os.path.join(script_dir, "backend")
 
 backend_started = False
 if sys.platform == "win32":
     try:
         # Start backend in new window
-        cmd = f'cd /d "{script_dir}" && python -m uvicorn ingestion.api:app --reload --host 0.0.0.0 --port 8000'
+        cmd = f'cd /d "{backend_dir}" && set PYTHONPATH={backend_dir} && python -m uvicorn ingestion.api:app --reload --host 0.0.0.0 --port 8000'
         subprocess.Popen(
             ["cmd", "/c", "start", "cmd", "/k", "title Backend Server && " + cmd],
             shell=True
@@ -57,9 +57,13 @@ if sys.platform == "win32":
         print(f"   ❌ Failed to start backend: {e}")
 else:
     try:
+        env = os.environ.copy()
+        env['PYTHONPATH'] = backend_dir
         with open("backend.log", "w") as log_file:
             process = subprocess.Popen(
                 ["python", "-m", "uvicorn", "ingestion.api:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+                cwd=backend_dir,
+                env=env,
                 stdout=log_file,
                 stderr=subprocess.STDOUT
             )
