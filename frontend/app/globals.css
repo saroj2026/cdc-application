@@ -1,0 +1,568 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
+
+:root {
+  /* Light theme colors */
+  --background: oklch(0.98 0.002 280);
+  --foreground: oklch(0.2 0.04 280);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.04 280);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.04 280);
+  --primary: oklch(0.5 0.22 260);
+  --primary-foreground: oklch(0.98 0.002 280);
+  --secondary: oklch(0.55 0.2 200);
+  --secondary-foreground: oklch(0.98 0.002 280);
+  --muted: oklch(0.92 0.01 280);
+  --muted-foreground: oklch(0.5 0.05 280);
+  --accent: oklch(0.55 0.2 200);
+  --accent-foreground: oklch(0.98 0.002 280);
+  --destructive: oklch(0.6 0.25 27);
+  --destructive-foreground: oklch(0.98 0.002 280);
+  --border: oklch(0.92 0.01 280);
+  --input: oklch(0.96 0.005 280);
+  --ring: oklch(0.5 0.22 260);
+  --chart-1: oklch(0.5 0.22 260);
+  --chart-2: oklch(0.55 0.2 200);
+  --chart-3: oklch(0.6 0.15 140);
+  --chart-4: oklch(0.7 0.18 50);
+  --chart-5: oklch(0.65 0.2 30);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.98 0.002 280);
+  --sidebar-foreground: oklch(0.2 0.04 280);
+  --sidebar-primary: oklch(0.5 0.22 260);
+  --sidebar-primary-foreground: oklch(0.98 0.002 280);
+  --sidebar-accent: oklch(0.55 0.2 200);
+  --sidebar-accent-foreground: oklch(0.98 0.002 280);
+  --sidebar-border: oklch(0.92 0.01 280);
+  --sidebar-ring: oklch(0.5 0.22 260);
+  --surface: oklch(0.96 0.005 280);
+  --surface-hover: oklch(0.92 0.01 280);
+  --foreground-muted: oklch(0.5 0.05 280);
+  --info: oklch(0.55 0.2 200);
+  --success: oklch(0.6 0.15 140);
+  --warning: oklch(0.7 0.18 50);
+  --error: oklch(0.6 0.25 27);
+}
+
+/* Custom animations for data transfer visualization */
+@keyframes flow {
+  0% {
+    transform: translateX(-100%) translateY(-50%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(400%) translateY(-50%);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes data-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.dark {
+  --background: #0a0e27;
+  --foreground: #e4e9f7;
+  --card: #111a3a;
+  --card-foreground: #e4e9f7;
+  --popover: #0a0e27;
+  --popover-foreground: #e4e9f7;
+  --primary: #0ea5e9;
+  --primary-foreground: #0a0e27;
+  --secondary: #06b6d4;
+  --secondary-foreground: #0a0e27;
+  --muted: #1e2749;
+  --muted-foreground: #9ca3af;
+  --accent: #06b6d4;
+  --accent-foreground: #0a0e27;
+  --destructive: #ef4444;
+  --destructive-foreground: #fee2e2;
+  --border: #1e2749;
+  --input: #0f1628;
+  --ring: #0ea5e9;
+  --chart-1: #0ea5e9;
+  --chart-2: #06b6d4;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
+  --sidebar: #0f1628;
+  --sidebar-foreground: #e4e9f7;
+  --sidebar-primary: #0ea5e9;
+  --sidebar-primary-foreground: #0a0e27;
+  --sidebar-accent: #06b6d4;
+  --sidebar-accent-foreground: #0a0e27;
+  --sidebar-border: #1e2749;
+  --sidebar-ring: #0ea5e9;
+  --surface: #111a3a;
+  --surface-hover: #1a2651;
+  --foreground-muted: #9ca3af;
+  --info: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+.light {
+  /* Enhanced background with subtle gradient feel */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  /* Cards with slight warmth */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  /* Vibrant primary - teal/cyan for modern look */
+  --primary: #14b8a6;
+  --primary-foreground: #ffffff;
+  /* Secondary with good contrast */
+  --secondary: #0891b2;
+  --secondary-foreground: #ffffff;
+  /* Softer muted colors */
+  --muted: #e2e8f0;
+  --muted-foreground: #64748b;
+  /* Accent matching primary */
+  --accent: #14b8a6;
+  --accent-foreground: #ffffff;
+  /* Destructive with better visibility */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  /* Borders with subtle color */
+  --border: #cbd5e1;
+  --input: #f1f5f9;
+  --ring: #14b8a6;
+  /* Chart colors - vibrant and distinct */
+  --chart-1: #14b8a6;
+  --chart-2: #0891b2;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
+  /* Sidebar with cohesive background - slightly off-white for depth */
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #14b8a6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0891b2;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #14b8a6;
+  /* Surface with better hover states */
+  --surface: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --foreground-muted: #64748b;
+  /* Status colors - vibrant and clear */
+  --info: #0891b2;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  .glass {
+    @apply backdrop-blur-sm border border-border/50;
+  }
+
+  .surface {
+    @apply bg-surface;
+  }
+
+  .surface-hover {
+    @apply hover:bg-surface-hover;
+  }
+}
+
+/* Enhanced Light Mode Hover States */
+.light {
+  /* Better hover text visibility */
+  .hover\:text-foreground:hover {
+    color: var(--foreground) !important;
+  }
+  
+  /* Active state improvements */
+  button:active:not(:disabled),
+  .active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Better contrast for hover states */
+  .hover\:bg-surface-hover:hover {
+    background-color: var(--surface-hover) !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* Enhanced button hover states with better visibility */
+  button:hover:not(:disabled) {
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  button:active:not(:disabled) {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better focus states */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  }
+  
+  /* Improved link hover */
+  a:hover {
+    color: var(--primary);
+    transition: color 0.2s ease;
+  }
+  
+  /* Better card hover effects */
+  .hover\:shadow-lg:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+  }
+  
+  /* Enhanced input focus */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  }
+  
+  /* Better sidebar active states */
+  [data-active="true"],
+  .bg-primary {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
+  
+  /* Improved dropdown hover */
+  [role="menuitem"]:hover,
+  [role="option"]:hover {
+    background-color: var(--surface-hover) !important;
+    color: var(--foreground) !important;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Login Page Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(10px) translateX(-10px);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0px);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-15px);
+  }
+}
+
+@keyframes pulse-connection {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes shimmer-line {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes shimmer-border {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes data-flow {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--target-x) - var(--start-x)), calc(var(--target-y) - var(--start-y)));
+    opacity: 0;
+  }
+}
+
+@keyframes transfer {
+  0% {
+    transform: translateX(0) translateY(-50%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100% - 20px)) translateY(-50%);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+.animate-pulse-connection {
+  animation: pulse-connection 2s ease-in-out infinite;
+}
+
+.animate-shimmer-line {
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.5), transparent);
+  background-size: 200% 100%;
+  animation: shimmer-line 2s infinite;
+}
+
+.animate-shimmer-border {
+  animation: shimmer-border 3s infinite;
+}
+
+.animate-data-flow {
+  animation: data-flow 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* Heartbeat Animation for Cards */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.02);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.02);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+@keyframes heartbeat-glow {
+  0%, 100% {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  }
+  10% {
+    box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.2), 0 2px 4px -2px rgba(20, 184, 166, 0.1);
+  }
+  20% {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  }
+  30% {
+    box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.2), 0 2px 4px -2px rgba(20, 184, 166, 0.1);
+  }
+  40% {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.animate-heartbeat-glow {
+  animation: heartbeat-glow 1.5s ease-in-out infinite;
+}
+
+/* Card hover with heartbeat effect */
+.card-heartbeat {
+  transition: all 0.3s ease;
+}
+
+.card-heartbeat:hover {
+  animation: heartbeat 1.5s ease-in-out infinite;
+  box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.2), 0 4px 6px -2px rgba(20, 184, 166, 0.1);
+}
+
+.light .card-heartbeat:hover {
+  box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.15), 0 4px 6px -2px rgba(20, 184, 166, 0.1);
+  border-color: rgba(20, 184, 166, 0.3);
+}
+
+.dark .card-heartbeat:hover {
+  box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.3), 0 4px 6px -2px rgba(20, 184, 166, 0.2);
+  border-color: rgba(20, 184, 166, 0.4);
+}
+
+/* Radar scan animation for CDC watching indicator */
+@keyframes radar-scan {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.8;
+  }
+}
