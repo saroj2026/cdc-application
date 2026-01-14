@@ -1,0 +1,159 @@
+#!/bin/bash
+# Install AS400 connector on VPS - run this on VPS server
+# This script assumes the connector is already on the VPS at /tmp/debezium-connector-ibmi
+
+echo "=================================================================================="
+echo "📦 INSTALLING AS400 CONNECTOR ON VPS"
+echo "=================================================================================="
+echo ""
+
+CONTAINER_NAME="kafka-connect-cdc"
+
+# Find connector on VPS
+echo "Step 1: Looking for debezium-connector-ibmi on VPS..."
+CONNECTOR_PATHS=(
+    "/tmp/debezium-connector-ibmi"
+    "/root/debezium-connector-ibmi"
+    "/opt/cdc3/connect-plugins/debezium-connector-ibmi"
+)
+
+CONNECTOR_PATH=""
+
+for path in "${CONNECTOR_PATHS[@]}"; do
+    if [ -d "$path" ]; then
+        CONNECTOR_PATH="$path"
+        echo "✅ Found connector at: $CONNECTOR_PATH"
+        break
+    fi
+done
+
+# Search more broadly if not found
+if [ -z "$CONNECTOR_PATH" ]; then
+    echo "  Not found in common locations. Searching..."
+    CONNECTOR_PATH=$(find /tmp /root /opt -type d -name "debezium-connector-ibmi*" 2>/dev/null | head -1)
+    if [ -n "$CONNECTOR_PATH" ]; then
+        echo "✅ Found connector at: $CONNECTOR_PATH"
+    fi
+fi
+
+# If still not found, ask user
+if [ -z "$CONNECTOR_PATH" ]; then
+    echo ""
+    echo "❌ Connector not found automatically"
+    echo ""
+    echo "Please provide the full path to the debezium-connector-ibmi folder:"
+    read -p "Enter path: " CONNECTOR_PATH
+    
+    if [ -z "$CONNECTOR_PATH" ] || [ ! -d "$CONNECTOR_PATH" ]; then
+        echo "❌ Invalid path or directory does not exist"
+        echo ""
+        echo "To find it, run:"
+        echo "  find /tmp /root /opt -type d -name 'debezium-connector-ibmi*' 2>/dev/null"
+        exit 1
+    fi
+fi
+
+echo ""
+echo "Step 2: Verifying connector..."
+JAR_COUNT=$(find "$CONNECTOR_PATH" -name "*.jar" 2>/dev/null | wc -l)
+if [ "$JAR_COUNT" -eq 0 ]; then
+    echo "⚠️  No JAR files found"
+    read -p "Continue anyway? (y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+else
+    echo "✅ Found $JAR_COUNT JAR files"
+fi
+
+echo ""
+echo "Step 3: Checking Kafka Connect container..."
+if ! docker ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
+    echo "❌ Container '$CONTAINER_NAME' is not running!"
+    echo "Start it first: docker start $CONTAINER_NAME"
+    exit 1
+fi
+echo "✅ Container is running"
+
+echo ""
+echo "Step 4: Installing connector in container..."
+CONTAINER_PATH="/usr/share/java/plugins/debezium-connector-ibmi"
+
+# Remove existing if present
+if docker exec "$CONTAINER_NAME" test -d "$CONTAINER_PATH" 2>/dev/null; then
+    echo "  Removing existing connector..."
+    docker exec "$CONTAINER_NAME" rm -rf "$CONTAINER_PATH"
+fi
+
+# Copy to container
+echo "  Copying from: $CONNECTOR_PATH"
+echo "  To container: $CONTAINER_NAME:$CONTAINER_PATH"
+docker cp "$CONNECTOR_PATH" "$CONTAINER_NAME:$CONTAINER_PATH"
+
+if [ $? -eq 0 ]; then
+    echo "✅ Connector copied successfully"
+else
+    echo "❌ Failed to copy connector"
+    exit 1
+fi
+
+echo ""
+echo "Step 5: Verifying copy..."
+CONTAINER_JAR_COUNT=$(docker exec "$CONTAINER_NAME" find "$CONTAINER_PATH" -name "*.jar" 2>/dev/null | wc -l)
+if [ "$CONTAINER_JAR_COUNT" -gt 0 ]; then
+    echo "✅ Verified: $CONTAINER_JAR_COUNT JAR files in container"
+else
+    echo "⚠️  No JAR files found in container"
+fi
+
+echo ""
+echo "Step 6: Restarting Kafka Connect..."
+docker restart "$CONTAINER_NAME"
+echo "Waiting 30 seconds for restart..."
+sleep 30
+
+echo ""
+echo "Step 7: Verifying connector is loaded..."
+MAX_RETRIES=10
+RETRY_COUNT=0
+SUCCESS=false
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if curl -s http://localhost:8083/connector-plugins > /dev/null 2>&1; then
+        if curl -s http://localhost:8083/connector-plugins | grep -qi "As400RpcConnector\|db2as400"; then
+            echo "✅ AS400 connector plugin is loaded!"
+            echo ""
+            echo "Connector details:"
+            curl -s http://localhost:8083/connector-plugins | python3 -m json.tool 2>/dev/null | grep -A 10 -i "As400RpcConnector\|db2as400" || \
+            curl -s http://localhost:8083/connector-plugins | grep -i "As400RpcConnector\|db2as400" -A 5
+            SUCCESS=true
+            break
+        else
+            echo "  ⏳ Connector not loaded yet (retry $((RETRY_COUNT+1))/$MAX_RETRIES)..."
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            sleep 5
+        fi
+    else
+        echo "  ⏳ Kafka Connect not responding yet (retry $((RETRY_COUNT+1))/$MAX_RETRIES)..."
+        RETRY_COUNT=$((RETRY_COUNT+1))
+        sleep 5
+    fi
+done
+
+if [ "$SUCCESS" = false ]; then
+    echo ""
+    echo "⚠️  Could not verify connector loading automatically"
+    echo "   Check manually: curl -s http://localhost:8083/connector-plugins | grep -i As400RpcConnector"
+    echo "   Or check logs: docker logs $CONTAINER_NAME | tail -50"
+else
+    echo ""
+    echo "=================================================================================="
+    echo "✅ SUCCESS! AS400 connector is installed and loaded"
+    echo "=================================================================================="
+    echo ""
+    echo "You can now start your AS400 pipeline:"
+    echo "  python3 start_as400_pipeline.py"
+    echo ""
+fi
+
