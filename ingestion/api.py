@@ -2519,6 +2519,7 @@ async def restart_connector(connector_name: str) -> Dict[str, Any]:
 # ==================== Monitoring & Metrics Endpoints ====================
 
 @app.get("/api/monitoring/dashboard")
+@app.get("/api/v1/monitoring/dashboard")  # Also support /v1 for frontend compatibility
 async def get_monitoring_dashboard(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Get overall monitoring dashboard data."""
     try:
@@ -2952,6 +2953,55 @@ async def get_system_health() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to get system health: {e}", exc_info=True)
         return {"status": "error", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+
+
+# ==================== Application Logs Endpoints ====================
+
+@app.get("/api/v1/logs/application-logs")
+async def get_application_logs(
+    skip: int = 0,
+    limit: int = 100,
+    level: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get application logs.
+    
+    Note: Currently returns empty logs as log storage is not implemented.
+    This endpoint can be enhanced to read from log files or a log database.
+    """
+    try:
+        # TODO: Implement log storage and retrieval
+        # For now, return empty logs to prevent frontend errors
+        return {
+            "logs": [],
+            "total": 0,
+            "skip": skip,
+            "limit": limit
+        }
+    except Exception as e:
+        logger.error(f"Failed to get application logs: {e}", exc_info=True)
+        return {
+            "logs": [],
+            "total": 0,
+            "skip": skip,
+            "limit": limit
+        }
+
+
+@app.get("/api/v1/logs/application-logs/levels")
+async def get_log_levels() -> List[str]:
+    """Get available log levels.
+    
+    Returns an array of log level strings directly.
+    """
+    try:
+        return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    except Exception as e:
+        logger.error(f"Failed to get log levels: {e}", exc_info=True)
+        return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 @app.post("/api/v1/pipelines/{pipeline_id}/recover")
