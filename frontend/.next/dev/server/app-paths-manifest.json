@@ -6,7 +6,6 @@
   "/errors/page": "app/errors/page.js",
   "/governance/page": "app/governance/page.js",
   "/monitoring/page": "app/monitoring/page.js",
-  "/page": "app/page.js",
   "/pipelines/page": "app/pipelines/page.js",
   "/settings/page": "app/settings/page.js",
   "/users/page": "app/users/page.js"
