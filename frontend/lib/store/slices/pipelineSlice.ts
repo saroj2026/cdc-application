@@ -50,7 +50,7 @@ export const fetchPipelines = createAsyncThunk(
     } catch (error: any) {
       // Provide more helpful error messages for timeouts
       if (error.isTimeout) {
-        return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+        return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
       }
       if (error.isNetworkError) {
         return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');
@@ -156,11 +156,42 @@ export const triggerPipeline = createAsyncThunk(
   async ({ id, runType }: { id: string | number; runType?: string }, { rejectWithValue, dispatch }) => {
     try {
       const result = await apiClient.triggerPipeline(String(id), runType);
+      // Wait longer before refreshing to allow backend to fully update status
+      await new Promise(resolve => setTimeout(resolve, 2000));
       // Refresh pipelines to get updated status
       dispatch(fetchPipelines());
+      // Refresh again after a longer delay to ensure status is persisted
+      setTimeout(() => {
+        dispatch(fetchPipelines());
+      }, 4000);
       return result;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.detail || 'Failed to trigger pipeline');
+      // Extract detailed error message
+      let errorMessage = 'Failed to trigger pipeline'
+      
+      if (error?.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
+      // Remove redundant wrapping if present
+      if (errorMessage.includes("Failed to trigger pipeline") && errorMessage.length > 25) {
+        // Keep the actual error, remove the wrapper
+        const parts = errorMessage.split("Failed to trigger pipeline")
+        if (parts.length > 1) {
+          errorMessage = parts[parts.length - 1].trim()
+          if (errorMessage.startsWith(":")) {
+            errorMessage = errorMessage.substring(1).trim()
+          }
+        }
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -229,7 +260,40 @@ const pipelineSlice = createSlice({
       })
       .addCase(fetchPipelines.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.pipelines = action.payload;
+        // Merge with existing pipelines to preserve optimistic updates
+        // Only update if the backend status is more recent or different
+        const newPipelines = action.payload;
+        if (Array.isArray(newPipelines)) {
+          // Create a map of new pipelines by ID
+          const newPipelinesMap = new Map(newPipelines.map(p => [String(p.id), p]));
+          
+          // Update existing pipelines, but preserve optimistic 'active' status if backend hasn't caught up
+          state.pipelines = state.pipelines.map(existingPipeline => {
+            const newPipeline = newPipelinesMap.get(String(existingPipeline.id));
+            if (newPipeline) {
+              // If we optimistically set it to active and backend still shows stopped/starting,
+              // keep it as active for a bit longer (backend might be slow to update)
+              if (existingPipeline.status === 'active' && 
+                  newPipeline.status !== 'active' && 
+                  newPipeline.status !== 'running') {
+                // Keep optimistic status for now, but update other fields
+                return { ...newPipeline, status: 'active' };
+              }
+              return newPipeline;
+            }
+            return existingPipeline;
+          });
+          
+          // Add any new pipelines that weren't in the existing list
+          newPipelines.forEach(newPipeline => {
+            const exists = state.pipelines.some(p => String(p.id) === String(newPipeline.id));
+            if (!exists) {
+              state.pipelines.push(newPipeline);
+            }
+          });
+        } else {
+          state.pipelines = newPipelines;
+        }
       })
       .addCase(fetchPipelines.rejected, (state, action) => {
         state.isLoading = false;
@@ -256,16 +320,37 @@ const pipelineSlice = createSlice({
           state.selectedPipeline = null;
         }
       })
-      .addCase(triggerPipeline.fulfilled, (state, action) => {
-        // Update pipeline status to active
-        // The response has 'id' field, not 'pipeline_id'
-        const pipelineId = action.payload.id || action.payload.pipeline_id;
-        const pipeline = state.pipelines.find((p) => p.id === pipelineId);
+      .addCase(triggerPipeline.pending, (state, action) => {
+        // Optimistically update status to active immediately
+        const pipelineId = action.meta.arg.id;
+        const pipeline = state.pipelines.find((p) => String(p.id) === String(pipelineId));
         if (pipeline) {
           pipeline.status = 'active';
         }
-        if (state.selectedPipeline && state.selectedPipeline.id === pipelineId) {
+        if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
           state.selectedPipeline.status = 'active';
+        }
+      })
+      .addCase(triggerPipeline.fulfilled, (state, action) => {
+        // Update pipeline status to active (in case pending didn't catch it)
+        // The response might have 'id' field or 'pipeline_id'
+        const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg.id;
+        const pipeline = state.pipelines.find((p) => String(p.id) === String(pipelineId));
+        if (pipeline) {
+          pipeline.status = 'active';
+        }
+        if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
+          state.selectedPipeline.status = 'active';
+        }
+      })
+      .addCase(triggerPipeline.rejected, (state, action) => {
+        // Revert optimistic update on error
+        const pipelineId = action.meta.arg.id;
+        const pipeline = state.pipelines.find((p) => String(p.id) === String(pipelineId));
+        if (pipeline && pipeline.status === 'active') {
+          // Only revert if we optimistically set it - check if it was actually started
+          // Don't revert if backend says it's active but request failed
+          pipeline.status = 'stopped';
         }
       })
       .addCase(pausePipeline.fulfilled, (state, action) => {

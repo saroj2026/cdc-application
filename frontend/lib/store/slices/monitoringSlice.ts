@@ -5,9 +5,9 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '@/lib/api/client';
 
 interface ReplicationEvent {
-  id: string;  // MongoDB ObjectId as string
-  pipeline_id: string;  // MongoDB ObjectId as string
-  pipeline_run_id?: string;  // MongoDB ObjectId as string (optional)
+  id: string;  // Database ID as string
+  pipeline_id: string;  // Database ID as string
+  pipeline_run_id?: string;  // Database ID as string (optional)
   event_type: 'insert' | 'update' | 'delete';
   table_name: string;
   schema_name?: string;
@@ -29,8 +29,8 @@ interface ReplicationEvent {
 }
 
 interface MonitoringMetric {
-  id: string;  // MongoDB ObjectId as string
-  pipeline_id: string;  // MongoDB ObjectId as string
+  id: string;  // Database ID as string
+  pipeline_id: string;  // Database ID as string
   timestamp: string;
   events_per_second: number;
   avg_latency_ms: number;
@@ -155,22 +155,32 @@ const monitoringSlice = createSlice({
       })
       .addCase(fetchReplicationEvents.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.events = action.payload;
+        // Ensure events is always an array
+        state.events = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchReplicationEvents.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch events';
+        // Ensure events remains an array even on error
+        if (!Array.isArray(state.events)) {
+          state.events = [];
+        }
       })
       .addCase(fetchMonitoringMetrics.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchMonitoringMetrics.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.metrics = action.payload;
+        // Ensure metrics is always an array
+        state.metrics = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMonitoringMetrics.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch metrics';
+        // Ensure metrics remains an array even on error
+        if (!Array.isArray(state.metrics)) {
+          state.metrics = [];
+        }
       });
   },
 });

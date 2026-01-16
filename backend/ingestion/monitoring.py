@@ -38,6 +38,13 @@ class CDCMonitor:
         """
         try:
             status = self.kafka_client.get_connector_status(connector_name)
+            if status is None:
+                # Connector doesn't exist
+                return {
+                    "connector_state": "NOT_FOUND",
+                    "tasks": [],
+                    "failed_tasks": []
+                }
             connector_state = status.get("connector", {}).get("state", "UNKNOWN")
             tasks = status.get("tasks", [])
             
@@ -151,7 +158,8 @@ class CDCMonitor:
                 dbz_status = self.kafka_client.get_connector_status(
                     pipeline.debezium_connector_name
                 )
-                metrics["debezium_connector_state"] = dbz_status.get("connector", {}).get("state")
+                if dbz_status:
+                    metrics["debezium_connector_state"] = dbz_status.get("connector", {}).get("state")
             except Exception:
                 pass
         
@@ -160,7 +168,8 @@ class CDCMonitor:
                 sink_status = self.kafka_client.get_connector_status(
                     pipeline.sink_connector_name
                 )
-                metrics["sink_connector_state"] = sink_status.get("connector", {}).get("state")
+                if sink_status:
+                    metrics["sink_connector_state"] = sink_status.get("connector", {}).get("state")
             except Exception:
                 pass
         

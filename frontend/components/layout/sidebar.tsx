@@ -53,7 +53,9 @@ const menuSections = [
 export function Sidebar() {
   const pathname = usePathname()
   const { isCollapsed, toggleCollapse, mounted } = useSidebar()
-  const state = useAppSelector((state) => state)
+  // Use specific selectors instead of root state to prevent unnecessary rerenders
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth)
+  const permissions = useAppSelector((state) => state.permissions)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     PLATFORM: true,
     REPLICATION: true,
@@ -62,11 +64,30 @@ export function Sidebar() {
 
   // Filter menu items based on permissions
   const getFilteredMenuSections = () => {
+    // If user is not loaded yet, show all items (will be filtered once user loads)
+    if (!user || !isAuthenticated) {
+      return menuSections
+    }
+    
+    // Super admin bypass - show all menu items for super admin
+    const isSuperAdmin = user.is_superuser === true || 
+                        user.role_name === 'super_admin' || 
+                        user.role_name === 'admin' ||
+                        user.is_superuser === 'true' || // Handle string 'true'
+                        String(user.is_superuser).toLowerCase() === 'true'
+    
+    if (isSuperAdmin) {
+      return menuSections
+    }
+    
+    // Create minimal state object for permission checks
+    const minimalState = { auth: { user, isAuthenticated }, permissions }
+    
     return menuSections.map((section) => ({
       ...section,
       items: section.items.filter((item) => {
         // Check if user can access this page
-        return canAccessPage(item.href)(state)
+        return canAccessPage(item.href)(minimalState)
       }),
     })).filter((section) => section.items.length > 0) // Remove empty sections
   }
@@ -93,12 +114,23 @@ export function Sidebar() {
     }))
   }
 
+  // Show loading state if not mounted
   if (!mounted) {
     return (
       <aside className="w-64 border-r border-border bg-sidebar flex flex-col transition-all duration-300">
         <div className="p-6 border-b border-border" />
       </aside>
     )
+  }
+  
+  // Debug: Log user info for super admin check
+  if (process.env.NODE_ENV === 'development' && user) {
+    console.log('[Sidebar] User check:', {
+      is_superuser: user.is_superuser,
+      role_name: user.role_name,
+      email: user.email,
+      willShowAll: user.is_superuser === true || user.role_name === 'super_admin' || user.role_name === 'admin'
+    })
   }
 
   return (

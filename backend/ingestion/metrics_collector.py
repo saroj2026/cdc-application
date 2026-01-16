@@ -58,23 +58,27 @@ class MetricsCollector:
                     dbz_status = self.kafka_client.get_connector_status(
                         pipeline.debezium_connector_name
                     )
-                    dbz_state = dbz_status.get("connector", {}).get("state", "UNKNOWN")
-                    metrics["connector_states"]["debezium"] = dbz_state
-                    
-                    # Get task metrics
-                    tasks = dbz_status.get("tasks", [])
-                    running_tasks = [t for t in tasks if t.get("state") == "RUNNING"]
-                    failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
-                    
-                    metrics["debezium_running_tasks"] = len(running_tasks)
-                    metrics["debezium_failed_tasks"] = len(failed_tasks)
-                    
-                    if failed_tasks:
-                        metrics["error_count"] += len(failed_tasks)
-                        metrics["errors"] = [
-                            task.get("trace", "Unknown error")
-                            for task in failed_tasks
-                        ]
+                    if dbz_status is None:
+                        # Connector doesn't exist, skip this pipeline
+                        logger.debug(f"Debezium connector {pipeline.debezium_connector_name} not found, skipping metrics")
+                    else:
+                        dbz_state = dbz_status.get("connector", {}).get("state", "UNKNOWN")
+                        metrics["connector_states"]["debezium"] = dbz_state
+                        
+                        # Get task metrics
+                        tasks = dbz_status.get("tasks", [])
+                        running_tasks = [t for t in tasks if t.get("state") == "RUNNING"]
+                        failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
+                        
+                        metrics["debezium_running_tasks"] = len(running_tasks)
+                        metrics["debezium_failed_tasks"] = len(failed_tasks)
+                        
+                        if failed_tasks:
+                            metrics["error_count"] += len(failed_tasks)
+                            metrics["errors"] = [
+                                task.get("trace", "Unknown error")
+                                for task in failed_tasks
+                            ]
                 except Exception as e:
                     logger.warning(f"Failed to get Debezium metrics: {e}")
             
@@ -84,25 +88,29 @@ class MetricsCollector:
                     sink_status = self.kafka_client.get_connector_status(
                         pipeline.sink_connector_name
                     )
-                    sink_state = sink_status.get("connector", {}).get("state", "UNKNOWN")
-                    metrics["connector_states"]["sink"] = sink_state
-                    
-                    # Get task metrics
-                    tasks = sink_status.get("tasks", [])
-                    running_tasks = [t for t in tasks if t.get("state") == "RUNNING"]
-                    failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
-                    
-                    metrics["sink_running_tasks"] = len(running_tasks)
-                    metrics["sink_failed_tasks"] = len(failed_tasks)
-                    
-                    if failed_tasks:
-                        metrics["error_count"] += len(failed_tasks)
-                        if "errors" not in metrics:
-                            metrics["errors"] = []
-                        metrics["errors"].extend([
-                            task.get("trace", "Unknown error")
-                            for task in failed_tasks
-                        ])
+                    if sink_status is None:
+                        # Connector doesn't exist, skip this pipeline
+                        logger.debug(f"Sink connector {pipeline.sink_connector_name} not found, skipping metrics")
+                    else:
+                        sink_state = sink_status.get("connector", {}).get("state", "UNKNOWN")
+                        metrics["connector_states"]["sink"] = sink_state
+                        
+                        # Get task metrics
+                        tasks = sink_status.get("tasks", [])
+                        running_tasks = [t for t in tasks if t.get("state") == "RUNNING"]
+                        failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
+                        
+                        metrics["sink_running_tasks"] = len(running_tasks)
+                        metrics["sink_failed_tasks"] = len(failed_tasks)
+                        
+                        if failed_tasks:
+                            metrics["error_count"] += len(failed_tasks)
+                            if "errors" not in metrics:
+                                metrics["errors"] = []
+                            metrics["errors"].extend([
+                                task.get("trace", "Unknown error")
+                                for task in failed_tasks
+                            ])
                 except Exception as e:
                     logger.warning(f"Failed to get Sink metrics: {e}")
             

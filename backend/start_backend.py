@@ -2,6 +2,16 @@
 import sys
 import os
 import subprocess
+import multiprocessing
+
+# Fix for Windows multiprocessing spawn issue
+# Set multiprocessing start method before any multiprocessing operations
+if sys.platform == 'win32':
+    try:
+        multiprocessing.set_start_method('spawn', force=True)
+    except RuntimeError:
+        # Already set, ignore
+        pass
 
 # Change to the backend directory
 backend_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,41 +1,104 @@
 """Database session management with connection pooling."""
 
 import os
-from typing import Generator
-from sqlalchemy import create_engine, event, pool
+import logging
+from typing import Generator, Optional
+from sqlalchemy import create_engine, event, pool, text
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.exc import OperationalError, DisconnectionError
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://cdc_user:cdc_pass@72.61.233.209:5432/cdctest")
 DATABASE_POOL_SIZE = int(os.getenv("DATABASE_POOL_SIZE", "10"))
 DATABASE_MAX_OVERFLOW = int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))
 
+# Create engine with connection error handling
+# Use NullPool to avoid connection blocking on startup
+# This allows the server to start even if database is unavailable
 engine = create_engine(
     DATABASE_URL,
-    poolclass=pool.QueuePool,
-    pool_size=DATABASE_POOL_SIZE,
-    max_overflow=DATABASE_MAX_OVERFLOW,
+    poolclass=pool.NullPool,  # NullPool doesn't create connections on startup
     pool_pre_ping=True,
     pool_recycle=3600,
     echo=False,
+    connect_args={
+        "connect_timeout": 3,  # 3 second timeout
+    }
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Track database availability
+_db_available = None
 
-def get_db() -> Generator[Session, None, None]:
-    """Get database session.
+def check_db_connection() -> bool:
+    """Check if database is available.
+    
+    Returns:
+        True if database is available, False otherwise
+    """
+    global _db_available
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        _db_available = True
+        return True
+    except (OperationalError, DisconnectionError, Exception) as e:
+        logger.warning(f"Database connection check failed: {e}")
+        _db_available = False
+        return False
+
+def get_db() -> Generator[Optional[Session], None, None]:
+    """Get database session with error handling.
     
     Yields:
-        Database session
+        Database session or None if connection fails
     """
-    db = SessionLocal()
+    global _db_available
+    
+    # Check if we know the DB is unavailable
+    if _db_available is False:
+        # Try once more to see if it's back
+        if not check_db_connection():
+            yield None
+            return
+    
+    db = None
     try:
+        db = SessionLocal()
+        # Test the connection
+        db.execute(text("SELECT 1"))
+        _db_available = True
         yield db
+    except (OperationalError, DisconnectionError) as e:
+        logger.error(f"Database connection error: {e}")
+        _db_available = False
+        if db:
+            try:
+                db.rollback()
+                db.close()
+            except:
+                pass
+        yield None
+    except Exception as e:
+        logger.error(f"Unexpected database error: {e}")
+        if db:
+            try:
+                db.rollback()
+                db.close()
+            except:
+                pass
+        yield None
     finally:
-        db.close()
+        if db:
+            try:
+                db.close()
+            except:
+                pass
 
 
 @event.listens_for(engine, "connect")

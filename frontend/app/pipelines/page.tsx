@@ -206,8 +206,8 @@ export default function PipelinesPage() {
       const pipelinePayload = {
         name: (pipelineData.name || "").trim(),
         description: (pipelineData.description || "").trim(),
-        source_connection_id: String(sourceConn.id), // Ensure it's a string (MongoDB ObjectId)
-        target_connection_id: String(targetConn.id), // Ensure it's a string (MongoDB ObjectId)
+        source_connection_id: String(sourceConn.id), // Ensure it's a string
+        target_connection_id: String(targetConn.id), // Ensure it's a string
         full_load_type: pipelineData.mode === "full_load" ? "overwrite" :
           pipelineData.mode === "cdc_only" ? "append" : "overwrite",
         cdc_enabled: pipelineData.mode !== "full_load",
@@ -305,7 +305,7 @@ export default function PipelinesPage() {
       }
 
       // Show user-friendly error with troubleshooting steps
-      alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. MongoDB is running`)
+      alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. PostgreSQL database is running and accessible`)
     }
   }
 
@@ -399,7 +399,7 @@ export default function PipelinesPage() {
         return
       }
 
-      // Ensure connection IDs are strings (MongoDB ObjectIds)
+      // Ensure connection IDs are strings
       const pipelineDataPayload = {
         name: pipelineData.name,
         description: pipelineData.description || "",
@@ -467,9 +467,49 @@ export default function PipelinesPage() {
 
   const handleTriggerPipeline = async (id: number, runType: string = "full_load") => {
     try {
-      await dispatch(triggerPipeline({ id, runType })).unwrap()
-    } catch (err) {
+      // Optimistically update UI immediately (handled in Redux slice)
+      const result = await dispatch(triggerPipeline({ id, runType })).unwrap()
+      console.log("Pipeline triggered successfully:", result)
+      // Refresh pipelines after longer delays to ensure backend status is updated
+      setTimeout(() => {
+        dispatch(fetchPipelines())
+      }, 3000)
+      setTimeout(() => {
+        dispatch(fetchPipelines())
+      }, 6000)
+    } catch (err: any) {
       console.error("Failed to trigger pipeline:", err)
+      // Extract error message from various possible locations
+      let errorMessage = "Failed to start pipeline"
+      
+      if (err?.payload) {
+        errorMessage = err.payload
+      } else if (err?.response?.data?.detail) {
+        errorMessage = err.response.data.detail
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message
+      } else if (err?.message) {
+        errorMessage = err.message
+      } else if (typeof err === 'string') {
+        errorMessage = err
+      }
+      
+      // Remove redundant "Failed to trigger pipeline" prefix if present
+      if (errorMessage.includes("Failed to trigger pipeline")) {
+        errorMessage = errorMessage.replace("Failed to trigger pipeline", "").trim()
+        if (errorMessage.startsWith(":")) {
+          errorMessage = errorMessage.substring(1).trim()
+        }
+      }
+      
+      // Show user-friendly error with full details
+      if (errorMessage && !errorMessage.includes("timeout")) {
+        alert(`Failed to start pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline configuration is valid\n2. Source and target connections are working\n3. Backend logs for detailed error information`)
+      }
+      // Still refresh to get current status even on error (will revert optimistic update)
+      setTimeout(() => {
+        dispatch(fetchPipelines())
+      }, 1000)
     }
   }
 

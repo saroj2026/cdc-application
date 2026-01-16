@@ -258,8 +258,13 @@ const hasAllPermissions = (permissions)=>(state)=>{
 const canAccessPage = (path)=>(state)=>{
         const user = state.auth?.user;
         if (!user) return false;
-        // Super admin has access to all pages
-        if (user.is_superuser || user.role_name === 'super_admin') {
+        // Super admin has access to all pages - check multiple ways
+        const isSuperAdmin = user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || user.role_name === 'super_admin' || user.role_name === 'admin';
+        if (isSuperAdmin) {
+            return true;
+        }
+        // Dashboard is accessible to all authenticated users
+        if (path === '/dashboard') {
             return true;
         }
         // Get required permissions for the page
@@ -282,6 +287,7 @@ __turbopack_context__.s([
     "Sidebar",
     ()=>Sidebar
 ]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
@@ -380,9 +386,13 @@ function Sidebar() {
     _s();
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     const { isCollapsed, toggleCollapse, mounted } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"])();
-    const state = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
-        "Sidebar.useAppSelector[state]": (state)=>state
-    }["Sidebar.useAppSelector[state]"]);
+    // Use specific selectors instead of root state to prevent unnecessary rerenders
+    const { user, isAuthenticated } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
+        "Sidebar.useAppSelector": (state)=>state.auth
+    }["Sidebar.useAppSelector"]);
+    const permissions = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
+        "Sidebar.useAppSelector[permissions]": (state)=>state.permissions
+    }["Sidebar.useAppSelector[permissions]"]);
     const [expandedSections, setExpandedSections] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         PLATFORM: true,
         REPLICATION: true,
@@ -390,11 +400,29 @@ function Sidebar() {
     });
     // Filter menu items based on permissions
     const getFilteredMenuSections = ()=>{
+        // If user is not loaded yet, show all items (will be filtered once user loads)
+        if (!user || !isAuthenticated) {
+            return menuSections;
+        }
+        // Super admin bypass - show all menu items for super admin
+        const isSuperAdmin = user.is_superuser === true || user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === 'true' || // Handle string 'true'
+        String(user.is_superuser).toLowerCase() === 'true';
+        if (isSuperAdmin) {
+            return menuSections;
+        }
+        // Create minimal state object for permission checks
+        const minimalState = {
+            auth: {
+                user,
+                isAuthenticated
+            },
+            permissions
+        };
         return menuSections.map((section)=>({
                 ...section,
                 items: section.items.filter((item)=>{
                     // Check if user can access this page
-                    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["canAccessPage"])(item.href)(state);
+                    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["canAccessPage"])(item.href)(minimalState);
                 })
             })).filter((section)=>section.items.length > 0) // Remove empty sections
         ;
@@ -426,6 +454,7 @@ function Sidebar() {
                 [sectionTitle]: !prev[sectionTitle]
             }));
     };
+    // Show loading state if not mounted
     if (!mounted) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
             className: "w-64 border-r border-border bg-sidebar flex flex-col transition-all duration-300",
@@ -433,14 +462,23 @@ function Sidebar() {
                 className: "p-6 border-b border-border"
             }, void 0, false, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 99,
+                lineNumber: 121,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/components/layout/sidebar.tsx",
-            lineNumber: 98,
+            lineNumber: 120,
             columnNumber: 7
         }, this);
+    }
+    // Debug: Log user info for super admin check
+    if (("TURBOPACK compile-time value", "development") === 'development' && user) {
+        console.log('[Sidebar] User check:', {
+            is_superuser: user.is_superuser,
+            role_name: user.role_name,
+            email: user.email,
+            willShowAll: user.is_superuser === true || user.role_name === 'super_admin' || user.role_name === 'admin'
+        });
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("border-r border-border bg-sidebar flex flex-col transition-all duration-300", isCollapsed ? "w-20" : "w-64"),
@@ -457,12 +495,12 @@ function Sidebar() {
                                     className: "w-5 h-5 text-foreground"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 116,
+                                    lineNumber: 148,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/sidebar.tsx",
-                                lineNumber: 115,
+                                lineNumber: 147,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -472,7 +510,7 @@ function Sidebar() {
                                         children: "CDC Admin"
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 119,
+                                        lineNumber: 151,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -480,19 +518,19 @@ function Sidebar() {
                                         children: "Platform"
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 120,
+                                        lineNumber: 152,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/layout/sidebar.tsx",
-                                lineNumber: 118,
+                                lineNumber: 150,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 114,
+                        lineNumber: 146,
                         columnNumber: 11
                     }, this),
                     isCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -501,12 +539,12 @@ function Sidebar() {
                             className: "w-5 h-5 text-foreground"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 126,
+                            lineNumber: 158,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 125,
+                        lineNumber: 157,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -517,24 +555,24 @@ function Sidebar() {
                             className: "w-4 h-4"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 134,
+                            lineNumber: 166,
                             columnNumber: 26
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__["ChevronLeft"], {
                             className: "w-4 h-4"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 134,
+                            lineNumber: 166,
                             columnNumber: 65
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 129,
+                        lineNumber: 161,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 112,
+                lineNumber: 144,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -553,26 +591,26 @@ function Sidebar() {
                                             children: section.title
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 158,
+                                            lineNumber: 190,
                                             columnNumber: 21
                                         }, this),
                                         isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                             className: "w-3 h-3"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 160,
+                                            lineNumber: 192,
                                             columnNumber: 23
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                             className: "w-3 h-3"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 162,
+                                            lineNumber: 194,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 151,
+                                    lineNumber: 183,
                                     columnNumber: 19
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -588,26 +626,26 @@ function Sidebar() {
                                                     className: "w-4 h-4 flex-shrink-0"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                                    lineNumber: 187,
+                                                    lineNumber: 219,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: item.label
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                                    lineNumber: 188,
+                                                    lineNumber: 220,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, item.href, true, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 177,
+                                            lineNumber: 209,
                                             columnNumber: 25
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 167,
+                                    lineNumber: 199,
                                     columnNumber: 19
                                 }, this)
                             ]
@@ -624,29 +662,29 @@ function Sidebar() {
                                         className: "w-4 h-4 flex-shrink-0"
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 212,
+                                        lineNumber: 244,
                                         columnNumber: 25
                                     }, this)
                                 }, item.href, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 201,
+                                    lineNumber: 233,
                                     columnNumber: 23
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 196,
+                            lineNumber: 228,
                             columnNumber: 17
                         }, this)
                     }, section.title, false, {
                         fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 147,
+                        lineNumber: 179,
                         columnNumber: 13
                     }, this);
                 })
             }, void 0, false, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 139,
+                lineNumber: 171,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -661,14 +699,14 @@ function Sidebar() {
                                     children: "v1.0.0"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 228,
+                                    lineNumber: 260,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     children: "Real-time CDC Platform"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 229,
+                                    lineNumber: 261,
                                     columnNumber: 15
                                 }, this)
                             ]
@@ -678,31 +716,32 @@ function Sidebar() {
                             children: "v1"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 232,
+                            lineNumber: 264,
                             columnNumber: 27
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/sidebar.tsx",
-                    lineNumber: 225,
+                    lineNumber: 257,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 224,
+                lineNumber: 256,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/layout/sidebar.tsx",
-        lineNumber: 105,
+        lineNumber: 137,
         columnNumber: 5
     }, this);
 }
-_s(Sidebar, "CXjxvwReI2OdXZjv88z3jUIZTow=", false, function() {
+_s(Sidebar, "EAO67SHiVKD3f54b5uS9Ipbzg8M=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"],
         __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"]
     ];
 });
@@ -1296,6 +1335,7 @@ class ApiClient {
             console.error('[API Client] Raw error object:', error);
         }
         // Extract error message - handle different error types
+        // Also sanitize error messages to handle escaped % characters from backend
         let errorMessage = '';
         if (typeof error === 'string') {
             errorMessage = error;
@@ -1310,11 +1350,21 @@ class ApiClient {
         } else {
             errorMessage = 'Unknown error occurred';
         }
+        // Sanitize error message: convert escaped %% back to % for display
+        // Backend escapes % to %% to prevent Python string formatting issues
+        // Frontend should display the original % character
+        if (typeof errorMessage === 'string') {
+            errorMessage = errorMessage.replace(/%%/g, '%');
+        }
         // Check for HTTP status codes FIRST (before network/timeout errors)
         // This ensures we properly handle validation errors, server errors, etc.
         // Check for validation errors (422) - these are NOT network errors
         if (error.response?.status === 422) {
-            const validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+            let validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+            // Sanitize error message: convert escaped %% back to % for display
+            if (typeof validationError === 'string') {
+                validationError = validationError.replace(/%%/g, '%');
+            }
             // Check if it's a list of validation errors (Pydantic format)
             if (Array.isArray(validationError)) {
                 const errorDetails = validationError.map((err)=>{
@@ -1338,6 +1388,12 @@ class ApiClient {
             // If errorDetail is a string, use it directly; if it's an object, try to extract message
             if (typeof errorDetail === 'object') {
                 errorDetail = errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
+            }
+            // Sanitize error message: convert escaped %% back to % for display
+            // Backend escapes % to %% to prevent Python string formatting issues
+            // Frontend should display the original % character
+            if (typeof errorDetail === 'string') {
+                errorDetail = errorDetail.replace(/%%/g, '%');
             }
             // Check if this is an Oracle-related error
             const isOracleError = typeof errorDetail === 'string' && (errorDetail.toLowerCase().includes('oracle') || errorDetail.toLowerCase().includes('ora-') || errorDetail.toLowerCase().includes('service name') || errorDetail.toLowerCase().includes('listener'));
@@ -1409,7 +1465,7 @@ class ApiClient {
     // Pipeline endpoints
     async getPipelines(skip, limit, retries) {
         const skipValue = skip ?? 0;
-        const limitValue = limit ?? 100;
+        const limitValue = limit ?? 10000; // Increased default limit to fetch all pipelines
         const retriesValue = retries ?? 1;
         const requestKey = `pipelines-${skipValue}-${limitValue}`;
         return this.retryRequest(()=>this.client.get('/api/v1/pipelines/', {
@@ -1421,8 +1477,37 @@ class ApiClient {
             }).then((res)=>res.data), 'pipelines', retriesValue, 10000, requestKey);
     }
     async getPipeline(pipelineId) {
-        const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`);
-        return response.data;
+        try {
+            const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
+                timeout: 5000 // 5 seconds timeout
+            });
+            return response.data;
+        } catch (error) {
+            // Handle all errors gracefully - return basic pipeline info to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('took too long');
+            const isServerError = error.response?.status >= 500;
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+            if (isTimeout || isServerError || isNetworkError) {
+                // Return minimal pipeline info to prevent UI breakage
+                console.warn(`Pipeline ${pipelineId} endpoint timeout or error, returning minimal info`);
+                return {
+                    id: String(pipelineId),
+                    name: `Pipeline ${pipelineId}`,
+                    status: 'UNKNOWN',
+                    full_load_status: 'NOT_STARTED',
+                    cdc_status: 'NOT_STARTED',
+                    error: 'Endpoint timeout or unavailable'
+                };
+            }
+            // For other errors (like 404), also return minimal info
+            return {
+                id: String(pipelineId),
+                name: `Pipeline ${pipelineId}`,
+                status: 'NOT_FOUND',
+                full_load_status: 'NOT_STARTED',
+                cdc_status: 'NOT_STARTED'
+            };
+        }
     }
     async fixOrphanedConnections() {
         const response = await this.client.post('/api/v1/pipelines/fix-orphaned-connections');
@@ -1488,11 +1573,25 @@ class ApiClient {
     // Checkpoint management
     async getPipelineCheckpoints(pipelineId) {
         // LSN metrics router is under /monitoring prefix, but endpoints start with /pipelines
-        // Increase timeout as this endpoint may query multiple collections and potentially connect to source DB
-        const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
-            timeout: 20000 // 20 seconds timeout
-        });
-        return response.data;
+        // Use shorter timeout and handle errors gracefully
+        try {
+            const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
+                timeout: 5000 // 5 seconds timeout - backend should respond quickly
+            });
+            return response.data;
+        } catch (error) {
+            // Handle all errors gracefully - return empty checkpoints to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('took too long');
+            const isServerError = error.response?.status >= 500;
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+            // Always return empty checkpoints for any error - prevents UI breakage
+            // This includes timeouts, network errors, server errors, and 404s
+            return {
+                checkpoints: [],
+                pipeline_id: String(pipelineId),
+                count: 0
+            };
+        }
     }
     async getPipelineCheckpoint(pipelineId, tableName, schemaName) {
         const params = schemaName ? {
@@ -1522,8 +1621,12 @@ class ApiClient {
         return response.data;
     }
     async triggerPipeline(pipelineId, runType = 'full_load') {
+        // Pipeline start can take time (schema creation, connector setup, etc.)
+        // Increase timeout to 60 seconds to allow for full initialization
         const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
             run_type: runType
+        }, {
+            timeout: 60000 // 60 seconds timeout for pipeline start
         });
         return response.data;
     }
@@ -1534,17 +1637,40 @@ class ApiClient {
     async getPipelineProgress(pipelineId) {
         // Progress endpoint is optimized to return immediately from memory (no DB queries)
         // Using shorter timeout since endpoint should respond instantly
-        const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-            timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
-        });
-        return response.data;
+        try {
+            const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
+                timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
+            });
+            return response.data;
+        } catch (error) {
+            // Handle timeout/errors gracefully - return empty progress
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            if (isTimeout || error.response?.status >= 500) {
+                console.warn(`Pipeline progress endpoint timeout for ${pipelineId}, returning empty progress`);
+                return {
+                    pipeline_id: String(pipelineId),
+                    progress: 0,
+                    status: 'UNKNOWN',
+                    message: 'Progress unavailable'
+                };
+            }
+            // For other errors, return empty progress
+            return {
+                pipeline_id: String(pipelineId),
+                progress: 0,
+                status: 'UNKNOWN'
+            };
+        }
     }
     async pausePipeline(pipelineId) {
         const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/pause`);
         return response.data;
     }
     async stopPipeline(pipelineId) {
-        const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`);
+        // Increase timeout for stop pipeline as it may take time to stop connectors
+        const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`, {}, {
+            timeout: 35000
+        });
         return response.data;
     }
     async getPipelineRuns(pipelineId, skip = 0, limit = 100) {
@@ -1661,13 +1787,33 @@ class ApiClient {
             if (search) params.search = search;
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
+            // Reduced timeout and limit for faster response
             const response = await this.client.get('/api/v1/logs/application-logs', {
-                params
+                params,
+                timeout: 5000 // 5 second timeout
             });
             return response.data;
         } catch (error) {
-            console.error('Error fetching application logs:', error);
-            throw error;
+            // Handle all errors gracefully - return empty logs to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK';
+            const isServerError = error.response?.status >= 500;
+            if (isTimeout || isNetworkError || isServerError) {
+                // Silently return empty logs - don't log as error to avoid noise
+                return {
+                    logs: [],
+                    total: 0,
+                    skip,
+                    limit
+                };
+            }
+            // For other errors (like 404), also return empty logs
+            return {
+                logs: [],
+                total: 0,
+                skip,
+                limit
+            };
         }
     }
     async getLogLevels() {
@@ -1775,32 +1921,38 @@ const login = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2
         }
         // Step 2: Set token in API client and localStorage
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].setToken(data.access_token);
-        // Step 3: Wait a bit to ensure token is set, then get user info
-        // Small delay to ensure localStorage is updated
-        await new Promise((resolve)=>setTimeout(resolve, 100));
-        // Step 4: Get current user info
-        try {
-            const user = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getCurrentUser();
+        // Step 3: Use user from login response (it already has all the data we need)
+        // The login response includes the user object with is_superuser and role_name
+        // IMPORTANT: Always use the user from login response, don't call getCurrentUser()
+        if (data.user) {
+            // Normalize user data - ensure is_superuser is boolean
+            const user = {
+                ...data.user
+            }; // Create a copy to avoid mutating the original
+            // Ensure is_superuser is a boolean
+            if (typeof user.is_superuser !== 'boolean') {
+                // Infer from role_name if available
+                user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || false;
+            }
+            // Ensure role_name is set
+            if (!user.role_name && user.is_superuser) {
+                user.role_name = 'super_admin';
+            }
+            console.log('[Auth] Login response user (BEFORE normalization):', data.user);
+            console.log('[Auth] Login response user (AFTER normalization):', {
+                email: user.email,
+                is_superuser: user.is_superuser,
+                role_name: user.role_name,
+                full_user: user
+            });
             return {
                 token: data.access_token,
                 user
             };
-        } catch (userError) {
-            // If getting user fails, still return the token
-            // User info can be fetched later
-            console.warn('Failed to fetch user info after login:', userError);
-            return {
-                token: data.access_token,
-                user: {
-                    email,
-                    id: 0,
-                    full_name: email,
-                    is_active: true,
-                    is_superuser: false,
-                    roles: []
-                }
-            };
         }
+        // This should never happen if backend is working correctly
+        console.error('[Auth] Login response missing user object!', data);
+        throw new Error('Login response missing user object');
     } catch (error) {
         const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
         return rejectWithValue(errorMessage);
@@ -1812,23 +1964,35 @@ const logout = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$
 const getCurrentUser = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('auth/getCurrentUser', async (_, { rejectWithValue })=>{
     try {
         const user = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getCurrentUser();
-        console.log('[Auth] getCurrentUser response:', {
-            email: user?.email,
-            is_superuser: user?.is_superuser,
-            full_user: user
-        });
-        // Validate that is_superuser is a boolean
-        if (user && typeof user.is_superuser !== 'boolean') {
-            console.warn('[Auth] is_superuser is not a boolean, defaulting to false. User data:', user);
-            user.is_superuser = false;
+        console.log('[Auth] getCurrentUser RAW response:', user);
+        // Normalize user data - ensure is_superuser is boolean
+        if (user) {
+            // Ensure is_superuser is a boolean
+            if (typeof user.is_superuser !== 'boolean') {
+                // Infer from role_name if available
+                user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || false;
+            }
+            // Ensure role_name is set
+            if (!user.role_name && user.is_superuser) {
+                user.role_name = 'super_admin';
+            }
+            console.log('[Auth] getCurrentUser NORMALIZED response:', {
+                email: user.email,
+                is_superuser: user.is_superuser,
+                role_name: user.role_name,
+                full_user: user
+            });
         }
-        if ("TURBOPACK compile-time truthy", 1) {
+        if (("TURBOPACK compile-time value", "object") !== 'undefined' && user) {
             localStorage.setItem('user', JSON.stringify(user));
         }
         return user;
     } catch (error) {
         console.error('[Auth] Failed to fetch current user:', error);
-        if ("TURBOPACK compile-time truthy", 1) {
+        // Don't clear auth state on error - keep cached user if available
+        // Only clear if it's an authentication error
+        const isAuthError = error?.response?.status === 401 || error?.response?.status === 403;
+        if (isAuthError && ("TURBOPACK compile-time value", "object") !== 'undefined') {
             localStorage.removeItem('user');
             localStorage.removeItem('access_token');
         }
@@ -1859,10 +2023,33 @@ const authSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
         }).addCase(login.fulfilled, (state, action)=>{
             state.isLoading = false;
             state.token = action.payload.token;
-            state.user = action.payload.user;
+            // Normalize user data - ensure is_superuser is boolean
+            const user = action.payload.user;
+            if (user) {
+                // Ensure is_superuser is a boolean
+                if (typeof user.is_superuser !== 'boolean') {
+                    // Infer from role_name if available
+                    user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || false;
+                }
+                // Ensure role_name is set
+                if (!user.role_name && user.is_superuser) {
+                    user.role_name = 'super_admin';
+                }
+                // Log for debugging
+                console.log('[Auth] Setting user after login:', {
+                    email: user.email,
+                    is_superuser: user.is_superuser,
+                    role_name: user.role_name,
+                    full_user: user
+                });
+                state.user = user;
+            } else {
+                state.user = null;
+            }
             state.isAuthenticated = true;
-            if ("TURBOPACK compile-time truthy", 1) {
-                localStorage.setItem('user', JSON.stringify(action.payload.user));
+            state.error = null;
+            if (("TURBOPACK compile-time value", "object") !== 'undefined' && user) {
+                localStorage.setItem('user', JSON.stringify(user));
             }
         }).addCase(login.rejected, (state, action)=>{
             state.isLoading = false;
@@ -3271,7 +3458,7 @@ const fetchConnections = (0, __TURBOPACK__imported__module__$5b$project$5d2f$nod
     } catch (error) {
         // Provide more helpful error messages for timeouts
         if (error.isTimeout) {
-            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
         }
         if (error.isNetworkError) {
             return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');
@@ -3449,7 +3636,7 @@ const fetchPipelines = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
     } catch (error) {
         // Provide more helpful error messages for timeouts
         if (error.isTimeout) {
-            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
         }
         if (error.isNetworkError) {
             return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');
@@ -3533,11 +3720,39 @@ const deletePipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
 const triggerPipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('pipelines/trigger', async ({ id, runType }, { rejectWithValue, dispatch })=>{
     try {
         const result = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].triggerPipeline(String(id), runType);
+        // Wait longer before refreshing to allow backend to fully update status
+        await new Promise((resolve)=>setTimeout(resolve, 2000));
         // Refresh pipelines to get updated status
         dispatch(fetchPipelines());
+        // Refresh again after a longer delay to ensure status is persisted
+        setTimeout(()=>{
+            dispatch(fetchPipelines());
+        }, 4000);
         return result;
     } catch (error) {
-        return rejectWithValue(error.response?.data?.detail || 'Failed to trigger pipeline');
+        // Extract detailed error message
+        let errorMessage = 'Failed to trigger pipeline';
+        if (error?.response?.data?.detail) {
+            errorMessage = error.response.data.detail;
+        } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error?.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+        // Remove redundant wrapping if present
+        if (errorMessage.includes("Failed to trigger pipeline") && errorMessage.length > 25) {
+            // Keep the actual error, remove the wrapper
+            const parts = errorMessage.split("Failed to trigger pipeline");
+            if (parts.length > 1) {
+                errorMessage = parts[parts.length - 1].trim();
+                if (errorMessage.startsWith(":")) {
+                    errorMessage = errorMessage.substring(1).trim();
+                }
+            }
+        }
+        return rejectWithValue(errorMessage);
     }
 });
 const pausePipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('pipelines/pause', async (id, { rejectWithValue, dispatch })=>{
@@ -3587,7 +3802,42 @@ const pipelineSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_m
             state.error = null;
         }).addCase(fetchPipelines.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.pipelines = action.payload;
+            // Merge with existing pipelines to preserve optimistic updates
+            // Only update if the backend status is more recent or different
+            const newPipelines = action.payload;
+            if (Array.isArray(newPipelines)) {
+                // Create a map of new pipelines by ID
+                const newPipelinesMap = new Map(newPipelines.map((p)=>[
+                        String(p.id),
+                        p
+                    ]));
+                // Update existing pipelines, but preserve optimistic 'active' status if backend hasn't caught up
+                state.pipelines = state.pipelines.map((existingPipeline)=>{
+                    const newPipeline = newPipelinesMap.get(String(existingPipeline.id));
+                    if (newPipeline) {
+                        // If we optimistically set it to active and backend still shows stopped/starting,
+                        // keep it as active for a bit longer (backend might be slow to update)
+                        if (existingPipeline.status === 'active' && newPipeline.status !== 'active' && newPipeline.status !== 'running') {
+                            // Keep optimistic status for now, but update other fields
+                            return {
+                                ...newPipeline,
+                                status: 'active'
+                            };
+                        }
+                        return newPipeline;
+                    }
+                    return existingPipeline;
+                });
+                // Add any new pipelines that weren't in the existing list
+                newPipelines.forEach((newPipeline)=>{
+                    const exists = state.pipelines.some((p)=>String(p.id) === String(newPipeline.id));
+                    if (!exists) {
+                        state.pipelines.push(newPipeline);
+                    }
+                });
+            } else {
+                state.pipelines = newPipelines;
+            }
         }).addCase(fetchPipelines.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch pipelines';
@@ -3608,16 +3858,35 @@ const pipelineSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_m
             if (state.selectedPipeline?.id === action.payload) {
                 state.selectedPipeline = null;
             }
-        }).addCase(triggerPipeline.fulfilled, (state, action)=>{
-            // Update pipeline status to active
-            // The response has 'id' field, not 'pipeline_id'
-            const pipelineId = action.payload.id || action.payload.pipeline_id;
-            const pipeline = state.pipelines.find((p)=>p.id === pipelineId);
+        }).addCase(triggerPipeline.pending, (state, action)=>{
+            // Optimistically update status to active immediately
+            const pipelineId = action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
             if (pipeline) {
                 pipeline.status = 'active';
             }
-            if (state.selectedPipeline && state.selectedPipeline.id === pipelineId) {
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
                 state.selectedPipeline.status = 'active';
+            }
+        }).addCase(triggerPipeline.fulfilled, (state, action)=>{
+            // Update pipeline status to active (in case pending didn't catch it)
+            // The response might have 'id' field or 'pipeline_id'
+            const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
+            if (pipeline) {
+                pipeline.status = 'active';
+            }
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
+                state.selectedPipeline.status = 'active';
+            }
+        }).addCase(triggerPipeline.rejected, (state, action)=>{
+            // Revert optimistic update on error
+            const pipelineId = action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
+            if (pipeline && pipeline.status === 'active') {
+                // Only revert if we optimistically set it - check if it was actually started
+                // Don't revert if backend says it's active but request failed
+                pipeline.status = 'stopped';
             }
         }).addCase(pausePipeline.fulfilled, (state, action)=>{
             // Update pipeline status to paused
@@ -3736,18 +4005,28 @@ const monitoringSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
             state.error = null;
         }).addCase(fetchReplicationEvents.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.events = action.payload;
+            // Ensure events is always an array
+            state.events = Array.isArray(action.payload) ? action.payload : [];
         }).addCase(fetchReplicationEvents.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch events';
+            // Ensure events remains an array even on error
+            if (!Array.isArray(state.events)) {
+                state.events = [];
+            }
         }).addCase(fetchMonitoringMetrics.pending, (state)=>{
             state.isLoading = true;
         }).addCase(fetchMonitoringMetrics.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.metrics = action.payload;
+            // Ensure metrics is always an array
+            state.metrics = Array.isArray(action.payload) ? action.payload : [];
         }).addCase(fetchMonitoringMetrics.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch metrics';
+            // Ensure metrics remains an array even on error
+            if (!Array.isArray(state.metrics)) {
+                state.metrics = [];
+            }
         });
     }
 });

@@ -92,21 +92,37 @@ class KafkaConnectClient:
             return {}
             
         except requests.exceptions.HTTPError as e:
-            # For 409 conflicts, don't log as error - let create_connector handle it
-            if e.response and e.response.status_code == 409:
-                logger.debug(f"Kafka Connect API {method} {url} returned 409 Conflict (will be handled by caller)")
-            else:
-                # Provide better error messages for other errors
-                error_msg = f"Kafka Connect API {method} {url} failed with status {e.response.status_code}"
-                if hasattr(e.response, 'text'):
-                    try:
-                        error_json = e.response.json()
-                        error_detail = error_json.get('message', error_json.get('error', str(error_json)))
-                        error_msg += f": {error_detail}"
-                    except:
-                        error_detail = e.response.text[:1000]  # Limit error message length
-                        error_msg += f": {error_detail}"
-                logger.error(error_msg)
+            # Handle different HTTP status codes appropriately
+            if e.response:
+                status_code = e.response.status_code
+                
+                # 404 Not Found - connector doesn't exist (expected in some cases)
+                if status_code == 404:
+                    logger.debug(f"Kafka Connect API {method} {url} returned 404 Not Found (connector may not exist)")
+                    # Don't log as error - this is expected when checking for non-existent connectors
+                
+                # 409 Conflict - connector already exists (expected during creation)
+                elif status_code == 409:
+                    logger.debug(f"Kafka Connect API {method} {url} returned 409 Conflict (will be handled by caller)")
+                
+                # Other errors - log as warning or error depending on severity
+                else:
+                    # Provide better error messages for other errors
+                    error_msg = f"Kafka Connect API {method} {url} failed with status {status_code}"
+                    if hasattr(e.response, 'text'):
+                        try:
+                            error_json = e.response.json()
+                            error_detail = error_json.get('message', error_json.get('error', str(error_json)))
+                            error_msg += f": {error_detail}"
+                        except:
+                            error_detail = e.response.text[:1000]  # Limit error message length
+                            error_msg += f": {error_detail}"
+                    
+                    # Log 4xx as warning, 5xx as error
+                    if status_code >= 500:
+                        logger.error(error_msg)
+                    else:
+                        logger.warning(error_msg)
             # Log the request data for debugging
             if data:
                 logger.debug(f"Request data: {data}")
@@ -180,18 +196,26 @@ class KafkaConnectClient:
         encoded_name = quote(connector_name, safe='')
         return self._request("GET", f"/connectors/{encoded_name}/config")
     
-    def get_connector_status(self, connector_name: str) -> Dict[str, Any]:
+    def get_connector_status(self, connector_name: str) -> Optional[Dict[str, Any]]:
         """Get connector status.
         
         Args:
             connector_name: Name of the connector
             
         Returns:
-            Connector status dictionary with state and tasks
+            Connector status dictionary with state and tasks, or None if connector doesn't exist
         """
         # URL encode connector name to handle special characters like #
         encoded_name = quote(connector_name, safe='')
-        return self._request("GET", f"/connectors/{encoded_name}/status")
+        try:
+            return self._request("GET", f"/connectors/{encoded_name}/status")
+        except requests.exceptions.HTTPError as e:
+            # 404 means connector doesn't exist - return None instead of raising
+            if e.response and e.response.status_code == 404:
+                logger.debug(f"Connector {connector_name} not found (404) - this is expected if connector was deleted")
+                return None
+            # Re-raise other errors
+            raise
     
     def create_connector(
         self,
@@ -223,7 +247,12 @@ class KafkaConnectClient:
                 logger.info(f"Connector {connector_name} already exists, checking status...")
                 try:
                     status = self.get_connector_status(connector_name)
-                    connector_state = status.get('connector', {}).get('state', 'UNKNOWN')
+                    if status is None:
+                        # Connector doesn't exist, create it
+                        logger.info(f"Connector {connector_name} not found, will create new one")
+                        # Continue to create the connector
+                    else:
+                        connector_state = status.get('connector', {}).get('state', 'UNKNOWN')
                     
                     if connector_state == 'RUNNING':
                         logger.info(f"Connector {connector_name} is already RUNNING, reusing it")
@@ -395,6 +424,10 @@ class KafkaConnectClient:
         while time.time() - start_time < max_wait_seconds:
             try:
                 status = self.get_connector_status(connector_name)
+                if status is None:
+                    # Connector doesn't exist, return False
+                    logger.debug(f"Connector {connector_name} not found, cannot check state")
+                    return False
                 connector_state = status.get("connector", {}).get("state", "UNKNOWN")
                 
                 logger.debug(

@@ -17,6 +17,110 @@ from ingestion.connectors.oracle import OracleConnector
 logger = logging.getLogger(__name__)
 
 
+def safe_error_message(msg: Any) -> str:
+    """Safely convert error message to string and escape % characters to prevent formatting issues.
+    
+    This function is designed to handle errors that might themselves contain formatting issues,
+    such as "not all arguments converted during string formatting".
+    
+    Args:
+        msg: Error message (can be Exception, str, or any type)
+        
+    Returns:
+        Safe error message string with % characters escaped
+    """
+    if msg is None:
+        return "Unknown error"
+    
+    # Try multiple methods to safely get the error message
+    error_str = None
+    
+    # Method 1: Try to get error message from exception args (safest)
+    # This avoids calling __str__ on the exception which might use % formatting
+    try:
+        if hasattr(msg, 'args') and msg.args and len(msg.args) > 0:
+            # Get the first argument, but handle it very carefully
+            first_arg = msg.args[0]
+            if isinstance(first_arg, str):
+                error_str = first_arg
+            elif first_arg is not None:
+                # Use repr() first to avoid any __str__ formatting issues
+                try:
+                    error_str = repr(first_arg)
+                    # Remove quotes if it's a string representation
+                    if (error_str.startswith("'") and error_str.endswith("'")) or \
+                       (error_str.startswith('"') and error_str.endswith('"')):
+                        error_str = error_str[1:-1]
+                except Exception:
+                    # If repr() fails, try str() as last resort
+                    try:
+                        error_str = str(first_arg)
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+    
+    # Method 2: Use repr() which is safer for formatting (doesn't use % formatting)
+    if error_str is None:
+        try:
+            error_repr = repr(msg)
+            # If it's an exception, try to extract just the message part
+            if hasattr(msg, '__class__'):
+                class_name = msg.__class__.__name__
+                if error_repr.startswith(class_name + '(') and error_repr.endswith(')'):
+                    # Extract content between parentheses
+                    content = error_repr[len(class_name) + 1:-1]
+                    # Remove quotes if present
+                    if (content.startswith("'") and content.endswith("'")) or \
+                       (content.startswith('"') and content.endswith('"')):
+                        content = content[1:-1]
+                    error_str = content
+                else:
+                    error_str = error_repr
+            else:
+                error_str = error_repr
+        except Exception:
+            pass
+    
+    # Method 3: Try str() conversion (last resort, might fail with formatting errors)
+    # IMPORTANT: str() on exceptions can trigger "not all arguments converted during string formatting"
+    # So we catch ValueError specifically which is what Python raises for formatting errors
+    if error_str is None:
+        try:
+            error_str = str(msg)
+        except (ValueError, TypeError) as format_error:
+            # If str() fails due to formatting error, use exception type name
+            # This happens when the exception's __str__ method uses % formatting incorrectly
+            try:
+                error_str = "Error type: " + type(msg).__name__
+            except Exception:
+                error_str = "Unknown error occurred"
+        except Exception:
+            # For any other exception, use safe fallback
+            try:
+                error_str = "Error type: " + type(msg).__name__
+            except Exception:
+                error_str = "Unknown error occurred"
+    
+    # If we still don't have an error string, use ultimate fallback
+    if not error_str:
+        error_str = "Unknown error occurred"
+    
+    # Escape % characters to prevent string formatting issues
+    # This is critical - we need to escape ALL % characters
+    try:
+        # Replace %% temporarily to avoid double-escaping
+        safe_str = error_str.replace('%%', '\x00\x00')  # Use null bytes as temporary marker
+        # Escape all single % characters
+        safe_str = safe_str.replace('%', '%%')
+        # Restore the original %% (now escaped as %%%%)
+        safe_str = safe_str.replace('\x00\x00', '%%')
+        return safe_str
+    except Exception:
+        # If even escaping fails, return a safe message
+        return "Error occurred (message formatting failed)"
+
+
 class ConnectionService:
     """Service for managing database connections."""
     
@@ -249,8 +353,11 @@ class ConnectionService:
             target_db = database or connection.database
             # Default schema based on database type
             if not schema:
-                if connection.database_type.value.lower() in ["sqlserver", "mssql"]:
+                db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+                if db_type in ["sqlserver", "mssql"]:
                     target_schema = connection.schema or "dbo"
+                elif db_type == "snowflake":
+                    target_schema = connection.schema or "PUBLIC"  # Snowflake default is PUBLIC (uppercase)
                 else:
                     target_schema = connection.schema or "public"
             else:
@@ -388,8 +495,10 @@ class ConnectionService:
         Returns:
             Dictionary with table schema details
         """
+        # Use a fresh session for this operation to avoid transaction state issues
+        session = SessionLocal()
         try:
-            connection = self.session.query(ConnectionModel).filter_by(
+            connection = session.query(ConnectionModel).filter_by(
                 id=connection_id
             ).first()
             
@@ -435,19 +544,133 @@ class ConnectionService:
             else:
                 connector = self._get_connector(connection)
             
-            conn = connector.connect()
+            try:
+                conn = connector.connect()
+            except Exception as connect_error:
+                safe_error = safe_error_message(connect_error)
+                return {
+                    "success": False,
+                    "error": f"Failed to connect to database: {safe_error}"
+                }
             
-            columns = connector.get_table_columns(
-                table=table_name,
-                database=target_db,
-                schema=target_schema
-            )
+            try:
+                # Clean table name - remove schema prefix if present (e.g., "public.projects_simple" -> "projects_simple")
+                clean_table_name = table_name
+                if '.' in clean_table_name and target_schema:
+                    parts = clean_table_name.split('.', 1)
+                    if len(parts) == 2 and parts[0] == target_schema:
+                        clean_table_name = parts[1]
+                        logger.info("[get_table_schema] Removed duplicate schema from table name: %r -> %r", table_name, clean_table_name)
+                
+                # Validate table name is not empty
+                if not clean_table_name or not clean_table_name.strip():
+                    return {
+                        "success": False,
+                        "error": "Table name cannot be empty"
+                    }
+                
+                # Validate schema is a string
+                if target_schema and not isinstance(target_schema, str):
+                    target_schema = str(target_schema)
+                
+                # Check if connector supports get_table_columns
+                if not hasattr(connector, 'get_table_columns'):
+                    logger.warning("[get_table_schema] Connector %s does not support get_table_columns method", type(connector).__name__)
+                    return {
+                        "success": False,
+                        "error": f"Connector {type(connector).__name__} does not support column extraction"
+                    }
+                
+                # Log connection details for debugging BEFORE executing query
+                db_type = connection.database_type.value if hasattr(connection.database_type, 'value') else connection.database_type
+                logger.info("[get_table_schema] Getting table columns for: table=%r, schema=%r, database=%r, connection_type=%r", 
+                           clean_table_name, target_schema, target_db, db_type)
+                
+                logger.info("[get_table_schema] Calling connector.get_table_columns with: table=%r, database=%r, schema=%r", 
+                           clean_table_name, target_db, target_schema)
+                
+                columns = connector.get_table_columns(
+                    table=clean_table_name,
+                    database=target_db,
+                    schema=target_schema
+                )
+                
+                logger.info("[get_table_schema] get_table_columns returned %d columns", len(columns) if columns else 0)
+                
+                if not columns:
+                    logger.warning("[get_table_schema] No columns returned for table=%r, schema=%r, database=%r. Table may not exist or user may not have permissions.", 
+                                 clean_table_name, target_schema, target_db)
+                    columns = []
+            except Exception as columns_error:
+                if hasattr(connector, 'disconnect') and conn:
+                    try:
+                        connector.disconnect(conn)
+                    except Exception:
+                        pass
+                # Use safe_error_message function to handle all edge cases
+                safe_error = safe_error_message(columns_error)
+                
+                # Use logger with explicit formatting to avoid any issues
+                # Use %r (repr) instead of %s to avoid any formatting issues
+                try:
+                    logger.error("Error getting table columns: %r", safe_error, exc_info=True)
+                except Exception as log_error:
+                    # If logging fails, just print to avoid cascading errors
+                    try:
+                        # Use repr() to avoid any formatting issues
+                        print("Error getting table columns:", repr(safe_error))
+                    except Exception:
+                        print("Error getting table columns: [Error message could not be formatted]")
+                
+                # Build error message using string concatenation instead of f-string to avoid any formatting issues
+                # Ensure safe_error is a string and handle any conversion errors
+                # Also escape % characters to prevent formatting issues
+                try:
+                    if isinstance(safe_error, str):
+                        # Escape % characters to prevent formatting issues
+                        escaped_error = safe_error.replace('%', '%%')
+                        error_message = "Failed to get table columns: " + escaped_error
+                    else:
+                        # If safe_error is not a string, convert it safely
+                        try:
+                            error_str = str(safe_error)
+                            # Escape % characters
+                            escaped_error = error_str.replace('%', '%%')
+                            error_message = "Failed to get table columns: " + escaped_error
+                        except Exception:
+                            # If str() fails, use repr() as fallback
+                            try:
+                                error_repr = repr(safe_error)
+                                escaped_error = error_repr.replace('%', '%%')
+                                error_message = "Failed to get table columns: " + escaped_error
+                            except Exception:
+                                error_message = "Failed to get table columns: Unknown error occurred"
+                except Exception:
+                    # Ultimate fallback if everything fails
+                    error_message = "Failed to get table columns: Unknown error occurred"
+                
+                return {
+                    "success": False,
+                    "error": error_message
+                }
             
-            primary_keys = connector.get_primary_keys(
-                table=table_name,
-                database=target_db,
-                schema=target_schema
-            )
+            try:
+                primary_keys = connector.get_primary_keys(
+                    table=table_name,
+                    database=target_db,
+                    schema=target_schema
+                )
+            except Exception as pk_error:
+                if hasattr(connector, 'disconnect') and conn:
+                    try:
+                        connector.disconnect(conn)
+                    except Exception:
+                        pass
+                safe_error = safe_error_message(pk_error)
+                return {
+                    "success": False,
+                    "error": f"Failed to get primary keys: {safe_error}"
+                }
             
             if hasattr(connector, 'disconnect') and conn:
                 connector.disconnect(conn)
@@ -464,10 +687,515 @@ class ConnectionService:
             
         except Exception as e:
             logger.error(f"Error getting table schema: {e}", exc_info=True)
+            # Ensure session is rolled back on error
+            try:
+                self.session.rollback()
+            except Exception as rollback_error:
+                logger.warning(f"Error rolling back session in get_table_schema: {rollback_error}")
+                try:
+                    self.session.close()
+                    self.session = SessionLocal()
+                except Exception:
+                    pass
+            # Escape any % characters in error message to prevent string formatting issues
+            safe_error_msg = safe_error_message(e)
             return {
                 "success": False,
-                "error": str(e)
+                "error": safe_error_msg
             }
+    
+    def get_table_data(
+        self,
+        connection_id: str,
+        table_name: str,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
+        limit: int = 100
+    ) -> Dict[str, Any]:
+        """Get table data from a connection.
+        
+        Args:
+            connection_id: Connection ID
+            table_name: Table name
+            database: Target database (optional)
+            schema: Target schema (optional)
+            limit: Maximum number of records to return
+            
+        Returns:
+            Dictionary with table data (records, columns, count)
+        """
+        # Use a fresh session for this operation to avoid transaction state issues
+        session = SessionLocal()
+        try:
+            connection = session.query(ConnectionModel).filter_by(
+                id=connection_id
+            ).first()
+            
+            if not connection:
+                return {
+                    "success": False,
+                    "error": f"Connection not found: {connection_id}"
+                }
+            
+            target_db = database or connection.database
+            # For Snowflake, default schema is "PUBLIC" (uppercase), for others use "public" (lowercase)
+            if connection.database_type.value.lower() == "snowflake":
+                target_schema = schema or connection.schema or "PUBLIC"
+            else:
+                target_schema = schema or connection.schema or "public"
+            
+            # Clean table name - remove schema prefix if present (e.g., "public.projects_simple" -> "projects_simple")
+            # Define in outer scope so it's available in error handling
+            clean_table_name = table_name
+            original_table_name = table_name  # Keep original for error messages
+            logger.info(f"[get_table_data] Original table_name: {table_name}, target_schema: {target_schema}, database: {target_db}")
+            if '.' in clean_table_name and target_schema:
+                parts = clean_table_name.split('.', 1)
+                logger.info(f"[get_table_data] Table name has dot, parts: {parts}, comparing '{parts[0]}' == '{target_schema}'")
+                if len(parts) == 2 and parts[0] == target_schema:
+                    clean_table_name = parts[1]
+                    logger.info(f"[get_table_data] Removed duplicate schema from table name: {table_name} -> {clean_table_name}")
+                else:
+                    logger.info(f"[get_table_data] Schema prefix '{parts[0]}' does not match target_schema '{target_schema}', keeping original name")
+            else:
+                logger.info(f"[get_table_data] No schema prefix to clean, using table_name as-is: {clean_table_name}")
+            
+            # Ensure table name is not empty
+            if not clean_table_name or not clean_table_name.strip():
+                return {
+                    "success": False,
+                    "error": "Table name cannot be empty"
+                }
+            
+            # For Oracle, handle database parameter
+            if connection.database_type.value.lower() == "oracle":
+                oracle_db = database if database else connection.database
+                if not oracle_db or (isinstance(oracle_db, str) and oracle_db.strip() == ""):
+                    if hasattr(connection, 'additional_config') and connection.additional_config:
+                        oracle_db = connection.additional_config.get("service_name") or connection.additional_config.get("database")
+                
+                if not oracle_db:
+                    return {
+                        "success": False,
+                        "error": "Either 'database' (SID) or 'service_name' must be provided for Oracle connection"
+                    }
+            
+            try:
+                connector = self._get_connector(connection)
+            except ImportError as import_error:
+                # Handle missing connector library (e.g., snowflake-connector-python)
+                error_msg = str(import_error)
+                if "snowflake" in error_msg.lower():
+                    return {
+                        "success": False,
+                        "error": "Snowflake connector library is not installed. Please install it with: pip install snowflake-connector-python"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Database connector library is not installed: {error_msg}"
+                    }
+            except Exception as connector_error:
+                # Escape any % characters in error message
+                safe_connector_error = safe_error_message(connector_error)
+                return {
+                    "success": False,
+                    "error": f"Failed to create database connector: {safe_connector_error}"
+                }
+            
+            conn = None
+            
+            try:
+                # Ensure session is clean before calling get_table_schema
+                try:
+                    self.session.rollback()
+                except Exception:
+                    pass
+                
+                conn = connector.connect()
+                
+                # Get table schema first to get column names (use cleaned table name)
+                logger.info(f"[get_table_data] Calling get_table_schema with: connection_id={connection_id}, table={clean_table_name}, database={database}, schema={schema or target_schema}")
+                schema_result = self.get_table_schema(
+                    connection_id,
+                    clean_table_name,  # Use cleaned table name
+                    database=database,
+                    schema=schema or target_schema  # Use target_schema if schema not provided
+                )
+                
+                logger.info(f"[get_table_data] get_table_schema result: success={schema_result.get('success')}, error={schema_result.get('error', 'None')}")
+                
+                if not schema_result.get("success"):
+                    schema_error = schema_result.get("error", "Failed to get table schema")
+                    logger.error(f"[get_table_data] Failed to get table schema: {schema_error}")
+                    # Ensure error message is safe (already escaped in get_table_schema, but be safe)
+                    safe_schema_error = safe_error_message(schema_error)
+                    return {
+                        "success": False,
+                        "error": safe_schema_error
+                    }
+                
+                columns = schema_result.get("columns", [])
+                column_names = [col.get("name") for col in columns if col.get("name")]
+                
+                if not column_names:
+                    return {
+                        "success": False,
+                        "error": "No columns found in table"
+                    }
+                
+                # Build query based on database type
+                db_type = connection.database_type.value.lower()
+                
+                if db_type in ["postgresql", "postgres"]:
+                    # PostgreSQL - use cleaned table name
+                    logger.info(f"[get_table_data] Building PostgreSQL query: schema={target_schema}, table={clean_table_name}, limit={limit}")
+                    if target_schema and target_schema != "public":
+                        query = f'SELECT * FROM "{target_schema}"."{clean_table_name}" LIMIT {limit}'
+                    else:
+                        # For public schema, we can omit schema or include it explicitly
+                        query = f'SELECT * FROM "public"."{clean_table_name}" LIMIT {limit}'
+                    logger.info(f"[get_table_data] PostgreSQL query: {query}")
+                elif db_type in ["sqlserver", "mssql"]:
+                    # SQL Server - use cleaned table name
+                    logger.info(f"[get_table_data] Building SQL Server query: schema={target_schema}, table={clean_table_name}, limit={limit}")
+                    if target_schema:
+                        query = f'SELECT TOP {limit} * FROM [{target_schema}].[{clean_table_name}]'
+                    else:
+                        query = f'SELECT TOP {limit} * FROM [{clean_table_name}]'
+                    logger.info(f"[get_table_data] SQL Server query: {query}")
+                elif db_type == "oracle":
+                    # Oracle: Unquoted identifiers are uppercase, quoted preserve case
+                    # Try uppercase first (most common), then try with quotes if that fails
+                    if target_schema:
+                        # Try uppercase (unquoted) first - most common case
+                        query = f'SELECT * FROM {target_schema.upper()}.{table_name.upper()} WHERE ROWNUM <= {limit}'
+                    else:
+                        # Try uppercase (unquoted) first
+                        query = f'SELECT * FROM {table_name.upper()} WHERE ROWNUM <= {limit}'
+                elif db_type == "mysql":
+                    # MySQL
+                    if target_schema:
+                        query = f'SELECT * FROM `{target_schema}`.`{table_name}` LIMIT {limit}'
+                    else:
+                        query = f'SELECT * FROM `{table_name}` LIMIT {limit}'
+                elif db_type == "snowflake":
+                    # Snowflake: SELECT * FROM "DATABASE"."SCHEMA"."TABLE" LIMIT n
+                    # Use uppercase for database and schema names (Snowflake convention)
+                    if target_db and target_schema:
+                        query = f'SELECT * FROM "{target_db}"."{target_schema}"."{table_name}" LIMIT {limit}'
+                    elif target_schema:
+                        query = f'SELECT * FROM "{target_schema}"."{table_name}" LIMIT {limit}'
+                    else:
+                        query = f'SELECT * FROM "{table_name}" LIMIT {limit}'
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Unsupported database type: {db_type}"
+                    }
+                
+                # Execute query using cursor - handle different database types
+                records = []
+                total_count = 0
+                
+                if db_type in ["postgresql", "postgres"]:
+                    from psycopg2.extras import RealDictCursor
+                    cursor = conn.cursor(cursor_factory=RealDictCursor)
+                    logger.info(f"[get_table_data] Executing PostgreSQL query: {query}")
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
+                    logger.info(f"[get_table_data] PostgreSQL query returned {len(rows)} rows")
+                    # RealDictCursor returns dict rows
+                    for row in rows:
+                        record = dict(row)
+                        # Convert datetime and other types to strings for JSON serialization
+                        for key, value in record.items():
+                            if hasattr(value, 'isoformat'):
+                                record[key] = value.isoformat()
+                            elif value is None:
+                                record[key] = None
+                            else:
+                                record[key] = str(value)
+                        records.append(record)
+                    logger.info(f"[get_table_data] Processed {len(records)} records from PostgreSQL")
+                    cursor.close()
+                    
+                    # Get count - use cleaned table name
+                    logger.info(f"[get_table_data] Building PostgreSQL count query: schema={target_schema}, table={clean_table_name}")
+                    if target_schema and target_schema != "public":
+                        count_query = f'SELECT COUNT(*) FROM "{target_schema}"."{clean_table_name}"'
+                    else:
+                        count_query = f'SELECT COUNT(*) FROM "public"."{clean_table_name}"'
+                    logger.info(f"[get_table_data] PostgreSQL count query: {count_query}")
+                    count_cursor = conn.cursor()
+                    count_cursor.execute(count_query)
+                    total_count = count_cursor.fetchone()[0]
+                    logger.info(f"[get_table_data] PostgreSQL count query returned: {total_count} total records")
+                    count_cursor.close()
+                    
+                elif db_type in ["sqlserver", "mssql"]:
+                    cursor = conn.cursor()
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
+                    # Get column names from cursor description
+                    column_names_from_cursor = [desc[0] for desc in cursor.description] if cursor.description else column_names
+                    for row in rows:
+                        record = {}
+                        for i, col_name in enumerate(column_names_from_cursor):
+                            if i < len(row):
+                                value = row[i]
+                                if hasattr(value, 'isoformat'):
+                                    record[col_name] = value.isoformat()
+                                elif value is None:
+                                    record[col_name] = None
+                                else:
+                                    record[col_name] = str(value)
+                        records.append(record)
+                    cursor.close()
+                    
+                    # Get count - use cleaned table name
+                    logger.info(f"[get_table_data] Building SQL Server count query: schema={target_schema}, table={clean_table_name}")
+                    if target_schema:
+                        count_query = f'SELECT COUNT(*) FROM [{target_schema}].[{clean_table_name}]'
+                    else:
+                        count_query = f'SELECT COUNT(*) FROM [{clean_table_name}]'
+                    logger.info(f"[get_table_data] SQL Server count query: {count_query}")
+                    count_cursor = conn.cursor()
+                    count_cursor.execute(count_query)
+                    total_count = count_cursor.fetchone()[0]
+                    count_cursor.close()
+                    
+                elif db_type == "oracle":
+                    cursor = conn.cursor()
+                    try:
+                        cursor.execute(query)
+                        rows = cursor.fetchall()
+                    except Exception as query_error:
+                        error_msg = str(query_error)
+                        # If uppercase query fails, try with quotes (preserve case)
+                        if "ORA-00942" in error_msg or "does not exist" in error_msg.lower():
+                            # Try with quoted identifiers (preserve case)
+                            if target_schema:
+                                query = f'SELECT * FROM "{target_schema}"."{table_name}" WHERE ROWNUM <= {limit}'
+                            else:
+                                query = f'SELECT * FROM "{table_name}" WHERE ROWNUM <= {limit}'
+                            try:
+                                cursor.execute(query)
+                                rows = cursor.fetchall()
+                            except Exception as retry_error:
+                                # If both fail, provide helpful error message
+                                cursor.close()
+                                # Escape any % characters in error_msg to prevent formatting issues
+                                safe_error_msg = safe_error_message(error_msg)
+                                return {
+                                    "success": False,
+                                    "error": f"Oracle table or view does not exist: {target_schema or 'default'}.{table_name}. "
+                                            f"Oracle table names are case-sensitive. "
+                                            f"Tried: {target_schema.upper() if target_schema else 'default'}.{table_name.upper()} and \"{target_schema or 'default'}\".\"{table_name}\". "
+                                            f"Please verify:\n"
+                                            f"1. The schema name is correct (current: {target_schema or 'default'})\n"
+                                            f"2. The table name matches exactly (including case)\n"
+                                            f"3. You have SELECT permissions on the table\n"
+                                            f"4. The table exists in the specified schema\n\n"
+                                            f"Original error: {safe_error_msg}"
+                                }
+                        else:
+                            cursor.close()
+                            raise query_error
+                    
+                    # Get column names from cursor description
+                    column_names_from_cursor = [desc[0] for desc in cursor.description] if cursor.description else column_names
+                    for row in rows:
+                        record = {}
+                        for i, col_name in enumerate(column_names_from_cursor):
+                            if i < len(row):
+                                value = row[i]
+                                if hasattr(value, 'isoformat'):
+                                    record[col_name] = value.isoformat()
+                                elif value is None:
+                                    record[col_name] = None
+                                else:
+                                    record[col_name] = str(value)
+                        records.append(record)
+                    cursor.close()
+                    
+                    # Get count - try uppercase first, then quoted
+                    try:
+                        if target_schema:
+                            count_query = f'SELECT COUNT(*) FROM {target_schema.upper()}.{table_name.upper()}'
+                        else:
+                            count_query = f'SELECT COUNT(*) FROM {table_name.upper()}'
+                        count_cursor = conn.cursor()
+                        count_cursor.execute(count_query)
+                        total_count = count_cursor.fetchone()[0]
+                        count_cursor.close()
+                    except Exception:
+                        # Try with quotes if uppercase fails
+                        try:
+                            if target_schema:
+                                count_query = f'SELECT COUNT(*) FROM "{target_schema}"."{table_name}"'
+                            else:
+                                count_query = f'SELECT COUNT(*) FROM "{table_name}"'
+                            count_cursor = conn.cursor()
+                            count_cursor.execute(count_query)
+                            total_count = count_cursor.fetchone()[0]
+                            count_cursor.close()
+                        except Exception as count_error:
+                            logger.warning(f"Failed to get table count: {count_error}")
+                            total_count = len(records)
+                    
+                elif db_type == "mysql":
+                    cursor = conn.cursor()
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
+                    # Get column names from cursor description
+                    column_names_from_cursor = [desc[0] for desc in cursor.description] if cursor.description else column_names
+                    for row in rows:
+                        record = {}
+                        for i, col_name in enumerate(column_names_from_cursor):
+                            if i < len(row):
+                                value = row[i]
+                                if hasattr(value, 'isoformat'):
+                                    record[col_name] = value.isoformat()
+                                elif value is None:
+                                    record[col_name] = None
+                                else:
+                                    record[col_name] = str(value)
+                        records.append(record)
+                    cursor.close()
+                    
+                    # Get count
+                    count_query = f'SELECT COUNT(*) FROM `{target_schema}`.`{table_name}`' if target_schema else f'SELECT COUNT(*) FROM `{table_name}`'
+                    count_cursor = conn.cursor()
+                    count_cursor.execute(count_query)
+                    total_count = count_cursor.fetchone()[0]
+                    count_cursor.close()
+                    
+                elif db_type == "snowflake":
+                    # Snowflake uses uppercase identifiers by default, but we'll use the provided case
+                    # Snowflake query syntax: SELECT * FROM "DATABASE"."SCHEMA"."TABLE" LIMIT n
+                    cursor = conn.cursor()
+                    cursor.execute(query)
+                    rows = cursor.fetchall()
+                    # Get column names from cursor description
+                    column_names_from_cursor = [desc[0] for desc in cursor.description] if cursor.description else column_names
+                    for row in rows:
+                        record = {}
+                        for i, col_name in enumerate(column_names_from_cursor):
+                            if i < len(row):
+                                value = row[i]
+                                if hasattr(value, 'isoformat'):
+                                    record[col_name] = value.isoformat()
+                                elif value is None:
+                                    record[col_name] = None
+                                else:
+                                    record[col_name] = str(value)
+                        records.append(record)
+                    cursor.close()
+                    
+                    # Get count
+                    count_query = f'SELECT COUNT(*) FROM "{target_db}"."{target_schema}"."{table_name}"' if target_db and target_schema else f'SELECT COUNT(*) FROM "{target_schema}"."{table_name}"' if target_schema else f'SELECT COUNT(*) FROM "{table_name}"'
+                    count_cursor = conn.cursor()
+                    count_cursor.execute(count_query)
+                    total_count = count_cursor.fetchone()[0]
+                    count_cursor.close()
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Unsupported database type: {db_type}"
+                    }
+                
+                logger.info(f"[get_table_data] Returning result: success=True, records={len(records)}, columns={len(columns) if columns else 0}, count={total_count}, limit={limit}")
+                return {
+                    "success": True,
+                    "records": records,
+                    "columns": columns,
+                    "count": total_count,
+                    "limit": limit
+                }
+                
+            finally:
+                if conn and hasattr(connector, 'disconnect'):
+                    try:
+                        connector.disconnect(conn)
+                    except Exception as disconnect_error:
+                        logger.warning(f"Error disconnecting from database: {disconnect_error}")
+                # Session will be closed in the outer finally block
+                    
+        except Exception as e:
+            # Safely log error to avoid formatting issues
+            safe_error_msg = safe_error_message(e)
+            try:
+                logger.error("Failed to get table data: %r", safe_error_msg, exc_info=True)
+            except Exception as log_err:
+                # If logging fails, just print to avoid cascading errors
+                try:
+                    print("Failed to get table data:", repr(safe_error_msg))
+                except Exception:
+                    print("Failed to get table data: [Error message could not be formatted]")
+            
+            error_msg = str(e) if hasattr(e, '__str__') else repr(e)
+            
+            # Get clean_table_name - it might not be defined if error occurred early
+            try:
+                table_name_for_error = clean_table_name if 'clean_table_name' in locals() else table_name
+            except:
+                table_name_for_error = table_name
+            
+            # Get target_schema - it might not be defined if error occurred early
+            try:
+                schema_for_error = target_schema if 'target_schema' in locals() else schema
+            except:
+                schema_for_error = schema
+            
+            # Provide more helpful error messages for common issues
+            # Use string concatenation instead of f-strings to avoid formatting issues
+            if "ORA-00942" in error_msg or "table or view does not exist" in error_msg.lower():
+                error_text = "Oracle table or view does not exist: " + str(table_name_for_error) + ". "
+                error_text += "Oracle table names are case-sensitive. "
+                error_text += "Please verify:\n"
+                error_text += "1. The schema name is correct (current: " + str(schema_for_error or 'default') + ")\n"
+                error_text += "2. The table name matches exactly (including case)\n"
+                error_text += "3. You have SELECT permissions on the table\n"
+                error_text += "4. The table exists in the specified schema\n\n"
+                error_text += "Original error: " + str(safe_error_msg)
+                return {
+                    "success": False,
+                    "error": error_text
+                }
+            elif "snowflake" in error_msg.lower() and "not installed" in error_msg.lower():
+                error_text = "Snowflake connector library is not installed. "
+                error_text += "Please install it with: pip install snowflake-connector-python\n\n"
+                error_text += "After installation, restart the backend server."
+                return {
+                    "success": False,
+                    "error": error_text
+                }
+            elif "does not exist" in error_msg.lower() or "relation" in error_msg.lower() or ("table" in error_msg.lower() and "not found" in error_msg.lower()):
+                # PostgreSQL/SQL Server table doesn't exist
+                error_text = "Table does not exist: " + str(table_name_for_error) + " in schema: " + str(schema_for_error or 'default') + ". "
+                error_text += "Please verify:\n"
+                error_text += "1. The table name is correct: " + str(table_name_for_error) + "\n"
+                error_text += "2. The schema is correct: " + str(schema_for_error or 'default') + "\n"
+                error_text += "3. The table was created during full load\n"
+                error_text += "4. You have SELECT permissions on the table\n\n"
+                error_text += "Original error: " + str(safe_error_msg)
+                return {
+                    "success": False,
+                    "error": error_text
+                }
+            else:
+                # Return safe error message (with % escaped)
+                return {
+                    "success": False,
+                    "error": safe_error_msg
+                }
+        finally:
+            # Always close the session
+            try:
+                session.close()
+            except Exception:
+                pass
     
     def get_test_history(
         self,
@@ -646,6 +1374,14 @@ class ConnectionService:
                 config.update(connection.additional_config)
             return PostgreSQLConnector(config)
         elif db_type in ["sqlserver", "mssql"]:
+            # Check if pyodbc is available
+            from .connectors.sqlserver import SQLSERVER_AVAILABLE
+            if not SQLSERVER_AVAILABLE:
+                raise ImportError(
+                    "pyodbc is not installed. SQL Server connector requires pyodbc. "
+                    "Please install it with: pip install pyodbc>=5.0.0"
+                )
+            
             # SQL Server connector expects 'server' instead of 'host', and 'user' instead of 'username'
             config = {
                 "server": connection.host,  # Map 'host' to 'server'
@@ -722,6 +1458,14 @@ class ConnectionService:
                 config.update(connection.additional_config)
             return PostgreSQLConnector(config)
         elif db_type in ["sqlserver", "mssql"]:
+            # Check if pyodbc is available
+            from .connectors.sqlserver import SQLSERVER_AVAILABLE
+            if not SQLSERVER_AVAILABLE:
+                raise ImportError(
+                    "pyodbc is not installed. SQL Server connector requires pyodbc. "
+                    "Please install it with: pip install pyodbc>=5.0.0"
+                )
+            
             # SQL Server connector expects 'server' instead of 'host'
             config = {
                 "server": connection.host,  # Map 'host' to 'server'
@@ -879,3 +1623,4 @@ class ConnectionService:
     def close(self):
         """Close database session."""
         self.session.close()
+

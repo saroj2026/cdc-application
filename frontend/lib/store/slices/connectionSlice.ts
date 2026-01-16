@@ -63,7 +63,7 @@ export const fetchConnections = createAsyncThunk(
     } catch (error: any) {
       // Provide more helpful error messages for timeouts
       if (error.isTimeout) {
-        return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+        return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
       }
       if (error.isNetworkError) {
         return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');

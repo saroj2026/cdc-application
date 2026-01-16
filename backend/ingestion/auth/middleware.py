@@ -43,6 +43,13 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> UserModel:
     """Get current user from JWT token. Raises 401 if not authenticated."""
+    # Handle database connection failure
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service is currently unavailable. Please try again later."
+        )
+    
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -91,6 +98,10 @@ def get_optional_user(
     
     Use this for endpoints that work both with and without authentication.
     """
+    # Handle database connection failure - return None for optional auth
+    if db is None:
+        return None
+    
     if not credentials:
         return None
     

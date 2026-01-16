@@ -363,18 +363,24 @@ class CDCManager:
             
             # Check if configs already exist in pipeline (loaded from database)
             # If they exist and connectors are running, reuse them
+            debezium_exists = False
             if pipeline.debezium_config and pipeline.debezium_connector_name:
                 logger.info(f"Pipeline has existing Debezium config and connector name: {pipeline.debezium_connector_name}")
                 try:
                     connector_status = self.kafka_client.get_connector_status(pipeline.debezium_connector_name)
-                    connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
-                    if connector_state == 'RUNNING':
-                        logger.info(f"Existing Debezium connector {pipeline.debezium_connector_name} is RUNNING, reusing it")
-                        # Skip connector creation, but still need to discover topics and create sink
-                        debezium_exists = True
-                    else:
-                        logger.info(f"Existing Debezium connector {pipeline.debezium_connector_name} state is {connector_state}, will recreate")
+                    if connector_status is None:
+                        # Connector doesn't exist, will create new one
+                        logger.info(f"Debezium connector {pipeline.debezium_connector_name} not found, will create new one")
                         debezium_exists = False
+                    else:
+                        connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                        if connector_state == 'RUNNING':
+                            logger.info(f"Existing Debezium connector {pipeline.debezium_connector_name} is RUNNING, reusing it")
+                            # Skip connector creation, but still need to discover topics and create sink
+                            debezium_exists = True
+                        else:
+                            logger.info(f"Existing Debezium connector {pipeline.debezium_connector_name} state is {connector_state}, will recreate")
+                            debezium_exists = False
                 except Exception as e:
                     logger.warning(f"Could not check existing Debezium connector status: {e}, will create new one")
                     debezium_exists = False
@@ -444,7 +450,11 @@ class CDCManager:
             try:
                 connector_info = self.kafka_client.get_connector_info(debezium_connector_name)
                 connector_status = self.kafka_client.get_connector_status(debezium_connector_name)
-                connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                if connector_status is None:
+                    # Connector doesn't exist, will create new one
+                    debezium_exists = False
+                else:
+                    connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
                 
                 if connector_state == 'RUNNING':
                     logger.info(f"Debezium connector {debezium_connector_name} already exists and is RUNNING, reusing it")
@@ -578,7 +588,12 @@ class CDCManager:
                 logger.info(f"Pipeline has existing Sink config and connector name: {pipeline.sink_connector_name}")
                 try:
                     connector_status = self.kafka_client.get_connector_status(pipeline.sink_connector_name)
-                    connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                    if connector_status is None:
+                        # Connector doesn't exist, will create new one
+                        logger.info(f"Sink connector {pipeline.sink_connector_name} not found, will create new one")
+                        sink_exists = False
+                    else:
+                        connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
                     if connector_state == 'RUNNING':
                         # Check if the existing config has the correct topics
                         existing_topics = pipeline.sink_config.get('topics', '').split(',')
@@ -1786,6 +1801,7 @@ class CDCManager:
                 debezium_status = self.kafka_client.get_connector_status(
                     pipeline.debezium_connector_name
                 )
+                # None means connector doesn't exist - that's okay
                 status["debezium_connector"] = debezium_status
             except Exception as e:
                 logger.warning(f"Failed to get Debezium connector status: {e}")
@@ -1796,6 +1812,7 @@ class CDCManager:
                 sink_status = self.kafka_client.get_connector_status(
                     pipeline.sink_connector_name
                 )
+                # None means connector doesn't exist - that's okay
                 status["sink_connector"] = sink_status
             except Exception as e:
                 logger.warning(f"Failed to get Sink connector status: {e}")

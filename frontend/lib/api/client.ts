@@ -593,6 +593,7 @@ class ApiClient {
       }
       
       // Extract error message - handle different error types
+      // Also sanitize error messages to handle escaped % characters from backend
       let errorMessage = '';
       if (typeof error === 'string') {
         errorMessage = error;
@@ -608,12 +609,23 @@ class ApiClient {
         errorMessage = 'Unknown error occurred';
       }
       
+      // Sanitize error message: convert escaped %% back to % for display
+      // Backend escapes % to %% to prevent Python string formatting issues
+      // Frontend should display the original % character
+      if (typeof errorMessage === 'string') {
+        errorMessage = errorMessage.replace(/%%/g, '%');
+      }
+      
       // Check for HTTP status codes FIRST (before network/timeout errors)
       // This ensures we properly handle validation errors, server errors, etc.
       
       // Check for validation errors (422) - these are NOT network errors
       if (error.response?.status === 422) {
-        const validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+        let validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+        // Sanitize error message: convert escaped %% back to % for display
+        if (typeof validationError === 'string') {
+          validationError = validationError.replace(/%%/g, '%');
+        }
         // Check if it's a list of validation errors (Pydantic format)
         if (Array.isArray(validationError)) {
           const errorDetails = validationError.map((err: any) => {
@@ -640,6 +652,13 @@ class ApiClient {
         // If errorDetail is a string, use it directly; if it's an object, try to extract message
         if (typeof errorDetail === 'object') {
           errorDetail = errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
+        }
+        
+        // Sanitize error message: convert escaped %% back to % for display
+        // Backend escapes % to %% to prevent Python string formatting issues
+        // Frontend should display the original % character
+        if (typeof errorDetail === 'string') {
+          errorDetail = errorDetail.replace(/%%/g, '%');
         }
         
         // Check if this is an Oracle-related error
@@ -782,7 +801,7 @@ class ApiClient {
   // Pipeline endpoints
   async getPipelines(skip?: number, limit?: number, retries?: number) {
     const skipValue = skip ?? 0;
-    const limitValue = limit ?? 100;
+    const limitValue = limit ?? 10000;  // Increased default limit to fetch all pipelines
     const retriesValue = retries ?? 1;
     const requestKey = `pipelines-${skipValue}-${limitValue}`;
     return this.retryRequest(
@@ -798,8 +817,41 @@ class ApiClient {
   }
 
   async getPipeline(pipelineId: number) {
-    const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`);
-    return response.data;
+    try {
+      const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
+        timeout: 5000 // 5 seconds timeout
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle all errors gracefully - return basic pipeline info to prevent UI breakage
+      const isTimeout = error.isTimeout || 
+                       error.code === 'ECONNABORTED' || 
+                       error.message?.includes('timeout') ||
+                       error.message?.includes('took too long');
+      const isServerError = error.response?.status >= 500;
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+      
+      if (isTimeout || isServerError || isNetworkError) {
+        // Return minimal pipeline info to prevent UI breakage
+        console.warn(`Pipeline ${pipelineId} endpoint timeout or error, returning minimal info`);
+        return {
+          id: String(pipelineId),
+          name: `Pipeline ${pipelineId}`,
+          status: 'UNKNOWN',
+          full_load_status: 'NOT_STARTED',
+          cdc_status: 'NOT_STARTED',
+          error: 'Endpoint timeout or unavailable'
+        };
+      }
+      // For other errors (like 404), also return minimal info
+      return {
+        id: String(pipelineId),
+        name: `Pipeline ${pipelineId}`,
+        status: 'NOT_FOUND',
+        full_load_status: 'NOT_STARTED',
+        cdc_status: 'NOT_STARTED'
+      };
+    }
   }
 
   async fixOrphanedConnections() {
@@ -876,11 +928,29 @@ class ApiClient {
   // Checkpoint management
   async getPipelineCheckpoints(pipelineId: string | number) {
     // LSN metrics router is under /monitoring prefix, but endpoints start with /pipelines
-    // Increase timeout as this endpoint may query multiple collections and potentially connect to source DB
-    const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
-      timeout: 20000 // 20 seconds timeout
-    });
-    return response.data;
+    // Use shorter timeout and handle errors gracefully
+    try {
+      const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
+        timeout: 5000 // 5 seconds timeout - backend should respond quickly
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle all errors gracefully - return empty checkpoints to prevent UI breakage
+      const isTimeout = error.isTimeout || 
+                       error.code === 'ECONNABORTED' || 
+                       error.message?.includes('timeout') ||
+                       error.message?.includes('took too long');
+      const isServerError = error.response?.status >= 500;
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+      
+      // Always return empty checkpoints for any error - prevents UI breakage
+      // This includes timeouts, network errors, server errors, and 404s
+      return {
+        checkpoints: [],
+        pipeline_id: String(pipelineId),
+        count: 0
+      };
+    }
   }
 
   async getPipelineCheckpoint(pipelineId: string | number, tableName: string, schemaName?: string) {
@@ -923,8 +993,12 @@ class ApiClient {
   }
 
   async triggerPipeline(pipelineId: string | number, runType = 'full_load') {
+    // Pipeline start can take time (schema creation, connector setup, etc.)
+    // Increase timeout to 60 seconds to allow for full initialization
     const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
       run_type: runType,
+    }, {
+      timeout: 60000 // 60 seconds timeout for pipeline start
     });
     return response.data;
   }
@@ -937,10 +1011,30 @@ class ApiClient {
   async getPipelineProgress(pipelineId: string | number) {
     // Progress endpoint is optimized to return immediately from memory (no DB queries)
     // Using shorter timeout since endpoint should respond instantly
-    const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-      timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
-    });
-    return response.data;
+    try {
+      const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
+        timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle timeout/errors gracefully - return empty progress
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      if (isTimeout || error.response?.status >= 500) {
+        console.warn(`Pipeline progress endpoint timeout for ${pipelineId}, returning empty progress`);
+        return {
+          pipeline_id: String(pipelineId),
+          progress: 0,
+          status: 'UNKNOWN',
+          message: 'Progress unavailable'
+        };
+      }
+      // For other errors, return empty progress
+      return {
+        pipeline_id: String(pipelineId),
+        progress: 0,
+        status: 'UNKNOWN'
+      };
+    }
   }
 
   async pausePipeline(pipelineId: string | number) {
@@ -949,7 +1043,10 @@ class ApiClient {
   }
 
   async stopPipeline(pipelineId: string | number) {
-    const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`);
+    // Increase timeout for stop pipeline as it may take time to stop connectors
+    const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`, {}, {
+      timeout: 35000, // 35 seconds timeout for stopping pipeline
+    });
     return response.data;
   }
 
@@ -1106,13 +1203,36 @@ class ApiClient {
       if (startDate) params.start_date = startDate
       if (endDate) params.end_date = endDate
       
-      const response = await this.client.get('/api/v1/logs/application-logs', { params })
+      // Reduced timeout and limit for faster response
+      const response = await this.client.get('/api/v1/logs/application-logs', { 
+        params,
+        timeout: 5000 // 5 second timeout
+      })
       return response.data
     } catch (error: any) {
-      console.error('Error fetching application logs:', error)
-      throw error
-    }
+      // Handle all errors gracefully - return empty logs to prevent UI breakage
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK'
+      const isServerError = error.response?.status >= 500
+      
+      if (isTimeout || isNetworkError || isServerError) {
+        // Silently return empty logs - don't log as error to avoid noise
+        return {
+          logs: [],
+          total: 0,
+          skip,
+          limit
+        }
+      }
+      // For other errors (like 404), also return empty logs
+      return {
+        logs: [],
+        total: 0,
+        skip,
+        limit
+      }
   }
+}
 
   async getLogLevels() {
     try {

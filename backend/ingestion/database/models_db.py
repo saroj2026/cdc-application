@@ -320,6 +320,26 @@ class UserModel(Base):
     )
 
 
+class ApplicationLogModel(Base):
+    """Application log entry model."""
+    __tablename__ = "application_logs"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    level = Column(String(20), nullable=False, index=True)  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    logger = Column(String(255), nullable=True, index=True)  # Logger name
+    message = Column(Text, nullable=False)  # Log message
+    module = Column(String(255), nullable=True)  # Module name
+    function = Column(String(255), nullable=True)  # Function name
+    line = Column(Integer, nullable=True)  # Line number
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    extra = Column(JSON, nullable=True)  # Additional context data
+    
+    __table_args__ = (
+        Index('idx_log_level_timestamp', 'level', 'timestamp'),
+        Index('idx_log_timestamp', 'timestamp'),
+    )
+
+
 class UserSessionModel(Base):
     """User session model for refresh tokens."""
     __tablename__ = "user_sessions"

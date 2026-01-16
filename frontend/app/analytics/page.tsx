@@ -22,7 +22,7 @@ import {
 import { Calendar, Download, BarChart as BarChartIcon } from "lucide-react"
 import { PageHeader } from "@/components/ui/page-header"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { fetchReplicationEvents } from "@/lib/store/slices/monitoringSlice"
+import { fetchReplicationEvents, fetchMonitoringMetrics } from "@/lib/store/slices/monitoringSlice"
 import { fetchPipelines } from "@/lib/store/slices/pipelineSlice"
 import { apiClient } from "@/lib/api/client"
 import { format, subDays, startOfDay } from "date-fns"
@@ -36,7 +36,7 @@ const COLORS = {
 
 export default function AnalyticsPage() {
   const dispatch = useAppDispatch()
-  const { events } = useAppSelector((state) => state.monitoring)
+  const { events, metrics } = useAppSelector((state) => state.monitoring)
   const { pipelines } = useAppSelector((state) => state.pipelines)
 
   const [timeRange, setTimeRange] = useState("all")
@@ -51,6 +51,8 @@ export default function AnalyticsPage() {
     dispatch(fetchPipelines())
     // Fetch all events (no date filter) for analytics - let client-side filtering handle time ranges
     dispatch(fetchReplicationEvents({ limit: 10000, todayOnly: false }))
+    // Also fetch metrics for latency trend fallback
+    dispatch(fetchMonitoringMetrics())
   }, [dispatch])
 
   // Track last fetched values to prevent unnecessary refetches
@@ -238,7 +240,7 @@ export default function AnalyticsPage() {
       .filter((l): l is number => l != null && l !== undefined && l > 0)
     const avgLatency = latencies.length > 0
       ? (latencies.reduce((a, b) => a + b, 0) / latencies.length).toFixed(1)
-      : "N/A" // Show N/A when no latency data available
+      : "0" // Show 0 when no latency data available
 
     // Debug logging (only in development)
     if (process.env.NODE_ENV === 'development') {
@@ -279,8 +281,8 @@ export default function AnalyticsPage() {
       daysToShow = 30
     }
     
-    // Create date buckets for the time range
-    const dateBuckets: Record<string, { date: string; dateObj: Date; replicated: number; synced: number; failed: number }> = {}
+    // Create date buckets for the time range - grouped by event type (INSERT, UPDATE, DELETE)
+    const dateBuckets: Record<string, { date: string; dateObj: Date; insert: number; update: number; delete: number; total: number }> = {}
     
     // Initialize all days in the range with 0 values
     for (let i = daysToShow - 1; i >= 0; i--) {
@@ -292,13 +294,14 @@ export default function AnalyticsPage() {
       dateBuckets[dateKey] = {
         date: dateKey,
         dateObj: date,
-        replicated: 0,
-        synced: 0,
-        failed: 0
+        insert: 0,
+        update: 0,
+        delete: 0,
+        total: 0
       }
     }
     
-    // Group events by date
+    // Group events by date and event type
     filteredEvents.forEach((event) => {
       try {
         const eventDate = new Date(event.created_at || event.source_commit_time || Date.now())
@@ -307,12 +310,23 @@ export default function AnalyticsPage() {
         
         // Only process events within our time range
         if (dateBuckets[dateKey]) {
-          dateBuckets[dateKey].replicated++
-          if (event.status === "success" || event.status === "applied") {
-            dateBuckets[dateKey].synced++
-          } else if (event.status === "failed" || event.status === "error") {
-            dateBuckets[dateKey].failed++
+          // Normalize event type to lowercase for comparison
+          const eventType = (event.event_type || "").toLowerCase()
+          
+          // Count by event type
+          if (eventType === "insert" || eventType === "i") {
+            dateBuckets[dateKey].insert++
+          } else if (eventType === "update" || eventType === "u") {
+            dateBuckets[dateKey].update++
+          } else if (eventType === "delete" || eventType === "d") {
+            dateBuckets[dateKey].delete++
+          } else {
+            // If event type is unknown, count as insert (most common)
+            dateBuckets[dateKey].insert++
           }
+          
+          // Increment total count
+          dateBuckets[dateKey].total++
         }
       } catch (err) {
         console.warn("Error processing event date:", err, event)
@@ -360,23 +374,75 @@ export default function AnalyticsPage() {
     const grouped: Record<string, { timestamp: string; latency: number; count: number }> = {}
 
     filteredEvents.forEach((event) => {
-      if (event.latency_ms && event.latency_ms > 0) {
-        const hour = format(new Date(event.created_at || event.source_commit_time || Date.now()), "HH:00")
-        if (!grouped[hour]) {
-          grouped[hour] = { timestamp: hour, latency: 0, count: 0 }
+      if (event.latency_ms != null && event.latency_ms !== undefined && event.latency_ms > 0) {
+        try {
+          const eventDate = new Date(event.created_at || event.source_commit_time || Date.now())
+          const hour = format(eventDate, "HH:00")
+          if (!grouped[hour]) {
+            grouped[hour] = { timestamp: hour, latency: 0, count: 0 }
+          }
+          grouped[hour].latency += event.latency_ms
+          grouped[hour].count++
+        } catch (err) {
+          console.warn("Error processing event for latency trend:", err, event)
         }
-        grouped[hour].latency += event.latency_ms
-        grouped[hour].count++
       }
     })
 
-    return Object.values(grouped)
-      .map((g) => ({
-        timestamp: g.timestamp,
-        latency: Math.round(g.latency / g.count),
-      }))
-      .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-  }, [filteredEvents, lsnLatencyData])
+    // If we have grouped data, return it
+    if (Object.keys(grouped).length > 0) {
+      return Object.values(grouped)
+        .map((g) => ({
+          timestamp: g.timestamp,
+          latency: Math.round(g.latency / g.count) || 0,
+        }))
+        .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+    }
+    
+    // If no event data, try to use metrics data as fallback
+    const metricsArray = Array.isArray(metrics) ? metrics : []
+    
+    if (metricsArray.length > 0) {
+      // Group metrics by hour
+      const metricsGrouped: Record<string, { timestamp: string; latency: number; count: number }> = {}
+      
+      metricsArray.forEach((metric: any) => {
+        if (metric.lag_seconds != null && metric.lag_seconds > 0) {
+          try {
+            const metricDate = new Date(metric.timestamp || Date.now())
+            const hour = format(metricDate, "HH:00")
+            if (!metricsGrouped[hour]) {
+              metricsGrouped[hour] = { timestamp: hour, latency: 0, count: 0 }
+            }
+            const latencyMs = (metric.lag_seconds || 0) * 1000
+            metricsGrouped[hour].latency += latencyMs
+            metricsGrouped[hour].count++
+          } catch (err) {
+            console.warn("Error processing metric for latency trend:", err, metric)
+          }
+        }
+      })
+      
+      if (Object.keys(metricsGrouped).length > 0) {
+        return Object.values(metricsGrouped)
+          .map((g) => ({
+            timestamp: g.timestamp,
+            latency: Math.round(g.latency / g.count) || 0,
+          }))
+          .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+      }
+    }
+    
+    // If no data at all, create empty buckets for the last 24 hours to show structure
+    const now = new Date()
+    return Array.from({ length: 24 }, (_, i) => {
+      const hour = new Date(now.getTime() - (23 - i) * 60 * 60 * 1000)
+      return {
+        timestamp: format(hour, "HH:00"),
+        latency: 0,
+      }
+    })
+  }, [filteredEvents, lsnLatencyData, metrics])
 
   // Calculate table-level metrics
   const tableMetrics = useMemo(() => {
@@ -510,15 +576,50 @@ export default function AnalyticsPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="card-heartbeat bg-surface border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Replication Events ({timeRange})</h3>
+        <Card className="bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-indigo-500/10 border-blue-500/20 shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Replication Events ({timeRange})
+            </h3>
+            <div className="flex items-center gap-4 text-xs text-foreground-muted">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-gradient-to-br from-cyan-400 to-cyan-600"></div>
+                <span className="font-medium">INSERT (Top)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-gradient-to-br from-blue-500 to-blue-700"></div>
+                <span className="font-medium">UPDATE (Middle)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded bg-gradient-to-br from-amber-500 to-amber-700"></div>
+                <span className="font-medium">DELETE (Bottom)</span>
+              </div>
+            </div>
+          </div>
           {timeSeriesData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart 
                 data={timeSeriesData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d3448" />
+                <defs>
+                  <linearGradient id="insertGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.8} />
+                  </linearGradient>
+                  <linearGradient id="updateGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.8} />
+                  </linearGradient>
+                  <linearGradient id="deleteGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.95} />
+                    <stop offset="100%" stopColor="#d97706" stopOpacity={0.8} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d3448" opacity={0.3} />
                 <XAxis 
                   dataKey="date" 
                   stroke="#9ca3af"
@@ -526,48 +627,64 @@ export default function AnalyticsPage() {
                   textAnchor="end"
                   height={80}
                   interval={timeSeriesData.length > 14 ? "preserveStartEnd" : 0}
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tick={{ fill: "#9ca3af", fontSize: 11, fontWeight: 600 }}
+                  label={{ value: 'Date', position: 'insideBottom', offset: -5, fill: '#9ca3af', fontSize: 12, fontWeight: 600 }}
                 />
                 <YAxis 
                   stroke="#9ca3af"
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
+                  tick={{ fill: "#9ca3af", fontSize: 11, fontWeight: 600 }}
+                  label={{ value: 'Total Events', angle: -90, position: 'insideLeft', fill: '#9ca3af', fontSize: 12, fontWeight: 600 }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: "#1a1f3a", 
-                    border: "1px solid #2d3448",
-                    borderRadius: "8px",
-                    padding: "12px"
+                    backgroundColor: "rgba(15, 23, 42, 0.95)", 
+                    border: "1px solid rgb(59, 130, 246)",
+                    borderRadius: "12px",
+                    padding: "12px",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)"
                   }}
-                  labelStyle={{ color: "#9ca3af", fontWeight: "bold", marginBottom: "8px" }}
-                  itemStyle={{ color: "#e5e7eb", padding: "4px 0" }}
-                  formatter={(value: any, name: string) => [value, name]}
+                  labelStyle={{ color: "#60a5fa", fontWeight: "bold", fontSize: "14px", marginBottom: "8px" }}
+                  itemStyle={{ color: "#e0e7ff", fontSize: "13px", padding: "4px 0" }}
+                  formatter={(value: any, name: string, props: any) => {
+                    // Show both individual count and percentage
+                    const payload = props.payload
+                    const total = payload?.total || (payload?.insert || 0) + (payload?.update || 0) + (payload?.delete || 0)
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                    return [`${value} (${percentage}%)`, name]
+                  }}
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                 />
                 <Legend 
-                  wrapperStyle={{ paddingTop: "20px" }}
+                  wrapperStyle={{ paddingTop: "20px", color: "#9ca3af", fontWeight: 600 }}
                   iconType="square"
-                  iconSize={12}
+                  iconSize={14}
                 />
                 <Bar 
-                  dataKey="replicated" 
+                  dataKey="delete" 
                   stackId="a" 
-                  fill="#0ea5e9" 
-                  name="Replicated"
+                  fill="url(#deleteGradient)" 
+                  name="DELETE"
                   radius={[0, 0, 0, 0]}
+                  stroke="#f59e0b"
+                  strokeWidth={1}
                 />
                 <Bar 
-                  dataKey="synced" 
+                  dataKey="update" 
                   stackId="a" 
-                  fill="#06b6d4" 
-                  name="Synced"
+                  fill="url(#updateGradient)" 
+                  name="UPDATE"
                   radius={[0, 0, 0, 0]}
+                  stroke="#3b82f6"
+                  strokeWidth={1}
                 />
                 <Bar 
-                  dataKey="failed" 
+                  dataKey="insert" 
                   stackId="a" 
-                  fill="#ef4444" 
-                  name="Failed"
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#insertGradient)" 
+                  name="INSERT"
+                  radius={[8, 8, 0, 0]}
+                  stroke="#22d3ee"
+                  strokeWidth={1}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -595,7 +712,7 @@ export default function AnalyticsPage() {
           {eventTypeData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 40 }}>
                   <defs>
                     <linearGradient id="insertGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.9} />
@@ -612,15 +729,41 @@ export default function AnalyticsPage() {
                   </defs>
                   <Pie
                     data={eventTypeData}
-                    cx="50%"
+                    cx="52%"
                     cy="50%"
                     labelLine={{
                       stroke: 'rgb(148, 163, 184)',
-                      strokeWidth: 2
+                      strokeWidth: 2,
+                      length: 10,
+                      lengthType: 'straight'
                     }}
-                    label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                    outerRadius={100}
-                    innerRadius={60}
+                    label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius }) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      const label = `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`;
+                      
+                      return (
+                        <text 
+                          x={x} 
+                          y={y} 
+                          fill="rgb(148, 163, 184)" 
+                          textAnchor={x > cx ? 'start' : 'end'} 
+                          dominantBaseline="central"
+                          fontSize={12}
+                          fontWeight={600}
+                          style={{ 
+                            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          {label}
+                        </text>
+                      );
+                    }}
+                    outerRadius={85}
+                    innerRadius={50}
                     paddingAngle={3}
                     dataKey="value"
                   >

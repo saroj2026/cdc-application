@@ -2007,7 +2007,7 @@ function PipelinesPage() {
                 errorMessage = `Validation errors:\n${validationErrors}`;
             }
             // Show user-friendly error with troubleshooting steps
-            alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. MongoDB is running`);
+            alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. PostgreSQL database is running and accessible`);
         }
     };
     const handleEditPipeline = async (pipelineData)=>{
@@ -2089,7 +2089,7 @@ function PipelinesPage() {
                 alert("Please select at least one table for replication");
                 return;
             }
-            // Ensure connection IDs are strings (MongoDB ObjectIds)
+            // Ensure connection IDs are strings
             const pipelineDataPayload = {
                 name: pipelineData.name,
                 description: pipelineData.description || "",

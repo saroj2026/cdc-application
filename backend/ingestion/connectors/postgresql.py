@@ -94,10 +94,10 @@ class PostgreSQLConnector(BaseConnector):
                 )
             # Set autocommit to avoid transaction issues
             conn.autocommit = True
-            logger.info(f"Connected to PostgreSQL: {host}:{port}/{database}")
+            logger.info("Connected to PostgreSQL: %s:%s/%s", host, port, database)
             return conn
         except Exception as e:
-            logger.error(f"Failed to connect to PostgreSQL: {e}")
+            logger.error("Failed to connect to PostgreSQL: %r", e, exc_info=True)
             raise
 
     def extract_schema(
@@ -170,7 +170,7 @@ class PostgreSQLConnector(BaseConnector):
                         cursor, table_catalog, table_schema, table_name
                     )
                 except Exception as e:
-                    logger.warning(f"Error extracting columns for {table_schema}.{table_name}: {e}")
+                    logger.warning("Error extracting columns for %s.%s: %r", table_schema, table_name, e, exc_info=True)
                     columns = []
 
                 # Extract table properties
@@ -1040,6 +1040,33 @@ class PostgreSQLConnector(BaseConnector):
         if not database:
             raise ValueError("Database name is required")
         
+        # Clean table name - remove schema prefix if present (e.g., "public.projects_simple" -> "projects_simple")
+        clean_table_name = table
+        # Use %r (repr) for logging to avoid formatting issues
+        logger.info("[PostgreSQL get_table_columns] Input: table=%r, schema=%r, database=%r", table, schema, database)
+        if '.' in clean_table_name and schema:
+            parts = clean_table_name.split('.', 1)
+            logger.info("[PostgreSQL get_table_columns] Table name has dot, parts: %r, comparing %r == %r", parts, parts[0] if len(parts) > 0 else None, schema)
+            if len(parts) == 2 and parts[0] == schema:
+                clean_table_name = parts[1]
+                logger.info("[PostgreSQL get_table_columns] Removed duplicate schema from table name: %r -> %r", table, clean_table_name)
+            else:
+                logger.info("[PostgreSQL get_table_columns] Schema prefix %r does not match schema %r, keeping original name", parts[0] if len(parts) > 0 else None, schema)
+        else:
+            logger.info("[PostgreSQL get_table_columns] No schema prefix to clean, using table as-is: %r", clean_table_name)
+        
+        # Ensure schema and table are strings
+        schema_str = str(schema) if schema else "public"
+        table_str = str(clean_table_name) if clean_table_name else ""
+        if not table_str:
+            raise ValueError("Table name cannot be empty")
+        
+        # Validate that schema and table are strings before passing to cursor.execute
+        if not isinstance(schema_str, str):
+            schema_str = str(schema_str)
+        if not isinstance(table_str, str):
+            table_str = str(table_str)
+        
         conn = self.connect()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
@@ -1061,7 +1088,10 @@ class PostgreSQLConnector(BaseConnector):
                     AND table_name = %s
                 ORDER BY ordinal_position
             """
-            cursor.execute(query, (database, schema, table))
+            # Execute query with parameters as a tuple - ensure all are strings
+            logger.info("[PostgreSQL get_table_columns] Executing query with: database=%r, schema=%r, table=%r", str(database), schema_str, table_str)
+            cursor.execute(query, (str(database), schema_str, table_str))
+            logger.info("[PostgreSQL get_table_columns] Query executed successfully, fetching results...")
             
             columns = []
             for row in cursor.fetchall():
@@ -1093,8 +1123,53 @@ class PostgreSQLConnector(BaseConnector):
             return columns
             
         except Exception as e:
-            logger.error(f"Failed to get table columns: {e}")
-            raise
+            # Safely get error message to avoid formatting issues
+            try:
+                from ingestion.connection_service import safe_error_message
+                safe_error_msg = safe_error_message(e)
+            except Exception:
+                # Fallback if import fails
+                try:
+                    if hasattr(e, 'args') and e.args and len(e.args) > 0:
+                        first_arg = e.args[0]
+                        if isinstance(first_arg, str):
+                            safe_error_msg = first_arg.replace('%', '%%')
+                        else:
+                            safe_error_msg = repr(first_arg).replace('%', '%%')
+                    else:
+                        safe_error_msg = "Error type: " + type(e).__name__
+                except Exception:
+                    safe_error_msg = "Unknown error occurred"
+            
+            # Use logger with %r (repr) to avoid any formatting issues
+            try:
+                logger.error("Failed to get table columns: %r", safe_error_msg, exc_info=True)
+            except Exception as log_error:
+                # If logging fails, just print to avoid cascading errors
+                try:
+                    print("Failed to get table columns:", repr(safe_error_msg))
+                except Exception:
+                    print("Failed to get table columns: [Error message could not be formatted]")
+            
+            # Re-raise with a safe error message that won't cause formatting issues
+            # Use string concatenation to build the exception message (avoid f-strings and % formatting)
+            error_prefix = "Failed to get table columns: "
+            try:
+                # Ensure safe_error_msg is a string and escape any % characters
+                if isinstance(safe_error_msg, str):
+                    # Replace % with %% to prevent formatting issues
+                    escaped_msg = safe_error_msg.replace('%', '%%')
+                    final_error_msg = error_prefix + escaped_msg
+                else:
+                    # If not a string, convert safely
+                    try:
+                        escaped_msg = str(safe_error_msg).replace('%', '%%')
+                        final_error_msg = error_prefix + escaped_msg
+                    except Exception:
+                        final_error_msg = error_prefix + "Unknown error"
+            except Exception:
+                final_error_msg = error_prefix + "Unknown error"
+            raise Exception(final_error_msg) from e
         finally:
             cursor.close()
             conn.close()
@@ -1251,4 +1326,5 @@ class PostgreSQLConnector(BaseConnector):
                 logger.debug("PostgreSQL connection closed")
             except Exception as e:
                 logger.warning(f"Error closing PostgreSQL connection: {e}")
+
 

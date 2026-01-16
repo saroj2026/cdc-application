@@ -51,6 +51,24 @@ interface Pipeline {
   current_offset?: string
   current_scn?: string
   last_offset_updated?: string
+  // Nested structures from pipeline status API
+  full_load?: {
+    lsn?: string  // Format: "SCN:17026643" or "LSN:..."
+    message?: string
+    success?: boolean
+    tables_transferred?: any[]
+    total_rows?: number
+  }
+  debezium_connector?: {
+    name?: string
+    status?: string
+    offset?: string | object
+  }
+  sink_connector?: {
+    name?: string
+    status?: string
+  }
+  kafka_topics?: string[]
 }
 
 // Performance data will be calculated from real metrics
@@ -216,7 +234,33 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     const fetchProgress = async () => {
       try {
         const progress = await apiClient.getPipelineProgress(stablePipelineId)
-        setReplicationProgress(progress)
+        
+        // Map backend response to expected format (handle both nested and flat formats)
+        const mappedProgress: any = {
+          full_load: progress.full_load || {
+            status: progress.full_load_status?.toLowerCase() || "unknown",
+            progress_percent: progress.progress_percentage || 0,
+            records_loaded: progress.records_loaded || progress.records_processed || 0,
+            total_records: progress.total_records || progress.records_total || 0,
+            current_table: progress.current_table,
+            error_message: progress.error_message
+          },
+          cdc: progress.cdc || {
+            status: progress.cdc_status?.toLowerCase() || "unknown"
+          }
+        }
+        
+        // Normalize status values
+        if (mappedProgress.full_load.status === "completed" || mappedProgress.full_load.status === "COMPLETED") {
+          mappedProgress.full_load.status = "completed"
+          mappedProgress.full_load.progress_percent = Math.max(mappedProgress.full_load.progress_percent, 100)
+        } else if (mappedProgress.full_load.status === "in_progress" || mappedProgress.full_load.status === "IN_PROGRESS" || mappedProgress.full_load.status === "running") {
+          mappedProgress.full_load.status = "running"
+        } else if (mappedProgress.full_load.status === "failed" || mappedProgress.full_load.status === "FAILED") {
+          mappedProgress.full_load.status = "failed"
+        }
+        
+        setReplicationProgress(mappedProgress)
         progressRetryCountRef.current = 0 // Reset retry count on success
       } catch (error: any) {
         // Handle timeout errors gracefully
@@ -245,10 +289,10 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     // Fetch immediately
     fetchProgress()
 
-    // Poll every 5 seconds if pipeline is active/running (increased from 2s to reduce load and timeout issues)
+    // Poll every 3 seconds if pipeline is active/running/starting (reduced from 5s for better responsiveness)
     // Use currentStatus from closure instead of pipelineStatus to avoid stale values
-    if (currentStatus === "active" || currentStatus === "running") {
-      progressPollIntervalRef.current = setInterval(fetchProgress, 5000)
+    if (currentStatus === "active" || currentStatus === "running" || currentStatus === "starting") {
+      progressPollIntervalRef.current = setInterval(fetchProgress, 3000)
     }
 
     return () => {
@@ -301,19 +345,29 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
 
   // Calculate performance data from real metrics
   const performanceData = useMemo(() => {
-    if (metrics.length === 0) {
+    // Ensure metrics is always an array
+    const safeMetrics = Array.isArray(metrics) ? metrics : []
+    const safeEvents = Array.isArray(events) ? events : []
+    const pipelineIdStr = String(pipeline?.id || '')
+    
+    if (safeMetrics.length === 0) {
       // If no metrics, create from events
       const now = new Date()
       return Array.from({ length: 7 }, (_, i) => {
         const hour = new Date(now.getTime() - (6 - i) * 60 * 60 * 1000)
         const time = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
 
-        const hourEvents = events.filter(e => {
+        const hourEvents = safeEvents.filter(e => {
+          if (!e || !e.created_at) return false
+          // Filter by pipeline ID to ensure stability
+          const eventPipelineId = String(e.pipeline_id || '')
+          if (eventPipelineId !== pipelineIdStr) return false
           const eventTime = new Date(e.created_at)
           return eventTime >= hour && eventTime < new Date(hour.getTime() + 60 * 60 * 1000)
         })
 
-        const records = hourEvents.length
+        // Count all event types (insert, update, delete) for records
+        const records = hourEvents.filter(e => e.event_type === 'insert' || e.event_type === 'update' || e.event_type === 'delete').length
         const latency = hourEvents.length > 0
           ? hourEvents.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / hourEvents.length
           : 0
@@ -322,16 +376,22 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       })
     }
 
-    return metrics.slice(-7).map(metric => {
+    // Filter metrics by pipeline ID for stability
+    const pipelineMetrics = safeMetrics.filter(m => {
+      const metricPipelineId = String(m.pipeline_id || '')
+      return metricPipelineId === pipelineIdStr
+    })
+
+    return pipelineMetrics.slice(-7).map(metric => {
       const date = new Date(metric.timestamp)
       const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
       return {
         time,
-        records: metric.total_events,
+        records: metric.total_events || 0,
         latency: Math.round(metric.avg_latency_ms || 0),
       }
     })
-  }, [metrics, events])
+  }, [metrics, events, pipeline?.id]) // Add pipeline.id to dependencies for stability
 
   if (!pipeline) return null
 
@@ -341,8 +401,10 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     : (pipeline.tables || [])
 
   const tableCount = pipeline.table_mappings?.length || pipeline.tables?.length || pipeline.tableCount || 0
-  const sourceConn = pipeline.sourceConnection || `Connection ${pipeline.source_connection_id || 'N/A'}`
-  const targetConn = pipeline.targetConnection || `Connection ${pipeline.target_connection_id || 'N/A'}`
+  const sourceConnObj = connections.find(c => String(c.id) === String(pipeline.source_connection_id))
+  const sourceConn = sourceConnObj?.name || pipeline.sourceConnection || `Connection ${pipeline.source_connection_id || 'N/A'}`
+  const targetConnObj = connections.find(c => String(c.id) === String(pipeline.target_connection_id))
+  const targetConn = targetConnObj?.name || pipeline.targetConnection || `Connection ${pipeline.target_connection_id || 'N/A'}`
 
   const handleCompareTable = async (tm: { source_table: string, target_table: string, source_schema?: string, target_schema?: string }) => {
     // Prevent multiple simultaneous calls - check early and return immediately
@@ -391,11 +453,50 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     }
 
     // Set selected table after state is set
+    // Clean table names and schemas before setting selectedTable
+    // Extract schema from table name if it's included (e.g., "public.projects_simple" -> schema: "public", table: "projects_simple")
+    let cleanSourceTable = tm.source_table
+    let cleanSourceSchema = tm.source_schema
+    if (cleanSourceTable.includes('.') && !cleanSourceSchema) {
+      const parts = cleanSourceTable.split('.')
+      if (parts.length === 2) {
+        cleanSourceSchema = parts[0]
+        cleanSourceTable = parts[1]
+      }
+    }
+    
+    let cleanTargetTable = tm.target_table
+    let cleanTargetSchema = tm.target_schema
+    if (cleanTargetTable.includes('.') && !cleanTargetSchema) {
+      const parts = cleanTargetTable.split('.')
+      if (parts.length === 2) {
+        cleanTargetSchema = parts[0]
+        cleanTargetTable = parts[1]
+      }
+    }
+    
+    // Also remove schema from table name if it's already in the schema field
+    if (cleanTargetTable.includes('.') && cleanTargetSchema) {
+      const parts = cleanTargetTable.split('.')
+      if (parts.length === 2 && parts[0] === cleanTargetSchema) {
+        cleanTargetTable = parts[1]
+        console.log(`[Compare] Removed duplicate schema from target table name: "${tm.target_table}" -> "${cleanTargetTable}"`)
+      }
+    }
+    
+    if (cleanSourceTable.includes('.') && cleanSourceSchema) {
+      const parts = cleanSourceTable.split('.')
+      if (parts.length === 2 && parts[0] === cleanSourceSchema) {
+        cleanSourceTable = parts[1]
+        console.log(`[Compare] Removed duplicate schema from source table name: "${tm.source_table}" -> "${cleanSourceTable}"`)
+      }
+    }
+    
     setSelectedTable({
-      source: tm.source_table,
-      target: tm.target_table,
-      sourceSchema: tm.source_schema,
-      targetSchema: tm.target_schema
+      source: cleanSourceTable,
+      target: cleanTargetTable,
+      sourceSchema: cleanSourceSchema,
+      targetSchema: cleanTargetSchema
     })
     setSourcePage(1) // Reset to first page
     setTargetPage(1) // Reset to first page
@@ -455,6 +556,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             isSourceOracle // Pass Oracle flag
           )
           setSourceData(sourceResult)
+          console.log(`[Compare] Source table loaded: ${sourceResult?.records?.length || 0} records`, {
+            fullResponse: sourceResult,
+            records: sourceResult?.records,
+            columns: sourceResult?.columns,
+            count: sourceResult?.count
+          })
         } catch (sourceError: any) {
           const errorMsg = sourceError?.message || "Failed to fetch source table"
           // Check if it's a connection not found error
@@ -465,13 +572,6 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           }
           throw sourceError
         }
-        setSourceData(sourceResult)
-        console.log(`[Compare] Source table loaded: ${sourceResult?.records?.length || 0} records`, {
-          fullResponse: sourceResult,
-          records: sourceResult?.records,
-          columns: sourceResult?.columns,
-          count: sourceResult?.count
-        })
       } catch (sourceError: any) {
         console.error("[Compare] Failed to fetch source table:", sourceError)
         const sourceErrMsg = sourceError?.message || sourceError?.response?.data?.detail || "Failed to fetch source table data"
@@ -556,6 +656,13 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         // Use UUID if available, otherwise fall back to numeric ID
         const targetConnectionId = pipeline.target_connection_uuid || pipeline.target_connection_id!
         console.log(`[Compare] Using target connection ID: ${targetConnectionId} (UUID: ${pipeline.target_connection_uuid || 'not available'}, numeric: ${pipeline.target_connection_id})`)
+        console.log(`[Compare] Calling getTableData with:`, {
+          connectionId: targetConnectionId,
+          tableName: targetTableName,
+          schema: targetSchema,
+          limit: targetLimit
+        })
+        
         const targetResult = await apiClient.getTableData(
           targetConnectionId,
           targetTableName, // Use cleaned table name (without schema prefix)
@@ -564,13 +671,92 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           isTargetOracle ? 1 : 2, // Fewer retries for Oracle
           isTargetOracle // Pass Oracle flag
         )
-        setTargetData(targetResult)
-        console.log(`[Compare] Target table loaded: ${targetResult?.records?.length || 0} records`, {
-          fullResponse: targetResult,
-          records: targetResult?.records,
-          columns: targetResult?.columns,
-          count: targetResult?.count
-        })
+        
+        console.log(`[Compare] Raw target result:`, targetResult)
+        
+        // Validate and set target data
+        if (targetResult && typeof targetResult === 'object') {
+          // Check if it's an error response
+          if (targetResult.success === false) {
+            console.error('[Compare] Target result indicates failure:', targetResult)
+            throw new Error(targetResult.error || 'Failed to fetch target table data')
+          }
+          
+          // Ensure records is an array (default to empty array if missing)
+          if (!Array.isArray(targetResult.records)) {
+            console.warn('[Compare] Target result records is not an array, setting to empty array:', targetResult.records)
+            targetResult.records = []
+          }
+          
+          // Ensure columns is an array (default to empty array if missing)
+          if (!Array.isArray(targetResult.columns)) {
+            console.warn('[Compare] Target result columns is not an array, setting to empty array:', targetResult.columns)
+            targetResult.columns = []
+          }
+          
+          // Ensure count is a number
+          if (typeof targetResult.count !== 'number') {
+            targetResult.count = targetResult.records?.length || 0
+          }
+          
+          // Validate that we actually got data
+          if (targetResult.success === true && Array.isArray(targetResult.records) && targetResult.records.length === 0 && targetResult.count > 0) {
+            console.warn(`[Compare] WARNING: Target table has count=${targetResult.count} but records array is empty! This may indicate a data fetching issue.`)
+            console.warn(`[Compare] Target table details:`, {
+              tableName: targetTableName,
+              schema: targetSchema,
+              connectionId: targetConnectionId,
+              connectionType: targetConn?.connection_type,
+              result: targetResult
+            })
+          }
+          
+          // If records are empty and count is 0, check if table exists
+          if (targetResult?.count === 0 && (!Array.isArray(targetResult?.records) || targetResult.records.length === 0)) {
+            console.warn(`[Compare] Target table appears to be empty. This could mean: 1) Table doesn't exist, 2) Table exists but has no data, 3) Wrong table/schema name`)
+            console.warn(`[Compare] Table mapping: source="${tm.source_table}" -> target="${tm.target_table}" (schema: ${tm.target_schema || 'default'})`)
+            console.warn(`[Compare] Using table name: "${targetTableName}" with schema: "${targetSchema || 'default'}"`)
+          }
+          
+          setTargetData(targetResult)
+          console.log(`[Compare] Target table loaded: ${targetResult?.records?.length || 0} records (count: ${targetResult?.count || 0})`, {
+            fullResponse: targetResult,
+            records: targetResult?.records,
+            recordsLength: targetResult?.records?.length,
+            columns: targetResult?.columns,
+            columnsLength: targetResult?.columns?.length,
+            count: targetResult?.count,
+            success: targetResult?.success,
+            hasRecords: Array.isArray(targetResult?.records) && targetResult.records.length > 0,
+            hasColumns: Array.isArray(targetResult?.columns) && targetResult.columns.length > 0,
+            tableName: targetTableName,
+            schema: targetSchema,
+            connectionId: targetConnectionId,
+            originalMapping: {
+              source_table: tm.source_table,
+              target_table: tm.target_table,
+              target_schema: tm.target_schema
+            }
+          })
+          
+          // Log warning if records are empty but count > 0
+          if (targetResult?.count > 0 && (!Array.isArray(targetResult?.records) || targetResult.records.length === 0)) {
+            console.warn(`[Compare] Target table has ${targetResult.count} records but records array is empty. This may indicate a data fetching issue.`)
+            console.warn(`[Compare] Please check: 1) Table name is correct (${targetTableName}), 2) Schema is correct (${targetSchema || 'default'}), 3) Connection is valid (${targetConnectionId})`)
+          }
+        } else {
+          console.error('[Compare] Invalid target result (not an object):', targetResult, typeof targetResult)
+          // Even if invalid, set empty structure to show the table card
+          setTargetData({
+            success: false,
+            records: [],
+            columns: [],
+            count: 0,
+            error: 'Target table data format is invalid. Backend returned: ' + (typeof targetResult === 'string' ? targetResult : JSON.stringify(targetResult))
+          })
+          // Don't throw error, just set empty data so UI can show error message
+          console.error('[Compare] Target data is invalid, but continuing to show empty table')
+        }
       } catch (targetError: any) {
         console.error("[Compare] Failed to fetch target table:", targetError)
         // Extract error details more carefully
@@ -614,6 +800,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         }
 
         errors.push(`Target: ${targetErrMsg}`)
+        // Set targetData to null on error to prevent showing stale data
+        setTargetData(null)
         // Continue even if target fails - at least show source if available
       }
 
@@ -679,6 +867,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     : Array.isArray(sourceData?.data) 
       ? sourceData.data 
       : []
+  // Extract records from targetData - backend returns {success, records, columns, count}
   const targetRecords = Array.isArray(targetData?.records) 
     ? targetData.records 
     : Array.isArray(targetData?.data) 
@@ -711,17 +900,20 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       fullSourceData: sourceData
     })
     console.log('[Table Data] Target data structure:', {
-      hasRecords: !!targetData?.records,
-      recordsLength: targetData?.records?.length,
-      hasData: !!targetData?.data,
-      dataLength: targetData?.data?.length,
+      hasRecords: Array.isArray(targetData?.records) && targetData.records.length > 0,
+      recordsLength: Array.isArray(targetData?.records) ? targetData.records.length : 0,
+      hasData: Array.isArray(targetData?.records) && targetData.records.length > 0,
+      dataLength: Array.isArray(targetData?.records) ? targetData.records.length : 0,
       targetRecordsLength: targetRecords.length,
       paginatedLength: paginatedTargetRecords.length,
       targetPage: targetPage,
       targetStartIndex: targetStartIndex,
       targetEndIndex: targetEndIndex,
-      firstRecord: targetRecords[0],
-      fullTargetData: targetData
+      firstRecord: targetRecords && targetRecords.length > 0 ? targetRecords[0] : (Array.isArray(targetData?.records) && targetData.records.length > 0 ? targetData.records[0] : null),
+      fullTargetData: targetData,
+      targetRecords: targetRecords,
+      targetDataRecords: targetData?.records,
+      targetDataRecordsType: Array.isArray(targetData?.records) ? 'array' : typeof targetData?.records
     })
     console.log('[Pagination] Source:', {
       totalRecords: sourceRecords.length,
@@ -1096,77 +1288,132 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       </div>
 
       {/* Offset/LSN/SCN Information */}
-      {(pipeline?.current_lsn || pipeline?.current_offset || pipeline?.current_scn) && (
-        <Card className="bg-surface border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Replication Offset</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {pipeline.current_lsn && (
-              <div className="space-y-2">
-                <Label className="text-sm text-foreground-muted">Current LSN</Label>
-                <div className="p-3 bg-surface-hover rounded-lg border border-border">
-                  <code className="text-sm text-foreground font-mono break-all">{pipeline.current_lsn}</code>
+      {(() => {
+        // Extract SCN/LSN from various possible locations in the pipeline data
+        let currentLsn: string | undefined = pipeline?.current_lsn
+        let currentOffset: string | undefined = pipeline?.current_offset
+        let currentScn: string | undefined = pipeline?.current_scn
+        
+        // Check full_load.lsn (format: "SCN:17026643" or "LSN:...")
+        if ((pipeline as any)?.full_load?.lsn) {
+          const fullLoadLsn = (pipeline as any).full_load.lsn
+          if (typeof fullLoadLsn === 'string') {
+            // Parse formats like "SCN:17026643" or "LSN:..."
+            if (fullLoadLsn.startsWith('SCN:')) {
+              currentScn = fullLoadLsn.substring(4).trim() // Extract "17026643"
+            } else if (fullLoadLsn.startsWith('LSN:')) {
+              currentLsn = fullLoadLsn.substring(4).trim() // Extract LSN value
+            } else {
+              // If no prefix, check if it looks like SCN (numeric) or LSN (hex)
+              if (/^\d+$/.test(fullLoadLsn)) {
+                currentScn = fullLoadLsn
+              } else {
+                currentLsn = fullLoadLsn
+              }
+            }
+          }
+        }
+        
+        // Check debezium_connector for offset information
+        if ((pipeline as any)?.debezium_connector?.offset) {
+          const offset = (pipeline as any).debezium_connector.offset
+          if (typeof offset === 'string') {
+            currentOffset = offset
+          } else if (typeof offset === 'object') {
+            // Debezium offset might be an object with scn, lsn, etc.
+            if (offset.scn) {
+              currentScn = String(offset.scn)
+            }
+            if (offset.lsn) {
+              currentLsn = String(offset.lsn)
+            }
+            if (offset.binlog_file && offset.binlog_position) {
+              currentOffset = `${offset.binlog_file}:${offset.binlog_position}`
+            }
+          }
+        }
+        
+        // Only show if we have at least one value
+        if (!currentLsn && !currentOffset && !currentScn) {
+          return null
+        }
+        
+        return (
+          <Card className="bg-surface border-border p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Replication Offset</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {currentLsn && (
+                <div className="space-y-2">
+                  <Label className="text-sm text-foreground-muted">Current LSN</Label>
+                  <div className="p-3 bg-surface-hover rounded-lg border border-border">
+                    <code className="text-sm text-foreground font-mono break-all">{currentLsn}</code>
+                  </div>
+                  {pipeline?.last_offset_updated && (
+                    <p className="text-xs text-foreground-muted">
+                      Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-                {pipeline.last_offset_updated && (
-                  <p className="text-xs text-foreground-muted">
-                    Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            )}
-            {pipeline.current_offset && (
-              <div className="space-y-2">
-                <Label className="text-sm text-foreground-muted">Binlog Position</Label>
-                <div className="p-3 bg-surface-hover rounded-lg border border-border">
-                  <code className="text-sm text-foreground font-mono break-all">{pipeline.current_offset}</code>
+              )}
+              {currentOffset && (
+                <div className="space-y-2">
+                  <Label className="text-sm text-foreground-muted">Binlog Position</Label>
+                  <div className="p-3 bg-surface-hover rounded-lg border border-border">
+                    <code className="text-sm text-foreground font-mono break-all">{currentOffset}</code>
+                  </div>
+                  {pipeline?.last_offset_updated && (
+                    <p className="text-xs text-foreground-muted">
+                      Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-                {pipeline.last_offset_updated && (
-                  <p className="text-xs text-foreground-muted">
-                    Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            )}
-            {pipeline.current_scn && (
-              <div className="space-y-2">
-                <Label className="text-sm text-foreground-muted">Current SCN</Label>
-                <div className="p-3 bg-surface-hover rounded-lg border border-border">
-                  <code className="text-sm text-foreground font-mono break-all">{pipeline.current_scn}</code>
+              )}
+              {currentScn && (
+                <div className="space-y-2">
+                  <Label className="text-sm text-foreground-muted">Current SCN</Label>
+                  <div className="p-3 bg-surface-hover rounded-lg border border-border">
+                    <code className="text-sm text-foreground font-mono break-all">{currentScn}</code>
+                  </div>
+                  {pipeline?.last_offset_updated && (
+                    <p className="text-xs text-foreground-muted">
+                      Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-                {pipeline.last_offset_updated && (
-                  <p className="text-xs text-foreground-muted">
-                    Updated: {new Date(pipeline.last_offset_updated).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
+              )}
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Replication Progress - Always Show */}
       <Card className="bg-surface border-border p-6">
         <h3 className="text-lg font-semibold text-foreground mb-6">Replication Progress</h3>
         <div className="space-y-6">
           {/* Full Load Progress with Animation */}
-          {replicationProgress?.full_load ? (
+          {replicationProgress?.full_load || pipeline?.status === "active" || pipeline?.status === "running" || pipeline?.status === "starting" ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-foreground">Full Load</span>
-                  {replicationProgress.full_load.status === "running" && (
+                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && (
                     <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   )}
-                  {replicationProgress.full_load.status === "completed" && (
+                  {replicationProgress?.full_load?.status === "completed" && (
                     <CheckCircle className="w-4 h-4 text-success" />
                   )}
-                  {replicationProgress.full_load.status === "failed" && (
+                  {replicationProgress?.full_load?.status === "failed" && (
                     <AlertCircle className="w-4 h-4 text-error" />
                   )}
                 </div>
                 <span className="text-2xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                  {replicationProgress.full_load.progress_percent >= 100
-                    ? '100%'
-                    : `${replicationProgress.full_load.progress_percent.toFixed(1)}%`}
+                  {replicationProgress?.full_load ? (
+                    replicationProgress.full_load.status === "completed" || Math.min(100, Math.max(0, replicationProgress.full_load.progress_percent || 0)) >= 100
+                      ? '100%'
+                      : `${Math.min(100, Math.max(0, replicationProgress.full_load.progress_percent || 0)).toFixed(1)}%`
+                  ) : (
+                    pipeline?.status === "starting" || pipeline?.status === "running" ? "0%" : "N/A"
+                  )}
                 </span>
               </div>
 
@@ -1178,7 +1425,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     <div className="p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl border-2 border-blue-500/30 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-105">
                       <Database className="w-14 h-14 text-blue-400" />
                     </div>
-                    {replicationProgress.full_load.status === "running" && (
+                    {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && (
                       <>
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping" />
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
@@ -1195,11 +1442,20 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   {/* Progress Bar with Gradient */}
                   <div className="relative h-2.5 bg-gradient-to-r from-border via-border to-border rounded-full overflow-hidden shadow-inner">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 transition-all duration-500 ease-out rounded-full relative"
-                      style={{ width: `${replicationProgress.full_load.progress_percent}%` }}
+                      className={`h-full transition-all duration-500 ease-out rounded-full relative ${
+                        (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
+                          ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-400'
+                          : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(0, replicationProgress?.full_load?.progress_percent || 0))}%` }}
                     >
-                      {replicationProgress.full_load.status === "running" && (
+                      {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"
+                          style={{ backgroundSize: '200% 100%' }}
+                        />
+                      )}
+                      {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"
                           style={{ backgroundSize: '200% 100%' }}
                         />
                       )}
@@ -1207,7 +1463,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   </div>
 
                   {/* Animated File Icons Transferring */}
-                  {replicationProgress.full_load.status === "running" && (
+                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
                     <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none">
                       {[...Array(5)].map((_, i) => (
                         <div
@@ -1231,12 +1487,29 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       ))}
                     </div>
                   )}
+                  {/* Success animation when completed */}
+                  {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                      <div className="relative">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full shadow-xl flex items-center justify-center animate-bounce">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="absolute inset-0 bg-green-400 rounded-full blur-xl opacity-60 animate-pulse" />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Speed Indicator */}
-                  {replicationProgress.full_load.status === "running" && (
+                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
                     <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-cyan-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30">
                       <Activity className="w-3.5 h-3.5" />
                       <span>Transferring Data...</span>
+                    </div>
+                  )}
+                  {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                    <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-green-500/10 rounded-full border border-green-500/30">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Transfer Complete - 100%</span>
                     </div>
                   )}
                 </div>
@@ -1244,19 +1517,33 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 {/* Target Database - Enhanced */}
                 <div className="flex flex-col items-center gap-3 z-10">
                   <div className="relative group">
-                    <div className={`p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${replicationProgress.full_load.status === "completed"
+                    <div className={`p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${
+                      (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
                         ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20'
+                        : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
+                        ? 'bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border-blue-500/30 group-hover:shadow-2xl group-hover:shadow-blue-500/20'
                         : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'
                       }`}>
-                      <Database className={`w-14 h-14 transition-colors duration-500 ${replicationProgress.full_load.status === "completed" ? 'text-green-400' : 'text-gray-400'
-                        }`} />
+                      <Database className={`w-14 h-14 transition-colors duration-500 ${
+                        (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
+                          ? 'text-green-400'
+                          : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
+                          ? 'text-blue-400 animate-pulse'
+                          : 'text-gray-400'
+                      }`} />
                     </div>
-                    {replicationProgress.full_load.status === "completed" && (
+                    {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
                       <>
                         <div className="absolute -top-2 -right-2 w-9 h-9 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce">
                           <CheckCircle className="w-6 h-6 text-white" />
                         </div>
                         <div className="absolute inset-0 bg-green-400 rounded-2xl blur-xl opacity-40 animate-pulse" />
+                      </>
+                    )}
+                    {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
+                      <>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
                       </>
                     )}
                   </div>
@@ -1302,28 +1589,44 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
               `}</style>
 
               {/* Progress Details */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-foreground-muted">
-                  <span>
-                    {replicationProgress.full_load.records_loaded.toLocaleString()} / {replicationProgress.full_load.total_records.toLocaleString()} records
-                  </span>
-                  {replicationProgress.full_load.current_table && (
-                    <span className="text-primary">Processing: {replicationProgress.full_load.current_table}</span>
+              {replicationProgress?.full_load ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-foreground-muted">
+                    <span>
+                      {replicationProgress.full_load.records_loaded?.toLocaleString() || 0} / {replicationProgress.full_load.total_records?.toLocaleString() || 0} records
+                    </span>
+                    {replicationProgress.full_load.current_table && (
+                      <span className="text-primary">Processing: {replicationProgress.full_load.current_table}</span>
+                    )}
+                  </div>
+                  {replicationProgress.full_load.status === "completed" && (
+                    <div className="flex items-center gap-2 text-sm text-success bg-success/10 p-2 rounded">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Full load completed successfully - {Math.min(100, Math.max(0, replicationProgress.full_load.progress_percent || 100)).toFixed(1)}%</span>
+                    </div>
+                  )}
+                  {/* Also show success message if progress is 100% even if status is not "completed" */}
+                  {replicationProgress.full_load.progress_percent >= 100 && replicationProgress.full_load.status !== "completed" && (
+                    <div className="flex items-center gap-2 text-sm text-success bg-success/10 p-2 rounded">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Full load completed successfully - 100%</span>
+                    </div>
+                  )}
+                  {replicationProgress.full_load.status === "failed" && replicationProgress.full_load.error_message && (
+                    <div className="flex items-start gap-2 text-sm text-error bg-error/10 p-2 rounded">
+                      <AlertCircle className="w-4 h-4 mt-0.5" />
+                      <span>{replicationProgress.full_load.error_message}</span>
+                    </div>
                   )}
                 </div>
-                {replicationProgress.full_load.status === "completed" && (
-                  <div className="flex items-center gap-2 text-sm text-success bg-success/10 p-2 rounded">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Full load completed successfully - 100%</span>
+              ) : (pipeline?.status === "starting" || pipeline?.status === "running") ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-foreground-muted">
+                    <span>Initializing pipeline...</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   </div>
-                )}
-                {replicationProgress.full_load.status === "failed" && replicationProgress.full_load.error_message && (
-                  <div className="flex items-start gap-2 text-sm text-error bg-error/10 p-2 rounded">
-                    <AlertCircle className="w-4 h-4 mt-0.5" />
-                    <span>{replicationProgress.full_load.error_message}</span>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="text-center py-8 text-foreground-muted">
@@ -1778,7 +2081,10 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             </Badge>
           </div>
 
-          {(() => {
+          {useMemo(() => {
+            if (!events || !Array.isArray(events)) {
+              return null
+            }
             const pipelineIdStr = String(pipeline.id)
             const pipelineEvents = events.filter(e => String(e.pipeline_id) === pipelineIdStr)
             const totalEvents = pipelineEvents.length
@@ -2076,7 +2382,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 )}
               </div>
             )
-          })()}
+          }, [events, pipeline?.id, pipeline?.source_connection_id, connections, pipeline?.status])}
         </Card>
       )}
 
@@ -2239,7 +2545,14 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       <p className="whitespace-pre-line text-sm">{dataError}</p>
                       {dataError.includes('Target') && !targetData && selectedTable && (
                         <p className="text-xs mt-2 opacity-75">
-                          Table: {selectedTable.targetSchema ? `${selectedTable.targetSchema}.` : ''}{selectedTable.target}
+                          Table: {(() => {
+                            const tableName = selectedTable.target
+                            const schema = selectedTable.targetSchema
+                            if (schema && tableName.startsWith(`${schema}.`)) {
+                              return tableName
+                            }
+                            return schema ? `${schema}.${tableName}` : tableName
+                          })()}
                         </p>
                       )}
                     </div>
@@ -2334,7 +2647,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         <div className="flex-1">
                           <p className="text-sm font-bold text-foreground">Source Table</p>
                           <p className="text-xs text-foreground-muted mt-1">
-                            {selectedTable.sourceSchema ? `${selectedTable.sourceSchema}.` : ''}{selectedTable.source}
+                            {(() => {
+                              // Prevent duplicate schema in display (e.g., "public.public.table" -> "public.table")
+                              const tableName = selectedTable.source
+                              const schema = selectedTable.sourceSchema
+                              if (schema && tableName.startsWith(`${schema}.`)) {
+                                return tableName // Table already includes schema, don't duplicate
+                              }
+                              return schema ? `${schema}.${tableName}` : tableName
+                            })()}
                           </p>
                         </div>
                         <div className="text-right">
@@ -2524,7 +2845,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         <div className="flex-1">
                           <p className="text-sm font-bold text-foreground">Source Table</p>
                           <p className="text-xs text-foreground-muted mt-1">
-                            {selectedTable.sourceSchema ? `${selectedTable.sourceSchema}.` : ''}{selectedTable.source}
+                            {(() => {
+                              // Prevent duplicate schema in display (e.g., "public.public.table" -> "public.table")
+                              const tableName = selectedTable.source
+                              const schema = selectedTable.sourceSchema
+                              if (schema && tableName.startsWith(`${schema}.`)) {
+                                return tableName // Table already includes schema, don't duplicate
+                              }
+                              return schema ? `${schema}.${tableName}` : tableName
+                            })()}
                           </p>
                         </div>
                       </div>
@@ -2554,7 +2883,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         <div className="flex-1">
                           <p className="text-sm font-bold text-foreground">Target Table</p>
                           <p className="text-xs text-foreground-muted mt-1">
-                            {selectedTable.targetSchema ? `${selectedTable.targetSchema}.` : ''}{selectedTable.target}
+                            {(() => {
+                              // Prevent duplicate schema in display (e.g., "public.public.table" -> "public.table")
+                              const tableName = selectedTable.target
+                              const schema = selectedTable.targetSchema
+                              if (schema && tableName.startsWith(`${schema}.`)) {
+                                return tableName // Table already includes schema, don't duplicate
+                              }
+                              return schema ? `${schema}.${tableName}` : tableName
+                            })()}
                           </p>
                         </div>
                         <div className="text-right">
@@ -2655,11 +2992,11 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                               ) : (
                                 <tr>
                                   <td colSpan={targetData?.columns?.length || 1} className="px-3 py-8 text-center text-foreground-muted">
-                                    {targetRecords.length > 0 
-                                      ? `Showing ${targetRecords.length} records (page ${targetPage} of ${targetTotalPages})`
-                                      : targetData?.count === 0 || targetRecords.length === 0 
-                                        ? "No data available" 
-                                        : `Loading ${targetData?.count || targetRecords.length} records...`}
+                                    {targetData?.count === 0 || (targetRecords.length === 0 && (!targetData?.count || targetData.count === 0))
+                                      ? "No data available in target table" 
+                                      : targetRecords.length === 0 && targetData?.count > 0
+                                        ? `Table exists with ${targetData.count} records, but none loaded. Please check the table structure.`
+                                        : `Showing ${targetRecords.length} records (page ${targetPage} of ${targetTotalPages})`}
                                   </td>
                                 </tr>
                               )}
@@ -2735,7 +3072,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         <div className="flex-1">
                           <p className="text-sm font-bold text-foreground">Target Table</p>
                           <p className="text-xs text-foreground-muted mt-1">
-                            {selectedTable.targetSchema ? `${selectedTable.targetSchema}.` : ''}{selectedTable.target}
+                            {(() => {
+                              // Prevent duplicate schema in display (e.g., "public.public.table" -> "public.table")
+                              const tableName = selectedTable.target
+                              const schema = selectedTable.targetSchema
+                              if (schema && tableName.startsWith(`${schema}.`)) {
+                                return tableName // Table already includes schema, don't duplicate
+                              }
+                              return schema ? `${schema}.${tableName}` : tableName
+                            })()}
                           </p>
                         </div>
                       </div>

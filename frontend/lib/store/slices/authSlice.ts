@@ -5,12 +5,13 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '@/lib/api/client';
 
 interface User {
-  id: number;
+  id: string | number;
   email: string;
   full_name: string;
   is_active: boolean;
   is_superuser: boolean;
-  roles: Array<{ id: number; name: string }>;
+  role_name?: string; // Added to match backend response
+  roles?: Array<{ id: number; name: string }>; // Optional, may not be in response
 }
 
 interface AuthState {
@@ -68,23 +69,43 @@ export const login = createAsyncThunk(
       // Step 2: Set token in API client and localStorage
       apiClient.setToken(data.access_token);
       
-      // Step 3: Wait a bit to ensure token is set, then get user info
-      // Small delay to ensure localStorage is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Step 4: Get current user info
-      try {
-        const user = await apiClient.getCurrentUser();
+      // Step 3: Use user from login response (it already has all the data we need)
+      // The login response includes the user object with is_superuser and role_name
+      // IMPORTANT: Always use the user from login response, don't call getCurrentUser()
+      if (data.user) {
+        // Normalize user data - ensure is_superuser is boolean
+        const user = { ...data.user }; // Create a copy to avoid mutating the original
+        
+        // Ensure is_superuser is a boolean
+        if (typeof user.is_superuser !== 'boolean') {
+          // Infer from role_name if available
+          user.is_superuser = user.role_name === 'super_admin' || 
+                             user.role_name === 'admin' || 
+                             user.is_superuser === true ||
+                             user.is_superuser === 'true' ||
+                             String(user.is_superuser).toLowerCase() === 'true' ||
+                             false;
+        }
+        
+        // Ensure role_name is set
+        if (!user.role_name && user.is_superuser) {
+          user.role_name = 'super_admin';
+        }
+        
+        console.log('[Auth] Login response user (BEFORE normalization):', data.user);
+        console.log('[Auth] Login response user (AFTER normalization):', {
+          email: user.email,
+          is_superuser: user.is_superuser,
+          role_name: user.role_name,
+          full_user: user
+        });
+        
         return { token: data.access_token, user };
-      } catch (userError: any) {
-        // If getting user fails, still return the token
-        // User info can be fetched later
-        console.warn('Failed to fetch user info after login:', userError);
-        return { 
-          token: data.access_token, 
-          user: { email, id: 0, full_name: email, is_active: true, is_superuser: false, roles: [] } 
-        };
       }
+      
+      // This should never happen if backend is working correctly
+      console.error('[Auth] Login response missing user object!', data);
+      throw new Error('Login response missing user object');
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
       return rejectWithValue(errorMessage);
@@ -99,25 +120,44 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 export const getCurrentUser = createAsyncThunk('auth/getCurrentUser', async (_, { rejectWithValue }) => {
   try {
     const user = await apiClient.getCurrentUser();
-    console.log('[Auth] getCurrentUser response:', {
-      email: user?.email,
-      is_superuser: user?.is_superuser,
-      full_user: user
-    });
+    console.log('[Auth] getCurrentUser RAW response:', user);
     
-    // Validate that is_superuser is a boolean
-    if (user && typeof user.is_superuser !== 'boolean') {
-      console.warn('[Auth] is_superuser is not a boolean, defaulting to false. User data:', user);
-      user.is_superuser = false;
+    // Normalize user data - ensure is_superuser is boolean
+    if (user) {
+      // Ensure is_superuser is a boolean
+      if (typeof user.is_superuser !== 'boolean') {
+        // Infer from role_name if available
+        user.is_superuser = user.role_name === 'super_admin' || 
+                           user.role_name === 'admin' || 
+                           user.is_superuser === true ||
+                           user.is_superuser === 'true' ||
+                           String(user.is_superuser).toLowerCase() === 'true' ||
+                           false;
+      }
+      
+      // Ensure role_name is set
+      if (!user.role_name && user.is_superuser) {
+        user.role_name = 'super_admin';
+      }
+      
+      console.log('[Auth] getCurrentUser NORMALIZED response:', {
+        email: user.email,
+        is_superuser: user.is_superuser,
+        role_name: user.role_name,
+        full_user: user
+      });
     }
     
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user) {
       localStorage.setItem('user', JSON.stringify(user));
     }
     return user;
   } catch (error: any) {
     console.error('[Auth] Failed to fetch current user:', error);
-    if (typeof window !== 'undefined') {
+    // Don't clear auth state on error - keep cached user if available
+    // Only clear if it's an authentication error
+    const isAuthError = error?.response?.status === 401 || error?.response?.status === 403;
+    if (isAuthError && typeof window !== 'undefined') {
       localStorage.removeItem('user');
       localStorage.removeItem('access_token');
     }
@@ -155,10 +195,43 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user;
+        
+        // Normalize user data - ensure is_superuser is boolean
+        const user = action.payload.user;
+        if (user) {
+          // Ensure is_superuser is a boolean
+          if (typeof user.is_superuser !== 'boolean') {
+            // Infer from role_name if available
+            user.is_superuser = user.role_name === 'super_admin' || 
+                               user.role_name === 'admin' || 
+                               user.is_superuser === true ||
+                               user.is_superuser === 'true' ||
+                               false;
+          }
+          
+          // Ensure role_name is set
+          if (!user.role_name && user.is_superuser) {
+            user.role_name = 'super_admin';
+          }
+          
+          // Log for debugging
+          console.log('[Auth] Setting user after login:', {
+            email: user.email,
+            is_superuser: user.is_superuser,
+            role_name: user.role_name,
+            full_user: user
+          });
+          
+          state.user = user;
+        } else {
+          state.user = null;
+        }
+        
         state.isAuthenticated = true;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(action.payload.user));
+        state.error = null;
+        
+        if (typeof window !== 'undefined' && user) {
+          localStorage.setItem('user', JSON.stringify(user));
         }
       })
       .addCase(login.rejected, (state, action) => {

@@ -306,7 +306,7 @@ function PipelinesPage() {
                 errorMessage = `Validation errors:\n${validationErrors}`;
             }
             // Show user-friendly error with troubleshooting steps
-            alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. MongoDB is running`);
+            alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. PostgreSQL database is running and accessible`);
         }
     };
     const handleEditPipeline = async (pipelineData)=>{
@@ -388,7 +388,7 @@ function PipelinesPage() {
                 alert("Please select at least one table for replication");
                 return;
             }
-            // Ensure connection IDs are strings (MongoDB ObjectIds)
+            // Ensure connection IDs are strings
             const pipelineDataPayload = {
                 name: pipelineData.name,
                 description: pipelineData.description || "",
@@ -447,12 +447,49 @@ function PipelinesPage() {
     };
     const handleTriggerPipeline = async (id, runType = "full_load")=>{
         try {
-            await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["triggerPipeline"])({
+            // Optimistically update UI immediately (handled in Redux slice)
+            const result = await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["triggerPipeline"])({
                 id,
                 runType
             })).unwrap();
+            console.log("Pipeline triggered successfully:", result);
+            // Refresh pipelines after longer delays to ensure backend status is updated
+            setTimeout(()=>{
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fetchPipelines"])());
+            }, 3000);
+            setTimeout(()=>{
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fetchPipelines"])());
+            }, 6000);
         } catch (err) {
             console.error("Failed to trigger pipeline:", err);
+            // Extract error message from various possible locations
+            let errorMessage = "Failed to start pipeline";
+            if (err?.payload) {
+                errorMessage = err.payload;
+            } else if (err?.response?.data?.detail) {
+                errorMessage = err.response.data.detail;
+            } else if (err?.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err?.message) {
+                errorMessage = err.message;
+            } else if (typeof err === 'string') {
+                errorMessage = err;
+            }
+            // Remove redundant "Failed to trigger pipeline" prefix if present
+            if (errorMessage.includes("Failed to trigger pipeline")) {
+                errorMessage = errorMessage.replace("Failed to trigger pipeline", "").trim();
+                if (errorMessage.startsWith(":")) {
+                    errorMessage = errorMessage.substring(1).trim();
+                }
+            }
+            // Show user-friendly error with full details
+            if (errorMessage && !errorMessage.includes("timeout")) {
+                alert(`Failed to start pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline configuration is valid\n2. Source and target connections are working\n3. Backend logs for detailed error information`);
+            }
+            // Still refresh to get current status even on error (will revert optimistic update)
+            setTimeout(()=>{
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fetchPipelines"])());
+            }, 1000);
         }
     };
     const handlePausePipeline = async (id)=>{
@@ -476,7 +513,7 @@ function PipelinesPage() {
                     className: "w-3 h-3 rounded-full bg-success animate-pulse"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 495,
+                    lineNumber: 535,
                     columnNumber: 16
                 }, this);
             case "paused":
@@ -484,7 +521,7 @@ function PipelinesPage() {
                     className: "w-4 h-4 text-warning"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 497,
+                    lineNumber: 537,
                     columnNumber: 16
                 }, this);
             case "error":
@@ -492,7 +529,7 @@ function PipelinesPage() {
                     className: "w-4 h-4 text-error"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 499,
+                    lineNumber: 539,
                     columnNumber: 16
                 }, this);
             default:
@@ -500,7 +537,7 @@ function PipelinesPage() {
                     className: "w-4 h-4 text-muted-foreground"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 501,
+                    lineNumber: 541,
                     columnNumber: 16
                 }, this);
         }
@@ -543,7 +580,7 @@ function PipelinesPage() {
                 onBack: ()=>setSelectedPipelineId(null)
             }, void 0, false, {
                 fileName: "[project]/app/pipelines/page.tsx",
-                lineNumber: 534,
+                lineNumber: 574,
                 columnNumber: 14
             }, this);
         }
@@ -566,19 +603,19 @@ function PipelinesPage() {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/page.tsx",
-                                lineNumber: 547,
+                                lineNumber: 587,
                                 columnNumber: 13
                             }, void 0),
                             "New Pipeline"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/page.tsx",
-                        lineNumber: 546,
+                        lineNumber: 586,
                         columnNumber: 11
                     }, void 0)
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 541,
+                    lineNumber: 581,
                     columnNumber: 9
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -588,12 +625,12 @@ function PipelinesPage() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/app/pipelines/page.tsx",
-                        lineNumber: 556,
+                        lineNumber: 596,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 555,
+                    lineNumber: 595,
                     columnNumber: 9
                 }, this),
                 isLoading && pipelines.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -603,7 +640,7 @@ function PipelinesPage() {
                             className: "w-6 h-6 animate-spin text-foreground-muted"
                         }, void 0, false, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 563,
+                            lineNumber: 603,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -611,13 +648,13 @@ function PipelinesPage() {
                             children: "Loading pipelines..."
                         }, void 0, false, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 564,
+                            lineNumber: 604,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 562,
+                    lineNumber: 602,
                     columnNumber: 9
                 }, this),
                 !isLoading && pipelines.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -628,7 +665,7 @@ function PipelinesPage() {
                             children: "No pipelines found"
                         }, void 0, false, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 571,
+                            lineNumber: 611,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -639,20 +676,20 @@ function PipelinesPage() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/app/pipelines/page.tsx",
-                                    lineNumber: 576,
+                                    lineNumber: 616,
                                     columnNumber: 13
                                 }, this),
                                 "Create First Pipeline"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 572,
+                            lineNumber: 612,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 570,
+                    lineNumber: 610,
                     columnNumber: 9
                 }, this),
                 pipelines.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -684,7 +721,7 @@ function PipelinesPage() {
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 606,
+                                                        lineNumber: 646,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -696,18 +733,18 @@ function PipelinesPage() {
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 613,
+                                                        lineNumber: 653,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                lineNumber: 602,
+                                                lineNumber: 642,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 594,
+                                            lineNumber: 634,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -721,17 +758,17 @@ function PipelinesPage() {
                                                             className: "w-5 h-5 text-primary"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 631,
+                                                            lineNumber: 671,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 630,
+                                                        lineNumber: 670,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 629,
+                                                    lineNumber: 669,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -748,13 +785,13 @@ function PipelinesPage() {
                                                                         children: pipeline.name
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 639,
+                                                                        lineNumber: 679,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 637,
+                                                                lineNumber: 677,
                                                                 columnNumber: 21
                                                             }, this),
                                                             pipeline.description && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -762,7 +799,7 @@ function PipelinesPage() {
                                                                 children: pipeline.description
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 644,
+                                                                lineNumber: 684,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -775,14 +812,14 @@ function PipelinesPage() {
                                                                                 className: "w-1.5 h-1.5 rounded-full bg-success mr-1 animate-pulse"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                                lineNumber: 649,
+                                                                                lineNumber: 689,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             "Running"
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 648,
+                                                                        lineNumber: 688,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -790,24 +827,24 @@ function PipelinesPage() {
                                                                         children: pipeline.full_load_type === "overwrite" && pipeline.cdc_enabled ? "Full + CDC" : pipeline.cdc_enabled ? "CDC" : "Full"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 653,
+                                                                        lineNumber: 693,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 646,
+                                                                lineNumber: 686,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 636,
+                                                        lineNumber: 676,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 635,
+                                                    lineNumber: 675,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -817,7 +854,7 @@ function PipelinesPage() {
                                                             className: "w-3 h-3 text-primary"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 675,
+                                                            lineNumber: 715,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -825,7 +862,7 @@ function PipelinesPage() {
                                                             children: getSourceConnectionName(pipeline.source_connection_id)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 676,
+                                                            lineNumber: 716,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -833,14 +870,14 @@ function PipelinesPage() {
                                                             children: "→"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 677,
+                                                            lineNumber: 717,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
                                                             className: "w-3 h-3 text-info"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 678,
+                                                            lineNumber: 718,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -848,19 +885,19 @@ function PipelinesPage() {
                                                             children: getTargetConnectionName(pipeline.target_connection_id)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 679,
+                                                            lineNumber: 719,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 674,
+                                                    lineNumber: 714,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 626,
+                                            lineNumber: 666,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -878,12 +915,12 @@ function PipelinesPage() {
                                                                         className: "w-3.5 h-3.5 text-primary"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 691,
+                                                                        lineNumber: 731,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 690,
+                                                                    lineNumber: 730,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -893,7 +930,7 @@ function PipelinesPage() {
                                                                             children: "Tables"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 694,
+                                                                            lineNumber: 734,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -901,19 +938,19 @@ function PipelinesPage() {
                                                                             children: pipeline.table_mappings?.length || 0
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 695,
+                                                                            lineNumber: 735,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 693,
+                                                                    lineNumber: 733,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 689,
+                                                            lineNumber: 729,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -925,12 +962,12 @@ function PipelinesPage() {
                                                                         className: "w-3.5 h-3.5 text-info"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 700,
+                                                                        lineNumber: 740,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 699,
+                                                                    lineNumber: 739,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -940,7 +977,7 @@ function PipelinesPage() {
                                                                             children: "Events"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 703,
+                                                                            lineNumber: 743,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -948,19 +985,19 @@ function PipelinesPage() {
                                                                             children: stats.totalEvents.toLocaleString()
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 704,
+                                                                            lineNumber: 744,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 702,
+                                                                    lineNumber: 742,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 698,
+                                                            lineNumber: 738,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -972,12 +1009,12 @@ function PipelinesPage() {
                                                                         className: "w-3.5 h-3.5 text-success"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 709,
+                                                                        lineNumber: 749,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 708,
+                                                                    lineNumber: 748,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -987,7 +1024,7 @@ function PipelinesPage() {
                                                                             children: "Success"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 712,
+                                                                            lineNumber: 752,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -995,19 +1032,19 @@ function PipelinesPage() {
                                                                             children: stats.successEvents.toLocaleString()
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 713,
+                                                                            lineNumber: 753,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 711,
+                                                                    lineNumber: 751,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 707,
+                                                            lineNumber: 747,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1019,12 +1056,12 @@ function PipelinesPage() {
                                                                         className: "w-3.5 h-3.5 text-warning"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                                        lineNumber: 718,
+                                                                        lineNumber: 758,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 717,
+                                                                    lineNumber: 757,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1034,7 +1071,7 @@ function PipelinesPage() {
                                                                             children: "Rate"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 721,
+                                                                            lineNumber: 761,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1045,19 +1082,19 @@ function PipelinesPage() {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                                            lineNumber: 722,
+                                                                            lineNumber: 762,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 720,
+                                                                    lineNumber: 760,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 716,
+                                                            lineNumber: 756,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
@@ -1065,7 +1102,7 @@ function PipelinesPage() {
                                             })()
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 684,
+                                            lineNumber: 724,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1089,12 +1126,12 @@ function PipelinesPage() {
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 746,
+                                                                    lineNumber: 786,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 735,
+                                                                lineNumber: 775,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1111,12 +1148,12 @@ function PipelinesPage() {
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                                    lineNumber: 759,
+                                                                    lineNumber: 799,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 748,
+                                                                lineNumber: 788,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
@@ -1134,17 +1171,17 @@ function PipelinesPage() {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 774,
+                                                            lineNumber: 814,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 763,
+                                                        lineNumber: 803,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 732,
+                                                    lineNumber: 772,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1163,12 +1200,12 @@ function PipelinesPage() {
                                                                 className: "w-3 h-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 789,
+                                                                lineNumber: 829,
                                                                 columnNumber: 21
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 779,
+                                                            lineNumber: 819,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1184,12 +1221,12 @@ function PipelinesPage() {
                                                                 className: "w-3 h-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 801,
+                                                                lineNumber: 841,
                                                                 columnNumber: 21
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 791,
+                                                            lineNumber: 831,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1206,35 +1243,35 @@ function PipelinesPage() {
                                                                 className: "w-3 h-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/page.tsx",
-                                                                lineNumber: 814,
+                                                                lineNumber: 854,
                                                                 columnNumber: 21
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/page.tsx",
-                                                            lineNumber: 803,
+                                                            lineNumber: 843,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 778,
+                                                    lineNumber: 818,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 731,
+                                            lineNumber: 771,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, pipeline.id, true, {
                                     fileName: "[project]/app/pipelines/page.tsx",
-                                    lineNumber: 587,
+                                    lineNumber: 627,
                                     columnNumber: 13
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 585,
+                            lineNumber: 625,
                             columnNumber: 11
                         }, this),
                         totalPages > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1249,7 +1286,7 @@ function PipelinesPage() {
                                             children: startIndex + 1
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 826,
+                                            lineNumber: 866,
                                             columnNumber: 25
                                         }, this),
                                         " to",
@@ -1259,7 +1296,7 @@ function PipelinesPage() {
                                             children: Math.min(endIndex, pipelines.length)
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 827,
+                                            lineNumber: 867,
                                             columnNumber: 17
                                         }, this),
                                         " ",
@@ -1269,14 +1306,14 @@ function PipelinesPage() {
                                             children: pipelines.length
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 830,
+                                            lineNumber: 870,
                                             columnNumber: 20
                                         }, this),
                                         " pipelines"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/page.tsx",
-                                    lineNumber: 825,
+                                    lineNumber: 865,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1293,14 +1330,14 @@ function PipelinesPage() {
                                                     className: "w-4 h-4 mr-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 841,
+                                                    lineNumber: 881,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Previous"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 834,
+                                            lineNumber: 874,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1318,7 +1355,7 @@ function PipelinesPage() {
                                                         children: page
                                                     }, page, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 854,
+                                                        lineNumber: 894,
                                                         columnNumber: 25
                                                     }, this);
                                                 } else if (page === currentPage - 2 || page === currentPage + 2) {
@@ -1327,7 +1364,7 @@ function PipelinesPage() {
                                                         children: "..."
                                                     }, page, false, {
                                                         fileName: "[project]/app/pipelines/page.tsx",
-                                                        lineNumber: 873,
+                                                        lineNumber: 913,
                                                         columnNumber: 25
                                                     }, this);
                                                 }
@@ -1335,7 +1372,7 @@ function PipelinesPage() {
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 845,
+                                            lineNumber: 885,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1350,25 +1387,25 @@ function PipelinesPage() {
                                                     className: "w-4 h-4 ml-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/page.tsx",
-                                                    lineNumber: 890,
+                                                    lineNumber: 930,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/pipelines/page.tsx",
-                                            lineNumber: 882,
+                                            lineNumber: 922,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/page.tsx",
-                                    lineNumber: 833,
+                                    lineNumber: 873,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/pipelines/page.tsx",
-                            lineNumber: 824,
+                            lineNumber: 864,
                             columnNumber: 13
                         }, this)
                     ]
@@ -1379,7 +1416,7 @@ function PipelinesPage() {
                     onSave: handleAddPipeline
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 899,
+                    lineNumber: 939,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$pipelines$2f$pipeline$2d$wizard$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PipelineWizard"], {
@@ -1392,18 +1429,18 @@ function PipelinesPage() {
                     editingPipeline: editingPipeline
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/page.tsx",
-                    lineNumber: 900,
+                    lineNumber: 940,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/pipelines/page.tsx",
-            lineNumber: 540,
+            lineNumber: 580,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/pipelines/page.tsx",
-        lineNumber: 539,
+        lineNumber: 579,
         columnNumber: 5
     }, this);
 }

@@ -400,21 +400,25 @@ class OracleConnector(BaseConnector):
             schema_upper = schema_name.upper()
             if table:
                 table_upper = table.upper()
-                query = f"""
+                # Use parameterized query to prevent string formatting issues
+                query = """
                     SELECT TABLE_NAME, 'TABLE' as TABLE_TYPE
                     FROM ALL_TABLES
-                    WHERE OWNER = '{schema_upper}' AND TABLE_NAME = '{table_upper}'
+                    WHERE OWNER = :1 AND TABLE_NAME = :2
                     ORDER BY TABLE_NAME
                 """
-                cursor.execute(query)
+                logger.info("[Oracle list_tables] Executing query with: schema=%r, table=%r", schema_upper, table_upper)
+                cursor.execute(query, (schema_upper, table_upper))
             else:
-                query = f"""
+                # Use parameterized query to prevent string formatting issues
+                query = """
                     SELECT TABLE_NAME, 'TABLE' as TABLE_TYPE
                     FROM ALL_TABLES
-                    WHERE OWNER = '{schema_upper}'
+                    WHERE OWNER = :1
                     ORDER BY TABLE_NAME
                 """
-                cursor.execute(query)
+                logger.info("[Oracle list_tables] Executing query with: schema=%r", schema_upper)
+                cursor.execute(query, (schema_upper,))
             
             tables_data = cursor.fetchall()
             tables_dict = []
@@ -431,7 +435,7 @@ class OracleConnector(BaseConnector):
                         cursor, schema_name, table_name
                     )
                 except Exception as e:
-                    logger.warning(f"Error extracting columns for {schema_name}.{table_name}: {e}")
+                    logger.warning("Error extracting columns for %s.%s: %r", schema_name, table_name, e, exc_info=True)
                     columns = []
                 
                 # Extract table properties
@@ -440,7 +444,7 @@ class OracleConnector(BaseConnector):
                         cursor, schema_name, table_name
                     )
                 except Exception as e:
-                    logger.warning(f"Error extracting properties for {schema_name}.{table_name}: {e}")
+                    logger.warning("Error extracting properties for %s.%s: %r", schema_name, table_name, e, exc_info=True)
                     properties = {}
                 
                 table_dict = {
@@ -481,10 +485,19 @@ class OracleConnector(BaseConnector):
         Returns:
             List of column dictionaries
         """
-        # Use string formatting to avoid bind variable issues
-        schema_upper = schema.upper()
-        table_upper = table.upper()
-        query = f"""
+        # Use parameterized queries to prevent SQL injection and formatting issues
+        # Oracle uses :1, :2 for bind variables
+        # First try uppercase (unquoted identifiers are uppercase in Oracle)
+        schema_upper = schema.upper().strip() if schema else None
+        table_upper = table.upper().strip() if table else None
+        
+        if not schema_upper or not table_upper:
+            raise ValueError("Schema and table names cannot be empty")
+        
+        # Log before executing query
+        logger.info("[Oracle get_table_columns] Executing query with: schema=%r, table=%r", schema_upper, table_upper)
+        
+        query = """
             SELECT 
                 COLUMN_NAME,
                 DATA_TYPE,
@@ -495,10 +508,40 @@ class OracleConnector(BaseConnector):
                 NULLABLE,
                 DATA_DEFAULT
             FROM ALL_TAB_COLUMNS
-            WHERE OWNER = '{schema_upper}' AND TABLE_NAME = '{table_upper}'
+            WHERE OWNER = :1 AND TABLE_NAME = :2
             ORDER BY COLUMN_ID
         """
-        cursor.execute(query)
+        
+        try:
+            cursor.execute(query, (schema_upper, table_upper))
+        except Exception as e:
+            # If uppercase fails with ORA-00942, try with quoted (case-preserving) names
+            error_msg = str(e) if hasattr(e, '__str__') else repr(e)
+            if "ORA-00942" in error_msg or "does not exist" in error_msg.lower():
+                logger.info("[Oracle get_table_columns] Uppercase query failed, trying with quoted (case-preserving) names: schema=%r, table=%r", schema, table)
+                # Try with original case (quoted identifiers)
+                query_quoted = """
+                    SELECT 
+                        COLUMN_NAME,
+                        DATA_TYPE,
+                        DATA_LENGTH,
+                        DATA_PRECISION,
+                        DATA_SCALE,
+                        COLUMN_ID,
+                        NULLABLE,
+                        DATA_DEFAULT
+                    FROM ALL_TAB_COLUMNS
+                    WHERE OWNER = :1 AND TABLE_NAME = :2
+                    ORDER BY COLUMN_ID
+                """
+                try:
+                    cursor.execute(query_quoted, (schema.strip(), table.strip()))
+                except Exception as e2:
+                    logger.error("[Oracle get_table_columns] Both uppercase and quoted queries failed: %r", e2, exc_info=True)
+                    raise
+            else:
+                logger.error("[Oracle get_table_columns] Query execution failed: %r", e, exc_info=True)
+                raise
         
         columns = []
         for row in cursor.fetchall():
@@ -622,35 +665,45 @@ class OracleConnector(BaseConnector):
             schema_upper = schema.upper()
             table_upper = table_name.upper()
             
-            # Get total row count - try without quotes first
+            # Get total row count - try without quotes first (uppercase)
+            # Note: For COUNT queries, we need to use table names directly, not parameterized
+            # But we'll escape them properly to prevent SQL injection
             try:
-                count_query = f'SELECT COUNT(*) FROM {schema_upper}.{table_upper}'
+                # Escape schema and table names for safety (they should already be validated)
+                schema_escaped = schema_upper.replace('"', '""')
+                table_escaped = table_upper.replace('"', '""')
+                count_query = f'SELECT COUNT(*) FROM "{schema_escaped}"."{table_escaped}"'
+                logger.info("[Oracle get_table_data] Executing count query (uppercase): %s", count_query)
                 cursor.execute(count_query)
                 total_rows = cursor.fetchone()[0]
                 use_quotes = False
-            except Exception:
+            except Exception as e1:
                 # If that fails, try with quotes (for case-sensitive identifiers)
                 try:
-                    count_query = f'SELECT COUNT(*) FROM "{schema}"."{table_name}"'
+                    schema_escaped_orig = schema.replace('"', '""')
+                    table_escaped_orig = table_name.replace('"', '""')
+                    count_query = f'SELECT COUNT(*) FROM "{schema_escaped_orig}"."{table_escaped_orig}"'
+                    logger.info("[Oracle get_table_data] Executing count query (original case): %s", count_query)
                     cursor.execute(count_query)
                     total_rows = cursor.fetchone()[0]
                     use_quotes = True
-                except Exception as e:
-                    logger.error(f"Could not access table {schema}.{table_name}: {e}")
+                except Exception as e2:
+                    logger.error("[Oracle get_table_data] Could not access table %s.%s: %r (uppercase error: %r)", schema, table_name, e2, e1, exc_info=True)
                     raise
             
-            # Get column names - use string formatting
-            columns_query = f"""
+            # Get column names - use parameterized query to prevent string formatting issues
+            columns_query = """
                 SELECT COLUMN_NAME
                 FROM ALL_TAB_COLUMNS
-                WHERE OWNER = '{schema_upper}' AND TABLE_NAME = '{table_upper}'
+                WHERE OWNER = :1 AND TABLE_NAME = :2
                 ORDER BY COLUMN_ID
             """
-            cursor.execute(columns_query)
+            logger.info("[Oracle get_table_data] Getting column names with: schema=%r, table=%r", schema_upper, table_upper)
+            cursor.execute(columns_query, (schema_upper, table_upper))
             column_names = [row[0] for row in cursor.fetchall()]
             
             if not column_names:
-                logger.warning(f"No columns found for table {schema}.{table_name}")
+                logger.warning("[Oracle get_table_data] No columns found for table %s.%s", schema, table_name)
                 cursor.close()
                 conn.close()
                 return {
@@ -696,7 +749,7 @@ class OracleConnector(BaseConnector):
             }
             
         except Exception as e:
-            logger.error(f"Error extracting data from Oracle: {e}")
+            logger.error("[Oracle get_table_data] Error extracting data from Oracle: %r", e, exc_info=True)
             raise
 
     def get_table_columns(
@@ -731,7 +784,7 @@ class OracleConnector(BaseConnector):
             return columns
             
         except Exception as e:
-            logger.error(f"Failed to get table columns: {e}")
+            logger.error("[Oracle get_table_columns] Failed to get table columns: %r", e, exc_info=True)
             raise
 
     def get_primary_keys(
@@ -782,7 +835,7 @@ class OracleConnector(BaseConnector):
             return primary_keys
             
         except Exception as e:
-            logger.error(f"Failed to get primary keys: {e}")
+            logger.error("[Oracle get_primary_keys] Failed to get primary keys: %r", e, exc_info=True)
             raise
 
     def full_load(

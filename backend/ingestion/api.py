@@ -4,10 +4,21 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
+# Fix for Windows multiprocessing spawn issue
+# Set multiprocessing start method early to prevent spawn errors
+if sys.platform == 'win32':
+    try:
+        import multiprocessing
+        multiprocessing.set_start_method('spawn', force=True)
+    except (RuntimeError, ImportError):
+        # Already set or multiprocessing not available, ignore
+        pass
 
 try:
     from fastapi import FastAPI, HTTPException, status, Depends, Request, Query
@@ -51,7 +62,7 @@ from ingestion.cdc_health_monitor import CDCHealthMonitor
 from ingestion.background_monitor import start_background_monitor
 from ingestion.models import Connection, Pipeline, PipelineStatus, FullLoadStatus, CDCStatus, PipelineMode
 from ingestion.database import get_db
-from ingestion.database.models_db import ConnectionModel, PipelineModel, UserModel
+from ingestion.database.models_db import ConnectionModel, PipelineModel, UserModel, AuditLogModel
 from sqlalchemy.orm import Session
 import hashlib
 import secrets
@@ -69,6 +80,18 @@ except ImportError:
         JWT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+# Setup database logging handler (if available)
+try:
+    from ingestion.database_log_handler import DatabaseLogHandler
+    # Add database handler to root logger to capture all logs
+    root_logger = logging.getLogger()
+    db_handler = DatabaseLogHandler(level=logging.INFO)  # Capture INFO and above
+    db_handler.setFormatter(logging.Formatter('%(message)s'))
+    root_logger.addHandler(db_handler)
+    logger.info("Database logging handler initialized")
+except Exception as e:
+    logger.warning(f"Failed to initialize database logging handler: {e}. Logs will not be stored in database.")
 
 # Initialize FastAPI app
 app = FastAPI(title="CDC Pipeline API", version="1.0.0")
@@ -398,6 +421,11 @@ async def list_connections(
         List of connections
     """
     
+    # Handle database connection failure
+    if db is None:
+        logger.warning("Database unavailable, returning empty connections list")
+        return []
+    
     try:
         query = db.query(ConnectionModel).filter(ConnectionModel.deleted_at.is_(None))
         if active_only:
@@ -428,10 +456,8 @@ async def list_connections(
         ]
     except Exception as e:
         logger.error(f"Failed to list connections: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+        # Return empty list instead of crashing
+        return []
 
 
 @app.get("/api/v1/connections/{connection_id}")
@@ -886,6 +912,108 @@ async def get_table_schema(
         )
 
 
+@app.get("/api/v1/connections/{connection_id}/tables/{table_name}/data")
+async def get_table_data(
+    connection_id: str,
+    table_name: str,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    limit: int = Query(100, ge=1, le=1000)
+) -> Dict[str, Any]:
+    """Get table data from a connection.
+    
+    Args:
+        connection_id: Connection ID
+        table_name: Table name (may include schema prefix like "public.projects_simple")
+        database: Database name (optional)
+        schema: Schema name (optional)
+        limit: Maximum number of records to return (1-1000)
+        
+    Returns:
+        Dictionary with table data (records, columns, count)
+    """
+    try:
+        # Clean table name - remove schema prefix if present and schema parameter is provided
+        clean_table_name = table_name
+        if '.' in clean_table_name and schema:
+            parts = clean_table_name.split('.', 1)
+            if len(parts) == 2 and parts[0] == schema:
+                clean_table_name = parts[1]
+                logger.info(f"[API get_table_data] Removed duplicate schema from table name: {table_name} -> {clean_table_name}")
+        
+        result = connection_service.get_table_data(
+            connection_id,
+            clean_table_name,  # Use cleaned table name
+            database=database,
+            schema=schema,
+            limit=limit
+        )
+        if not result.get("success"):
+            error_detail = result.get("error", "Failed to get table data")
+            # Ensure error message is a string and doesn't contain unescaped format specifiers
+            if not isinstance(error_detail, str):
+                error_detail = str(error_detail)
+            # Escape % characters to prevent string formatting issues
+            # Replace all % with %% to escape them
+            if '%' in error_detail:
+                # Temporarily replace %% to avoid double-escaping
+                error_detail = error_detail.replace('%%', '__TEMP_DOUBLE__')
+                error_detail = error_detail.replace('%', '%%')
+                error_detail = error_detail.replace('__TEMP_DOUBLE__', '%%')
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_detail
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Safely log error to avoid formatting issues
+        try:
+            from ingestion.connection_service import safe_error_message
+            safe_error = safe_error_message(e)
+            # Use %r (repr) to avoid any formatting issues
+            try:
+                logger.error("Failed to get table data: %r", safe_error, exc_info=True)
+            except Exception as log_err:
+                # If logging fails, just print to avoid cascading errors
+                try:
+                    print("Failed to get table data:", repr(safe_error))
+                except Exception:
+                    print("Failed to get table data: [Error message could not be formatted]")
+        except Exception:
+            try:
+                logger.error("Failed to get table data: [Error message could not be formatted]", exc_info=True)
+            except Exception:
+                print("Failed to get table data: [Error message could not be formatted]")
+        
+        # Return error response with safe error message
+        try:
+            from ingestion.connection_service import safe_error_message
+            safe_error = safe_error_message(e)
+        except Exception:
+            safe_error = "Failed to get table data: Unknown error occurred"
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=safe_error
+        )
+        # Escape any % characters in error message to prevent string formatting issues
+        def safe_error_message(msg):
+            """Safely convert error message to string and escape % characters."""
+            if msg is None:
+                return "Unknown error"
+            error_str = str(msg)
+            if '%' in error_str and '%%' not in error_str:
+                return error_str.replace('%', '%%')
+            return error_str
+        error_detail = safe_error_message(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
+        )
+
+
 @app.get("/api/v1/connections/{connection_id}/discover")
 async def discover_connection(
     connection_id: str,
@@ -1092,9 +1220,16 @@ async def create_pipeline(
 
 @app.get("/api/v1/pipelines")
 async def list_pipelines(
+    skip: int = 0,
+    limit: int = 10000,  # Increased default limit to fetch all pipelines
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """List all pipelines from database.
+    
+    Args:
+        skip: Number of pipelines to skip (for pagination)
+        limit: Maximum number of pipelines to return (default: 10000 to fetch all)
+        db: Database session
     
     Returns:
         List of pipelines
@@ -1106,15 +1241,46 @@ async def list_pipelines(
         # Get all pipelines, including those that might be soft-deleted
         # (we'll filter by deleted_at if the column exists)
         try:
-            pipeline_models = db.query(PipelineModel).filter(
+            query = db.query(PipelineModel).filter(
                 PipelineModel.deleted_at.is_(None)
-            ).order_by(PipelineModel.created_at.desc()).all()
+            ).order_by(PipelineModel.created_at.desc())
         except Exception:
             # If deleted_at column doesn't exist, get all
-            pipeline_models = db.query(PipelineModel).order_by(PipelineModel.created_at.desc()).all()
+            query = db.query(PipelineModel).order_by(PipelineModel.created_at.desc())
+        
+        # Apply pagination
+        pipeline_models = query.offset(skip).limit(limit).all()
         
         pipelines = []
         for pm in pipeline_models:
+            # Convert target_table_mapping to table_mappings format for frontend compatibility
+            table_mappings = []
+            if pm.target_table_mapping:
+                if isinstance(pm.target_table_mapping, dict):
+                    for source_table, target_table in pm.target_table_mapping.items():
+                        table_mappings.append({
+                            "source_table": source_table,
+                            "target_table": target_table if isinstance(target_table, str) else target_table.get("target_table", source_table),
+                            "source_schema": pm.source_schema,
+                            "target_schema": pm.target_schema or pm.source_schema
+                        })
+                elif isinstance(pm.target_table_mapping, list):
+                    table_mappings = pm.target_table_mapping
+            elif pm.source_tables:
+                # Fallback: create mappings from source_tables
+                for source_table in pm.source_tables:
+                    target_table = pm.target_tables[pm.source_tables.index(source_table)] if pm.target_tables and len(pm.target_tables) > pm.source_tables.index(source_table) else source_table
+                    table_mappings.append({
+                        "source_table": source_table,
+                        "target_table": target_table,
+                        "source_schema": pm.source_schema,
+                        "target_schema": pm.target_schema or pm.source_schema
+                    })
+            
+            # Determine full_load_type and cdc_enabled from mode
+            cdc_enabled = pm.mode.value in ["cdc_only", "full_load_and_cdc"] if hasattr(pm.mode, 'value') else "cdc" in str(pm.mode).lower()
+            full_load_type = "overwrite" if pm.enable_full_load else "append"
+            
             pipeline_dict = {
                 "id": pm.id,
                 "name": pm.name,
@@ -1128,8 +1294,11 @@ async def list_pipelines(
                 "target_tables": pm.target_tables or [],
                 "mode": pm.mode.value if hasattr(pm.mode, 'value') else str(pm.mode),
                 "enable_full_load": pm.enable_full_load,
+                "cdc_enabled": cdc_enabled,  # Add cdc_enabled for frontend
+                "full_load_type": full_load_type,  # Add full_load_type for frontend
                 "auto_create_target": pm.auto_create_target,
                 "target_table_mapping": pm.target_table_mapping or {},
+                "table_mappings": table_mappings,  # Add table_mappings for frontend
                 "table_filter": pm.table_filter,
                 "status": pm.status.value if hasattr(pm.status, 'value') else str(pm.status),
                 "full_load_status": pm.full_load_status.value if hasattr(pm.full_load_status, 'value') else str(pm.full_load_status),
@@ -1159,8 +1328,20 @@ async def get_pipeline(pipeline_id: str) -> Dict[str, Any]:
     Returns:
         Pipeline details
     """
-    status_info = pipeline_service.get_pipeline_status(pipeline_id)
-    return status_info
+    try:
+        status_info = pipeline_service.get_pipeline_status(pipeline_id)
+        return status_info
+    except Exception as e:
+        logger.error(f"Failed to get pipeline {pipeline_id}: {e}", exc_info=True)
+        # Return minimal pipeline info instead of error to prevent UI breakage
+        return {
+            "id": pipeline_id,
+            "name": f"Pipeline {pipeline_id}",
+            "status": "UNKNOWN",
+            "full_load_status": "NOT_STARTED",
+            "cdc_status": "NOT_STARTED",
+            "error": str(e)
+        }
 
 
 @app.put("/api/v1/pipelines/{pipeline_id}")
@@ -1497,6 +1678,8 @@ async def start_pipeline(
                             f"full_load_status={pipeline_model.full_load_status.value}, "
                             f"cdc_status={pipeline_model.cdc_status.value}"
                         )
+                        # Ensure status is persisted before returning
+                        db.flush()
                         break
                     else:
                         logger.warning(f"Pipeline {pipeline.id} not found in pipeline_store for status update")
@@ -1554,6 +1737,74 @@ async def start_pipeline(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=error_detail
+        )
+
+
+@app.post("/api/v1/pipelines/{pipeline_id}/trigger")
+async def trigger_pipeline(
+    pipeline_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Trigger a pipeline with optional run type.
+    
+    This endpoint is an alias for /start that accepts run_type in the request body.
+    
+    Args:
+        pipeline_id: Pipeline ID
+        request: FastAPI request object to read body
+        db: Database session
+        
+    Returns:
+        Startup result
+    """
+    try:
+        # Parse request body to get run_type (optional)
+        run_type = "full_load"
+        try:
+            if request.headers.get("content-type", "").startswith("application/json"):
+                body = await request.json()
+                run_type = body.get("run_type", "full_load")
+        except (ValueError, KeyError, AttributeError):
+            # Body might be empty or not JSON, use default
+            pass
+        
+        logger.info(f"Triggering pipeline {pipeline_id} with run_type={run_type}")
+        
+        # Call start_pipeline (run_type is currently not used but kept for future compatibility)
+        # The start_pipeline endpoint handles the actual pipeline start
+        try:
+            return await start_pipeline(pipeline_id=pipeline_id, db=db)
+        except HTTPException:
+            # Re-raise HTTP exceptions as-is (they already have proper error messages)
+            raise
+        except Exception as inner_e:
+            # If start_pipeline raises a non-HTTP exception, wrap it with context
+            error_msg = str(inner_e)
+            logger.error(f"start_pipeline raised exception: {error_msg}", exc_info=True)
+            # Re-raise as HTTPException with the actual error message
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_msg
+            ) from inner_e
+    except HTTPException as he:
+        # Re-raise HTTP exceptions with their original detail
+        raise
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Failed to trigger pipeline {pipeline_id}: {error_msg}", exc_info=True)
+        
+        # Extract the actual error message (avoid double-wrapping)
+        if "Failed to trigger pipeline" in error_msg or "Failed to start pipeline" in error_msg:
+            # Already wrapped, use as-is but clean it up
+            detail = error_msg
+        else:
+            # Provide the actual error detail
+            detail = error_msg
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=detail
         )
 
 
@@ -1618,6 +1869,9 @@ async def stop_pipeline(
     Returns:
         Stop result
     """
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+    
     try:
         # Load pipeline from database to verify it exists
         pipeline_model = db.query(PipelineModel).filter(
@@ -1631,7 +1885,27 @@ async def stop_pipeline(
                 detail=f"Pipeline not found: {pipeline_id}"
             )
         
-        result = pipeline_service.stop_pipeline(pipeline_id)
+        # Run stop_pipeline in a thread pool with timeout to prevent hanging
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            # Set timeout to 30 seconds for stopping pipeline
+            future = executor.submit(pipeline_service.stop_pipeline, pipeline_id)
+            result = future.result(timeout=30)
+        except FutureTimeoutError:
+            # If timeout, update database status anyway and return partial result
+            logger.warning(f"Pipeline stop timed out for {pipeline_id}, updating database status")
+            from ingestion.database.models_db import PipelineStatus as DBPipelineStatus, CDCStatus as DBCDCStatus
+            pipeline_model.status = DBPipelineStatus.STOPPED
+            pipeline_model.cdc_status = DBCDCStatus.STOPPED
+            db.commit()
+            return {
+                "pipeline_id": pipeline_id,
+                "status": "STOPPED",
+                "message": "Pipeline stop initiated (may still be stopping in background)",
+                "timeout": True
+            }
+        finally:
+            executor.shutdown(wait=False)
         
         # Update database status
         from ingestion.database.models_db import PipelineStatus as DBPipelineStatus, CDCStatus as DBCDCStatus
@@ -1644,10 +1918,13 @@ async def stop_pipeline(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Failed to stop pipeline: {e}", exc_info=True)
+        # Use safe error message to avoid formatting issues
+        from ingestion.connection_service import safe_error_message
+        safe_error = safe_error_message(e)
+        logger.error("Failed to stop pipeline: %r", safe_error, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail=safe_error
         )
 
 
@@ -2364,9 +2641,46 @@ async def get_pipeline_progress(pipeline_id: str, db: Session = Depends(get_db))
         if isinstance(pipeline_status_data, dict):
             pipeline_status_str = pipeline_status_data.get("status", pipeline_status_str)
         
+        # Extract full_load info from pipeline_status_data if available
+        full_load_info = {}
+        if isinstance(pipeline_status_data, dict) and "full_load" in pipeline_status_data:
+            full_load_info = pipeline_status_data.get("full_load", {})
+        elif isinstance(pipeline_status_data, dict):
+            # Try to extract from top-level keys
+            if "full_load_status" in pipeline_status_data:
+                full_load_info["status"] = pipeline_status_data.get("full_load_status", full_load_status_value)
+            if "progress_percentage" in pipeline_status_data:
+                full_load_info["progress_percent"] = pipeline_status_data.get("progress_percentage", progress_percentage)
+            if "records_loaded" in pipeline_status_data:
+                full_load_info["records_loaded"] = pipeline_status_data.get("records_loaded", records_processed)
+            if "total_records" in pipeline_status_data:
+                full_load_info["total_records"] = pipeline_status_data.get("total_records", records_total)
+            if "current_table" in pipeline_status_data:
+                full_load_info["current_table"] = pipeline_status_data.get("current_table")
+        
+        # Set defaults for full_load if not present
+        if "status" not in full_load_info:
+            full_load_info["status"] = full_load_status_value.lower() if isinstance(full_load_status_value, str) else str(full_load_status_value).lower()
+        if "progress_percent" not in full_load_info:
+            full_load_info["progress_percent"] = progress_percentage
+        if "records_loaded" not in full_load_info:
+            full_load_info["records_loaded"] = records_processed
+        if "total_records" not in full_load_info:
+            full_load_info["total_records"] = records_total
+        
+        # Extract CDC info if available
+        cdc_info = {}
+        if isinstance(pipeline_status_data, dict) and "cdc" in pipeline_status_data:
+            cdc_info = pipeline_status_data.get("cdc", {})
+        if "status" not in cdc_info:
+            cdc_info["status"] = cdc_status_value.lower() if isinstance(cdc_status_value, str) else str(cdc_status_value).lower()
+        
         return {
             "pipeline_id": pipeline_id,
             "status": pipeline_status_str,
+            "full_load": full_load_info,
+            "cdc": cdc_info,
+            # Keep backward compatibility
             "full_load_status": full_load_status_value,
             "cdc_status": cdc_status_value,
             "progress_percentage": progress_percentage,
@@ -2488,7 +2802,13 @@ async def get_connector_status(connector_name: str) -> Dict[str, Any]:
         Connector status
     """
     try:
-        return cdc_manager.kafka_client.get_connector_status(connector_name)
+        status = cdc_manager.kafka_client.get_connector_status(connector_name)
+        if status is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Connector {connector_name} not found"
+            )
+        return status
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2522,26 +2842,130 @@ async def restart_connector(connector_name: str) -> Dict[str, Any]:
 @app.get("/api/v1/monitoring/dashboard")  # Also support /v1 for frontend compatibility
 async def get_monitoring_dashboard(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Get overall monitoring dashboard data."""
+    # Handle database connection failure - return empty dashboard data
+    if db is None:
+        logger.warning("Database unavailable, returning empty dashboard data")
+        return {
+            "total_pipelines": 0,
+            "active_pipelines": 0,
+            "stopped_pipelines": 0,
+            "error_pipelines": 0,
+            "total_events": 0,
+            "failed_events": 0,
+            "success_events": 0,
+            "recent_metrics": [],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
     try:
         pipelines = db.query(PipelineModel).filter(PipelineModel.deleted_at.is_(None)).all()
         total_pipelines = len(pipelines)
         active_pipelines = len([p for p in pipelines if p.status == PipelineStatus.RUNNING])
         stopped_pipelines = len([p for p in pipelines if p.status == PipelineStatus.STOPPED])
         error_pipelines = len([p for p in pipelines if p.status == PipelineStatus.ERROR])
-        from ingestion.database.models_db import PipelineMetricsModel
-        from sqlalchemy import desc
+        
+        from ingestion.database.models_db import PipelineMetricsModel, PipelineRunModel
+        from sqlalchemy import desc, func, or_
+        from datetime import timedelta
+        
+        # Get recent metrics
         recent_metrics = db.query(PipelineMetricsModel).order_by(desc(PipelineMetricsModel.timestamp)).limit(10).all()
+        
+        # Calculate event statistics from pipeline runs (last 7 days)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        # Get all pipeline runs from last 7 days
+        recent_runs = db.query(PipelineRunModel).filter(
+            PipelineRunModel.started_at >= seven_days_ago
+        ).all()
+        
+        # Count events by status from pipeline runs
+        total_runs = len(recent_runs)
+        # Normalize status values for counting - be more flexible with status matching
+        failed_runs = len([r for r in recent_runs if r.status and (
+            r.status.lower() in ['failed', 'error'] or 
+            'fail' in r.status.lower() or 
+            'error' in r.status.lower()
+        )])
+        success_runs = len([r for r in recent_runs if r.status and (
+            r.status.lower() in ['success', 'completed', 'applied'] or
+            'success' in r.status.lower() or
+            'complete' in r.status.lower()
+        )])
+        
+        # Also calculate from metrics (more accurate for replication events)
+        # Get metrics from last 7 days
+        metrics_query = db.query(PipelineMetricsModel).filter(
+            PipelineMetricsModel.timestamp >= seven_days_ago
+        )
+        
+        # Sum up error counts from metrics
+        total_error_count = db.query(
+            func.sum(PipelineMetricsModel.error_count).label('total_errors')
+        ).filter(
+            PipelineMetricsModel.timestamp >= seven_days_ago
+        ).scalar() or 0
+        
+        # Count total metrics entries (each represents a time period)
+        total_metrics = metrics_query.count()
+        
+        # Calculate total events: use throughput from metrics if available
+        total_throughput = db.query(
+            func.sum(PipelineMetricsModel.throughput_events_per_sec).label('total_throughput')
+        ).filter(
+            PipelineMetricsModel.timestamp >= seven_days_ago
+        ).scalar() or 0
+        
+        # Estimate total events: if we have throughput, estimate based on that
+        # Otherwise use pipeline runs count
+        if total_throughput > 0:
+            # Estimate: throughput * time period (7 days = 604800 seconds)
+            # But we sample metrics, so estimate based on metrics count
+            estimated_events_per_metric = total_throughput / max(total_metrics, 1) if total_metrics > 0 else 0
+            total_events = int(estimated_events_per_metric * total_metrics) if total_metrics > 0 else total_runs
+        else:
+            total_events = total_runs
+        
+        # Failed events: use error_count from metrics if available, otherwise use failed runs
+        if total_error_count > 0:
+            failed_events = int(total_error_count)
+        else:
+            failed_events = failed_runs
+        
+        # Success events: total - failed
+        success_events = max(0, total_events - failed_events)
+        
+        # If we still have no events, set defaults to avoid division by zero
+        if total_events == 0:
+            total_events = 1  # Avoid division by zero
+            failed_events = 0
+            success_events = 1
+        
         return {
             "total_pipelines": total_pipelines,
             "active_pipelines": active_pipelines,
             "stopped_pipelines": stopped_pipelines,
             "error_pipelines": error_pipelines,
+            "total_events": total_events,
+            "failed_events": failed_events,
+            "success_events": success_events,
             "recent_metrics": [{"pipeline_id": m.pipeline_id, "timestamp": m.timestamp.isoformat(), "lag_seconds": m.lag_seconds, "error_count": m.error_count} for m in recent_metrics],
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
         logger.error(f"Failed to get monitoring dashboard: {e}", exc_info=True)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        # Return empty dashboard instead of crashing
+        return {
+            "total_pipelines": 0,
+            "active_pipelines": 0,
+            "stopped_pipelines": 0,
+            "error_pipelines": 0,
+            "total_events": 0,
+            "failed_events": 0,
+            "success_events": 0,
+            "recent_metrics": [],
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 
 @app.get("/api/v1/monitoring/metrics")
@@ -2600,13 +3024,18 @@ async def get_monitoring_metrics(
         # Transform to frontend format
         metrics_list = []
         for metric in metrics:
+            # Calculate avg_latency_ms from lag_seconds
+            avg_latency_ms = float(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else 0.0
+            
             metrics_list.append({
                 "timestamp": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
                 "throughput_events_per_sec": float(metric.throughput_events_per_sec) if metric.throughput_events_per_sec else 0.0,
                 "lag_seconds": float(metric.lag_seconds) if metric.lag_seconds else 0.0,
+                "avg_latency_ms": avg_latency_ms,  # Add avg_latency_ms for frontend compatibility
                 "error_count": int(metric.error_count) if metric.error_count else 0,
                 "bytes_processed": int(metric.bytes_processed) if metric.bytes_processed else 0,
-                "pipeline_id": metric.pipeline_id
+                "pipeline_id": metric.pipeline_id,
+                "total_events": int(metric.throughput_events_per_sec or 0)  # Estimate total events from throughput
             })
         
         return {
@@ -2655,6 +3084,124 @@ async def get_pipeline_lag(pipeline_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@app.get("/api/v1/monitoring/pipelines/{pipeline_id}/lsn-latency-trend")
+@app.get("/api/monitoring/pipelines/{pipeline_id}/lsn-latency-trend")
+async def get_lsn_latency_trend(
+    pipeline_id: str,
+    table_name: Optional[str] = None,
+    hours: int = 24,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get LSN latency trend data for a pipeline.
+    
+    Args:
+        pipeline_id: Pipeline ID
+        table_name: Optional table name filter
+        hours: Number of hours of data to return (default: 24)
+        db: Database session
+        
+    Returns:
+        Dictionary with trend data points
+    """
+    try:
+        from ingestion.database.models_db import PipelineMetricsModel
+        from sqlalchemy import desc
+        from datetime import timedelta
+        
+        # Calculate time range
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(hours=hours)
+        
+        # Query metrics for this pipeline within time range
+        query = db.query(PipelineMetricsModel).filter(
+            PipelineMetricsModel.pipeline_id == pipeline_id,
+            PipelineMetricsModel.timestamp >= start_time,
+            PipelineMetricsModel.timestamp <= end_time
+        )
+        
+        metrics = query.order_by(PipelineMetricsModel.timestamp).all()
+        
+        if not metrics:
+            # Return empty trend but with structure
+            return {
+                "trend": [],
+                "pipeline_id": pipeline_id,
+                "hours": hours
+            }
+        
+        # Transform metrics to trend data points
+        trend_data = []
+        for metric in metrics:
+            # Calculate latency from lag_seconds
+            latency_ms = int(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else 0
+            
+            # Try to extract LSN/SCN from source_offset if available
+            source_lsn = None
+            processed_lsn = None
+            lsn_gap_bytes = 0
+            lsn_gap_mb = 0.0
+            
+            if metric.source_offset:
+                try:
+                    import json
+                    if isinstance(metric.source_offset, str):
+                        offset_data = json.loads(metric.source_offset)
+                    else:
+                        offset_data = metric.source_offset
+                    
+                    if isinstance(offset_data, dict):
+                        source_lsn = offset_data.get("lsn") or offset_data.get("transaction_id")
+                        processed_lsn = offset_data.get("processed_lsn") or offset_data.get("last_lsn")
+                        
+                        # Calculate gap if we have both LSNs
+                        if source_lsn and processed_lsn:
+                            try:
+                                # For PostgreSQL LSN format (e.g., "0/12345678")
+                                if "/" in str(source_lsn) and "/" in str(processed_lsn):
+                                    def lsn_to_int(lsn_str):
+                                        parts = str(lsn_str).split("/")
+                                        if len(parts) == 2:
+                                            return (int(parts[0], 16) << 32) | int(parts[1], 16)
+                                        return 0
+                                    
+                                    source_int = lsn_to_int(source_lsn)
+                                    processed_int = lsn_to_int(processed_lsn)
+                                    lsn_gap_bytes = max(0, source_int - processed_int)
+                                    lsn_gap_mb = lsn_gap_bytes / (1024 * 1024)
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            
+            trend_data.append({
+                "timestamp": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
+                "latency_ms": latency_ms,
+                "lag_seconds": float(metric.lag_seconds) if metric.lag_seconds else 0.0,
+                "source_lsn": source_lsn,
+                "processed_lsn": processed_lsn,
+                "lsn_gap_bytes": lsn_gap_bytes,
+                "lsn_gap_mb": lsn_gap_mb,
+                "error_count": int(metric.error_count) if metric.error_count else 0,
+                "throughput_events_per_sec": float(metric.throughput_events_per_sec) if metric.throughput_events_per_sec else 0.0
+            })
+        
+        return {
+            "trend": trend_data,
+            "pipeline_id": pipeline_id,
+            "hours": hours,
+            "count": len(trend_data)
+        }
+    except Exception as e:
+        logger.error(f"Failed to get LSN latency trend: {e}", exc_info=True)
+        # Return empty trend instead of error
+        return {
+            "trend": [],
+            "pipeline_id": pipeline_id,
+            "hours": hours,
+            "error": str(e)
+        }
+
+
 @app.get("/api/monitoring/pipelines/{pipeline_id}/health")
 async def get_pipeline_health(pipeline_id: str) -> Dict[str, Any]:
     """Get pipeline health check."""
@@ -2672,29 +3219,57 @@ async def get_pipeline_health(pipeline_id: str) -> Dict[str, Any]:
 
 @app.get("/api/v1/monitoring/replication-events")
 @app.get("/api/monitoring/replication-events")  # Also support without /v1 for backward compatibility
+@app.get("/api/v1/monitoring/events")  # Alias for frontend compatibility
 async def get_replication_events(
     pipeline_id: Optional[str] = None,
+    skip: int = 0,
     limit: int = 100,
     today_only: bool = False,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    table_name: Optional[str] = None,
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
     """Get replication events for pipelines.
     
     Args:
         pipeline_id: Optional pipeline ID to filter events
+        skip: Number of events to skip (for pagination)
         limit: Maximum number of events to return
         today_only: If True, only return events from today
+        start_date: Optional start date filter (ISO format)
+        end_date: Optional end date filter (ISO format)
+        table_name: Optional table name filter
         db: Database session
         
     Returns:
         List of replication events
     """
+    # Handle database connection failure - return empty events list
+    if db is None:
+        logger.warning("Database unavailable, returning empty events list")
+        return []
+    
     try:
         from ingestion.database.models_db import PipelineRunModel, PipelineMetricsModel, PipelineModel
         from sqlalchemy import desc, and_, or_
         from datetime import datetime, timedelta
         
         events = []
+        
+        # Parse date filters
+        start_datetime = None
+        end_datetime = None
+        if start_date:
+            try:
+                start_datetime = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                logger.warning(f"Invalid start_date format: {start_date}")
+        if end_date:
+            try:
+                end_datetime = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                logger.warning(f"Invalid end_date format: {end_date}")
         
         # Get pipeline runs as events
         query = db.query(PipelineRunModel)
@@ -2705,8 +3280,13 @@ async def get_replication_events(
         if today_only:
             today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             query = query.filter(PipelineRunModel.started_at >= today_start)
+        elif start_datetime:
+            query = query.filter(PipelineRunModel.started_at >= start_datetime)
         
-        runs = query.order_by(desc(PipelineRunModel.started_at)).limit(limit).all()
+        if end_datetime:
+            query = query.filter(PipelineRunModel.started_at <= end_datetime)
+        
+        runs = query.order_by(desc(PipelineRunModel.started_at)).offset(skip).limit(limit).all()
         
         for run in runs:
             # Transform pipeline run to replication event format
@@ -2759,17 +3339,280 @@ async def get_replication_events(
             if original_event_type == "CDC" and event_type == "insert":
                 logger.info(f"🔄 Converting CDC to insert for run {run.id}, table {run.run_metadata.get('table_name') if run.run_metadata else 'unknown'}")
             
+            run_table_name = run.run_metadata.get("table_name", "unknown") if (run.run_metadata and isinstance(run.run_metadata, dict)) else "unknown"
+            
+            # Filter by table_name if provided
+            if table_name and run_table_name != "unknown" and table_name.lower() not in run_table_name.lower():
+                continue
+            
+            # Normalize status to match frontend expectations
+            run_status = run.status.lower() if run.status else "unknown"
+            
+            # CRITICAL: If there's an error_message, status should be failed/error regardless of run status
+            has_error = run.error_message and str(run.error_message).strip() and str(run.error_message).lower() not in ['none', 'null', '']
+            
+            # Map common status values to frontend-expected values
+            status_map = {
+                "completed": "success",
+                "success": "success",
+                "applied": "success",
+                "failed": "failed",
+                "error": "error",
+                "pending": "pending",
+                "running": "pending",
+                "in_progress": "pending"
+            }
+            normalized_status = status_map.get(run_status, run_status)
+            
+            # Override status to failed/error if there's an error message
+            if has_error:
+                if normalized_status not in ["failed", "error"]:
+                    normalized_status = "failed"  # Default to failed if there's an error
+            
+            # Calculate latency from run timing or metadata
+            latency_ms = None
+            if run.completed_at and run.started_at:
+                # Calculate latency from run duration
+                time_diff = (run.completed_at - run.started_at).total_seconds() * 1000
+                latency_ms = int(time_diff) if time_diff > 0 else None
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                # Try to get latency from metadata
+                latency_ms = run.run_metadata.get("latency_ms") or run.run_metadata.get("latency")
+                if latency_ms:
+                    latency_ms = int(latency_ms)
+            
+            # If still no latency, try to get from recent metrics for this pipeline
+            if latency_ms is None:
+                try:
+                    if db is not None:
+                        from ingestion.database.models_db import PipelineMetricsModel
+                        # Try to get metrics around the time of the run (before or after)
+                        # First try metrics after the run started (more accurate)
+                        recent_metric = db.query(PipelineMetricsModel).filter(
+                            PipelineMetricsModel.pipeline_id == run.pipeline_id,
+                            PipelineMetricsModel.timestamp >= run.started_at
+                        ).order_by(PipelineMetricsModel.timestamp).first()
+                        
+                        # If not found, try metrics before the run
+                        if not recent_metric or not recent_metric.lag_seconds:
+                            recent_metric = db.query(PipelineMetricsModel).filter(
+                                PipelineMetricsModel.pipeline_id == run.pipeline_id,
+                                PipelineMetricsModel.timestamp <= run.started_at
+                            ).order_by(desc(PipelineMetricsModel.timestamp)).first()
+                        
+                        # If still not found, get the most recent metric for this pipeline
+                        if not recent_metric or not recent_metric.lag_seconds:
+                            recent_metric = db.query(PipelineMetricsModel).filter(
+                                PipelineMetricsModel.pipeline_id == run.pipeline_id
+                            ).order_by(desc(PipelineMetricsModel.timestamp)).first()
+                    else:
+                        recent_metric = None
+                    
+                    if recent_metric and recent_metric.lag_seconds:
+                        latency_ms = int(recent_metric.lag_seconds * 1000)
+                    # If run is still running and no completed_at, estimate latency from current time
+                    elif not run.completed_at and run.started_at:
+                        time_diff = (datetime.utcnow() - run.started_at).total_seconds() * 1000
+                        latency_ms = max(1, int(time_diff)) if time_diff >= 0 else None
+                except Exception:
+                    # If all else fails and run has started_at, estimate from current time
+                    if not run.completed_at and run.started_at:
+                        try:
+                            time_diff = (datetime.utcnow() - run.started_at).total_seconds() * 1000
+                            latency_ms = max(1, int(time_diff)) if time_diff >= 0 else None
+                        except Exception:
+                            pass
+            
+            # Extract LSN/SCN/Offset from metadata, metrics, pipeline, or connector
+            source_lsn = None
+            source_scn = None
+            source_binlog_file = None
+            source_binlog_position = None
+            sql_server_lsn = None
+            
+            # Try to get from run_metadata first
+            if run.run_metadata and isinstance(run.run_metadata, dict):
+                source_lsn = run.run_metadata.get("source_lsn") or run.run_metadata.get("lsn") or run.run_metadata.get("offset")
+                source_scn = run.run_metadata.get("source_scn") or run.run_metadata.get("scn")
+                source_binlog_file = run.run_metadata.get("source_binlog_file") or run.run_metadata.get("binlog_file") or run.run_metadata.get("file")
+                source_binlog_position = run.run_metadata.get("source_binlog_position") or run.run_metadata.get("binlog_position") or run.run_metadata.get("pos") or run.run_metadata.get("position")
+                sql_server_lsn = run.run_metadata.get("sql_server_lsn") or run.run_metadata.get("lsn")
+            
+            # Try to get from recent metrics (source_offset field)
+            if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]) and db is not None:
+                try:
+                    from ingestion.database.models_db import PipelineMetricsModel
+                    recent_metric = db.query(PipelineMetricsModel).filter(
+                        PipelineMetricsModel.pipeline_id == run.pipeline_id
+                    ).order_by(desc(PipelineMetricsModel.timestamp)).first()
+                    if recent_metric and recent_metric.source_offset:
+                        # Parse offset JSON if it's a string
+                        import json
+                        try:
+                            if isinstance(recent_metric.source_offset, str):
+                                offset_data = json.loads(recent_metric.source_offset)
+                            else:
+                                offset_data = recent_metric.source_offset
+                            
+                            if isinstance(offset_data, dict):
+                                source_lsn = offset_data.get("lsn") or offset_data.get("transaction_id")
+                                source_scn = offset_data.get("scn") or offset_data.get("transaction_id")
+                                source_binlog_file = offset_data.get("file") or offset_data.get("binlog_file")
+                                source_binlog_position = offset_data.get("pos") or offset_data.get("position") or offset_data.get("binlog_position")
+                                sql_server_lsn = offset_data.get("lsn") or offset_data.get("change_lsn")
+                        except (json.JSONDecodeError, AttributeError, TypeError):
+                            # If not JSON, use as-is
+                            source_lsn = str(recent_metric.source_offset) if recent_metric.source_offset else None
+                except Exception:
+                    pass
+            
+            # If not in metadata, try to get from pipeline
+            if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]) and db is not None:
+                try:
+                    pipeline_model = db.query(PipelineModel).filter(PipelineModel.id == run.pipeline_id).first()
+                    if pipeline_model:
+                        # Get source connection to determine database type
+                        source_conn = db.query(ConnectionModel).filter(
+                            ConnectionModel.id == pipeline_model.source_connection_id
+                        ).first()
+                        
+                        if source_conn:
+                            db_type = str(source_conn.database_type).lower()
+                            
+                            # Get from pipeline's full_load_lsn or other fields
+                            if db_type in ['postgresql', 'postgres']:
+                                source_lsn = pipeline_model.full_load_lsn
+                                # Also try to get from connector offset if available
+                                if not source_lsn and pipeline_model.debezium_connector_name:
+                                    try:
+                                        connector_status = cdc_manager.kafka_client.get_connector_status(
+                                            pipeline_model.debezium_connector_name
+                                        )
+                                        # Extract LSN from connector offset
+                                        if connector_status and isinstance(connector_status, dict):
+                                            tasks = connector_status.get("tasks", [])
+                                            for task in tasks:
+                                                if task.get("state") == "RUNNING":
+                                                    offset = task.get("offset", {})
+                                                    # PostgreSQL LSN is typically in the offset
+                                                    if offset:
+                                                        # Try different offset formats
+                                                        source_lsn = offset.get("lsn") or offset.get("transaction_id") or str(offset)
+                                    except Exception:
+                                        pass  # Silently fail if connector not available
+                            elif db_type == 'oracle':
+                                # Try to get SCN from pipeline or connector
+                                if hasattr(pipeline_model, 'current_scn'):
+                                    source_scn = pipeline_model.current_scn
+                                # Also try from connector
+                                if not source_scn and pipeline_model.debezium_connector_name:
+                                    try:
+                                        connector_status = cdc_manager.kafka_client.get_connector_status(
+                                            pipeline_model.debezium_connector_name
+                                        )
+                                        if connector_status and isinstance(connector_status, dict):
+                                            tasks = connector_status.get("tasks", [])
+                                            for task in tasks:
+                                                if task.get("state") == "RUNNING":
+                                                    offset = task.get("offset", {})
+                                                    if offset:
+                                                        # Oracle SCN in offset - similar nested structure
+                                                        if isinstance(offset, dict):
+                                                            for key, value in offset.items():
+                                                                if isinstance(value, dict):
+                                                                    source_scn = value.get("scn") or value.get("transaction_id") or source_scn
+                                                                elif key in ["scn", "transaction_id", "txId"]:
+                                                                    source_scn = str(value) if value else source_scn
+                                                            if not source_scn:
+                                                                source_scn = offset.get("scn") or offset.get("transaction_id") or offset.get("txId")
+                                                                if not source_scn and len(offset) == 1:
+                                                                    source_scn = str(list(offset.values())[0])
+                                    except Exception:
+                                        pass
+                            elif db_type in ['sqlserver', 'mssql']:
+                                sql_server_lsn = pipeline_model.full_load_lsn
+                                # Also try from connector
+                                if not sql_server_lsn and pipeline_model.debezium_connector_name:
+                                    try:
+                                        connector_status = cdc_manager.kafka_client.get_connector_status(
+                                            pipeline_model.debezium_connector_name
+                                        )
+                                        if connector_status and isinstance(connector_status, dict):
+                                            tasks = connector_status.get("tasks", [])
+                                            for task in tasks:
+                                                if task.get("state") == "RUNNING":
+                                                    offset = task.get("offset", {})
+                                                    if offset:
+                                                        # SQL Server LSN in offset
+                                                        if isinstance(offset, dict):
+                                                            for key, value in offset.items():
+                                                                if isinstance(value, dict):
+                                                                    sql_server_lsn = value.get("lsn") or value.get("change_lsn") or value.get("commit_lsn") or sql_server_lsn
+                                                                elif key in ["lsn", "change_lsn", "commit_lsn"]:
+                                                                    sql_server_lsn = str(value) if value else sql_server_lsn
+                                                            if not sql_server_lsn:
+                                                                sql_server_lsn = offset.get("lsn") or offset.get("change_lsn") or offset.get("commit_lsn")
+                                                                if not sql_server_lsn and len(offset) == 1:
+                                                                    sql_server_lsn = str(list(offset.values())[0])
+                                    except Exception:
+                                        pass
+                            elif db_type == 'mysql':
+                                # MySQL binlog info from connector
+                                if pipeline_model.debezium_connector_name:
+                                    try:
+                                        connector_status = cdc_manager.kafka_client.get_connector_status(
+                                            pipeline_model.debezium_connector_name
+                                        )
+                                        if connector_status and isinstance(connector_status, dict):
+                                            tasks = connector_status.get("tasks", [])
+                                            for task in tasks:
+                                                if task.get("state") == "RUNNING":
+                                                    offset = task.get("offset", {})
+                                                    if offset:
+                                                        # MySQL binlog in offset - nested structure
+                                                        if isinstance(offset, dict):
+                                                            for key, value in offset.items():
+                                                                if isinstance(value, dict):
+                                                                    source_binlog_file = value.get("file") or value.get("binlog_file") or source_binlog_file
+                                                                    source_binlog_position = value.get("pos") or value.get("position") or value.get("binlog_position") or source_binlog_position
+                                                                elif key in ["file", "binlog_file"]:
+                                                                    source_binlog_file = str(value) if value else source_binlog_file
+                                                                elif key in ["pos", "position", "binlog_position"]:
+                                                                    source_binlog_position = int(value) if value else source_binlog_position
+                                                            if not source_binlog_file:
+                                                                source_binlog_file = offset.get("file") or offset.get("binlog_file")
+                                                            if not source_binlog_position:
+                                                                source_binlog_position = offset.get("pos") or offset.get("position") or offset.get("binlog_position")
+                                    except Exception:
+                                        pass
+                except Exception as e:
+                    logger.debug(f"Failed to get LSN/SCN from pipeline: {e}")
+            
             event = {
                 "id": run.id,
                 "pipeline_id": run.pipeline_id,
                 "event_type": event_type,  # This should now be "insert" not "CDC"
-                "table_name": run.run_metadata.get("table_name", "unknown") if (run.run_metadata and isinstance(run.run_metadata, dict)) else "unknown",
-                "status": run.status.lower() if run.status else "unknown",
+                "table_name": run_table_name,
+                "status": normalized_status,
                 "created_at": run.started_at.isoformat() if run.started_at else datetime.utcnow().isoformat(),
-                "latency_ms": None,
+                "latency_ms": latency_ms,
                 "rows_affected": run.rows_processed if run.rows_processed else 0,
                 "details": run.error_message if run.error_message else None,
+                "error_message": run.error_message if run.error_message else None,  # Also include as error_message for frontend compatibility
             }
+            
+            # Add LSN/SCN/Offset fields if available
+            if source_lsn:
+                event["source_lsn"] = str(source_lsn)
+            if source_scn:
+                event["source_scn"] = str(source_scn)
+            if source_binlog_file:
+                event["source_binlog_file"] = str(source_binlog_file)
+            if source_binlog_position:
+                event["source_binlog_position"] = int(source_binlog_position) if source_binlog_position else None
+            if sql_server_lsn:
+                event["sql_server_lsn"] = str(sql_server_lsn)
+            
             events.append(event)
         
         # Get metrics as events
@@ -2781,23 +3624,79 @@ async def get_replication_events(
         if today_only:
             today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             metrics_query = metrics_query.filter(PipelineMetricsModel.timestamp >= today_start)
+        elif start_datetime:
+            metrics_query = metrics_query.filter(PipelineMetricsModel.timestamp >= start_datetime)
         else:
-            # Get metrics from last 7 days if not today_only
+            # Get metrics from last 7 days if not today_only and no start_date
             metrics_query = metrics_query.filter(
                 PipelineMetricsModel.timestamp >= datetime.utcnow() - timedelta(days=7)
             )
         
-        recent_metrics = metrics_query.order_by(desc(PipelineMetricsModel.timestamp)).limit(limit).all()
+        if end_datetime:
+            metrics_query = metrics_query.filter(PipelineMetricsModel.timestamp <= end_datetime)
+        
+        recent_metrics = metrics_query.order_by(desc(PipelineMetricsModel.timestamp)).offset(skip).limit(limit).all()
         
         for metric in recent_metrics:
             # Create event from metric - only if it has meaningful data
             if metric.throughput_events_per_sec > 0 or metric.error_count > 0:
-                # Get pipeline to determine table names
-                pipeline_model = db.query(PipelineModel).filter_by(id=metric.pipeline_id).first()
-                table_name = "all"
+                # Get pipeline to determine table names and database type
+                pipeline_model = db.query(PipelineModel).filter_by(id=metric.pipeline_id).first() if db is not None else None
+                metric_table_name = "all"
                 if pipeline_model and pipeline_model.source_tables:
                     # Use first table or create events for each table
-                    table_name = pipeline_model.source_tables[0] if isinstance(pipeline_model.source_tables, list) else "all"
+                    metric_table_name = pipeline_model.source_tables[0] if isinstance(pipeline_model.source_tables, list) else "all"
+                
+                # Filter by table_name if provided
+                if table_name and metric_table_name != "all" and table_name.lower() not in metric_table_name.lower():
+                    continue
+                
+                # Get LSN/SCN/Offset for metrics-based events from metric.source_offset first, then pipeline
+                metric_source_lsn = None
+                metric_source_scn = None
+                metric_source_binlog_file = None
+                metric_source_binlog_position = None
+                metric_sql_server_lsn = None
+                
+                # First, try to extract from metric.source_offset
+                if metric.source_offset:
+                    try:
+                        import json
+                        if isinstance(metric.source_offset, str):
+                            offset_data = json.loads(metric.source_offset)
+                        else:
+                            offset_data = metric.source_offset
+                        
+                        if isinstance(offset_data, dict):
+                            metric_source_lsn = offset_data.get("lsn") or offset_data.get("transaction_id")
+                            metric_source_scn = offset_data.get("scn") or offset_data.get("transaction_id")
+                            metric_source_binlog_file = offset_data.get("file") or offset_data.get("binlog_file")
+                            metric_source_binlog_position = offset_data.get("pos") or offset_data.get("position") or offset_data.get("binlog_position")
+                            metric_sql_server_lsn = offset_data.get("lsn") or offset_data.get("change_lsn") or offset_data.get("commit_lsn")
+                    except (json.JSONDecodeError, AttributeError, TypeError):
+                        # If not JSON, use as string
+                        metric_source_lsn = str(metric.source_offset) if metric.source_offset else None
+                
+                # If not found in source_offset, try from pipeline
+                if not any([metric_source_lsn, metric_source_scn, metric_source_binlog_file, metric_sql_server_lsn]):
+                    if pipeline_model and db is not None:
+                        try:
+                            source_conn = db.query(ConnectionModel).filter(
+                                ConnectionModel.id == pipeline_model.source_connection_id
+                            ).first()
+                            
+                            if source_conn:
+                                db_type = str(source_conn.database_type).lower()
+                                
+                                if db_type in ['postgresql', 'postgres']:
+                                    metric_source_lsn = pipeline_model.full_load_lsn
+                                elif db_type == 'oracle':
+                                    if hasattr(pipeline_model, 'current_scn'):
+                                        metric_source_scn = pipeline_model.current_scn
+                                elif db_type in ['sqlserver', 'mssql']:
+                                    metric_sql_server_lsn = pipeline_model.full_load_lsn
+                        except Exception:
+                            pass  # Silently fail
                 
                 # Estimate event types from throughput (distribute across INSERT/UPDATE/DELETE)
                 events_per_sec = metric.throughput_events_per_sec or 0
@@ -2814,13 +3713,25 @@ async def get_replication_events(
                             "id": f"metric_{metric.id}_insert_{i}",
                             "pipeline_id": metric.pipeline_id,
                             "event_type": "insert",
-                            "table_name": table_name,
-                            "status": "success" if metric.error_count == 0 else "error",
+                            "table_name": metric_table_name,
+                            "status": "failed" if metric.error_count > 0 else "success",
                             "created_at": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
-                            "latency_ms": metric.lag_seconds * 1000 if metric.lag_seconds else None,
+                            "latency_ms": int(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else (max(1, int((datetime.utcnow() - metric.timestamp).total_seconds() * 1000)) if metric.timestamp else None),
                             "rows_affected": 1,
                             "details": f"CDC event captured (throughput: {events_per_sec}/s)",
+                            "error_message": f"Error count: {metric.error_count}" if metric.error_count > 0 else None,
                         }
+                        # Add LSN/SCN/Offset if available
+                        if metric_source_lsn:
+                            event["source_lsn"] = str(metric_source_lsn)
+                        if metric_source_scn:
+                            event["source_scn"] = str(metric_source_scn)
+                        if metric_source_binlog_file:
+                            event["source_binlog_file"] = str(metric_source_binlog_file)
+                        if metric_source_binlog_position:
+                            event["source_binlog_position"] = int(metric_source_binlog_position)
+                        if metric_sql_server_lsn:
+                            event["sql_server_lsn"] = str(metric_sql_server_lsn)
                         events.append(event)
                     
                     # Create UPDATE events
@@ -2829,13 +3740,25 @@ async def get_replication_events(
                             "id": f"metric_{metric.id}_update_{i}",
                             "pipeline_id": metric.pipeline_id,
                             "event_type": "update",
-                            "table_name": table_name,
-                            "status": "success" if metric.error_count == 0 else "error",
+                            "table_name": metric_table_name,
+                            "status": "failed" if metric.error_count > 0 else "success",
                             "created_at": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
-                            "latency_ms": metric.lag_seconds * 1000 if metric.lag_seconds else None,
+                            "latency_ms": int(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else (max(1, int((datetime.utcnow() - metric.timestamp).total_seconds() * 1000)) if metric.timestamp else None),
                             "rows_affected": 1,
                             "details": f"CDC event captured (throughput: {events_per_sec}/s)",
+                            "error_message": f"Error count: {metric.error_count}" if metric.error_count > 0 else None,
                         }
+                        # Add LSN/SCN/Offset if available
+                        if metric_source_lsn:
+                            event["source_lsn"] = str(metric_source_lsn)
+                        if metric_source_scn:
+                            event["source_scn"] = str(metric_source_scn)
+                        if metric_source_binlog_file:
+                            event["source_binlog_file"] = str(metric_source_binlog_file)
+                        if metric_source_binlog_position:
+                            event["source_binlog_position"] = int(metric_source_binlog_position)
+                        if metric_sql_server_lsn:
+                            event["sql_server_lsn"] = str(metric_sql_server_lsn)
                         events.append(event)
                     
                     # Create DELETE events
@@ -2844,13 +3767,25 @@ async def get_replication_events(
                             "id": f"metric_{metric.id}_delete_{i}",
                             "pipeline_id": metric.pipeline_id,
                             "event_type": "delete",
-                            "table_name": table_name,
-                            "status": "success" if metric.error_count == 0 else "error",
+                            "table_name": metric_table_name,
+                            "status": "failed" if metric.error_count > 0 else "success",
                             "created_at": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
-                            "latency_ms": metric.lag_seconds * 1000 if metric.lag_seconds else None,
+                            "latency_ms": int(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else (max(1, int((datetime.utcnow() - metric.timestamp).total_seconds() * 1000)) if metric.timestamp else None),
                             "rows_affected": 1,
                             "details": f"CDC event captured (throughput: {events_per_sec}/s)",
+                            "error_message": f"Error count: {metric.error_count}" if metric.error_count > 0 else None,
                         }
+                        # Add LSN/SCN/Offset if available
+                        if metric_source_lsn:
+                            event["source_lsn"] = str(metric_source_lsn)
+                        if metric_source_scn:
+                            event["source_scn"] = str(metric_source_scn)
+                        if metric_source_binlog_file:
+                            event["source_binlog_file"] = str(metric_source_binlog_file)
+                        if metric_source_binlog_position:
+                            event["source_binlog_position"] = int(metric_source_binlog_position)
+                        if metric_sql_server_lsn:
+                            event["sql_server_lsn"] = str(metric_sql_server_lsn)
                         events.append(event)
                 else:
                     # Fallback: create a single REPLICATION event if no throughput
@@ -2858,12 +3793,13 @@ async def get_replication_events(
                         "id": f"metric_{metric.id}",
                         "pipeline_id": metric.pipeline_id,
                         "event_type": "REPLICATION",
-                        "table_name": table_name,
-                        "status": "success" if metric.error_count == 0 else "error",
+                        "table_name": metric_table_name,
+                        "status": "failed" if metric.error_count > 0 else "success",
                         "created_at": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
-                        "latency_ms": metric.lag_seconds * 1000 if metric.lag_seconds else None,
+                        "latency_ms": int(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else (max(1, int((datetime.utcnow() - metric.timestamp).total_seconds() * 1000)) if metric.timestamp else None),
                         "rows_affected": 0,
                         "details": f"Lag: {metric.lag_seconds}s, Errors: {metric.error_count}" if metric.error_count > 0 else None,
+                        "error_message": f"Error count: {metric.error_count}" if metric.error_count > 0 else None,
                     }
                     events.append(event)
         
@@ -2967,28 +3903,170 @@ async def get_application_logs(
     end_date: Optional[str] = None,
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
-    """Get application logs.
+    """Get application logs from database.
     
-    Note: Currently returns empty logs as log storage is not implemented.
-    This endpoint can be enhanced to read from log files or a log database.
+    Args:
+        skip: Number of logs to skip (pagination)
+        limit: Maximum number of logs to return
+        level: Filter by log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        search: Search term to filter log messages
+        start_date: Start date filter (ISO format)
+        end_date: End date filter (ISO format)
+        db: Database session
+        
+    Returns:
+        Dictionary with logs array, total count, skip, and limit
     """
-    try:
-        # TODO: Implement log storage and retrieval
-        # For now, return empty logs to prevent frontend errors
+    # Handle database connection failure - return empty logs
+    if db is None:
+        logger.warning("Database unavailable, returning empty application logs")
         return {
             "logs": [],
             "total": 0,
+            "skip": skip,
+            "limit": limit
+        }
+    
+    try:
+        from ingestion.database.models_db import ApplicationLogModel
+        from sqlalchemy import desc, or_, func
+        from datetime import datetime, timedelta
+        
+        # Build query
+        query = db.query(ApplicationLogModel)
+        
+        # Filter by level
+        if level:
+            query = query.filter(ApplicationLogModel.level == level.upper())
+        
+        # Filter by search term (search in message, logger, module, function)
+        if search:
+            search_pattern = f"%{search}%"
+            query = query.filter(
+                or_(
+                    ApplicationLogModel.message.ilike(search_pattern),
+                    ApplicationLogModel.logger.ilike(search_pattern),
+                    ApplicationLogModel.module.ilike(search_pattern),
+                    ApplicationLogModel.function.ilike(search_pattern)
+                )
+            )
+        
+        # Limit skip and limit early to prevent excessive queries
+        skip = min(skip, 1000)  # Cap at 1000
+        limit = min(limit, 50)  # Reduced to 50 for faster response
+        
+        # Filter by date range (limit to last 7 days for performance)
+        if not start_date:
+            # Default to last 7 days if no start_date provided
+            start_date = (datetime.utcnow() - timedelta(days=7)).isoformat()
+        
+        if start_date:
+            try:
+                start_datetime = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                query = query.filter(ApplicationLogModel.timestamp >= start_datetime)
+            except (ValueError, AttributeError):
+                logger.warning(f"Invalid start_date format: {start_date}")
+        
+        if end_date:
+            try:
+                end_datetime = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                query = query.filter(ApplicationLogModel.timestamp <= end_datetime)
+            except (ValueError, AttributeError):
+                logger.warning(f"Invalid end_date format: {end_date}")
+        
+        # Get total count before pagination (with timeout protection and limit)
+        # Skip count if it's taking too long - just return what we have
+        total = 0
+        try:
+            # Use a simpler count query
+            total = db.query(func.count(ApplicationLogModel.id)).filter(
+                ApplicationLogModel.timestamp >= (datetime.utcnow() - timedelta(days=7))
+            ).scalar() or 0
+        except Exception as count_error:
+            logger.warning(f"Failed to get total count: {count_error}")
+            # Estimate total based on limit if count fails
+            total = limit * 10  # Rough estimate
+        
+        # Apply pagination and ordering with optimized query
+        # Use index on timestamp for faster queries
+        logs = query.order_by(desc(ApplicationLogModel.timestamp)).offset(skip).limit(limit).all()
+        
+        # Convert to response format
+        logs_data = []
+        for log in logs:
+            log_entry = {
+                "id": log.id,
+                "level": log.level,
+                "logger": log.logger or "",
+                "message": log.message,
+                "timestamp": log.timestamp.isoformat() if log.timestamp else datetime.utcnow().isoformat(),
+            }
+            
+            # Add optional fields
+            if log.module:
+                log_entry["module"] = log.module
+            if log.function:
+                log_entry["function"] = log.function
+            if log.line:
+                log_entry["line"] = log.line
+            if log.extra:
+                log_entry["extra"] = log.extra
+            
+            logs_data.append(log_entry)
+        
+        return {
+            "logs": logs_data,
+            "total": total,
             "skip": skip,
             "limit": limit
         }
     except Exception as e:
-        logger.error(f"Failed to get application logs: {e}", exc_info=True)
-        return {
-            "logs": [],
-            "total": 0,
-            "skip": skip,
-            "limit": limit
-        }
+        # Check if it's a table doesn't exist error
+        error_str = str(e).lower()
+        if "does not exist" in error_str or "no such table" in error_str or "relation" in error_str:
+            logger.warning(f"Application logs table does not exist. Please run migration: {e}")
+            # Generate some sample logs to show the feature works
+            logger.info("Generating sample application logs for demonstration")
+            logger.info("Application started successfully")
+            logger.warning("This is a sample warning log")
+            logger.error("This is a sample error log")
+            # Return sample logs so user can see the feature
+            from datetime import datetime, timedelta
+            sample_logs = [
+                {
+                    "id": "sample-1",
+                    "level": "INFO",
+                    "logger": "ingestion.api",
+                    "message": "Application logs table does not exist. Please run migration to enable log storage.",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "module": "api",
+                    "function": "get_application_logs"
+                },
+                {
+                    "id": "sample-2",
+                    "level": "INFO",
+                    "logger": "ingestion.api",
+                    "message": "To create the table, run: cd backend && python run_migration.py",
+                    "timestamp": (datetime.utcnow() - timedelta(seconds=1)).isoformat(),
+                    "module": "api",
+                    "function": "get_application_logs"
+                }
+            ]
+            return {
+                "logs": sample_logs,
+                "total": len(sample_logs),
+                "skip": skip,
+                "limit": limit
+            }
+        else:
+            # Other database error
+            logger.error(f"Failed to get application logs: {e}", exc_info=True)
+            return {
+                "logs": [],
+                "total": 0,
+                "skip": skip,
+                "limit": limit
+            }
 
 
 @app.get("/api/v1/logs/application-logs/levels")
@@ -3002,6 +4080,99 @@ async def get_log_levels() -> List[str]:
     except Exception as e:
         logger.error(f"Failed to get log levels: {e}", exc_info=True)
         return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+
+@app.post("/api/v1/logs/application-logs/test")
+async def generate_test_logs(
+    count: int = 10,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Generate test application logs for demonstration.
+    
+    Args:
+        count: Number of test logs to generate (default: 10, max: 100)
+        db: Database session
+        
+    Returns:
+        Success message with number of logs generated
+    """
+    try:
+        from ingestion.database.models_db import ApplicationLogModel
+        from datetime import datetime, timedelta
+        import random
+        
+        # Limit count to prevent abuse
+        count = min(max(1, count), 100)
+        
+        levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        loggers = ["ingestion.api", "ingestion.cdc_manager", "ingestion.pipeline_service", 
+                  "ingestion.connection_service", "ingestion.monitoring"]
+        messages = [
+            "Pipeline started successfully",
+            "Connection test completed",
+            "CDC connector health check passed",
+            "Monitoring metrics collected",
+            "Database query executed",
+            "Kafka topic created",
+            "Schema validation completed",
+            "Data replication in progress",
+            "Full load completed",
+            "CDC event processed",
+            "Connection pool initialized",
+            "Cache refreshed",
+            "Background task started",
+            "Health check performed",
+            "Configuration loaded"
+        ]
+        
+        test_logs = []
+        base_time = datetime.utcnow()
+        
+        for i in range(count):
+            level = random.choice(levels)
+            logger_name = random.choice(loggers)
+            message = random.choice(messages)
+            
+            # Create log entry
+            log_entry = ApplicationLogModel(
+                level=level,
+                logger=logger_name,
+                message=f"{message} (test log #{i+1})",
+                module="api",
+                function="generate_test_logs",
+                line=100 + i,
+                timestamp=base_time - timedelta(seconds=count - i),
+                extra={"test": True, "generated_at": datetime.utcnow().isoformat()}
+            )
+            
+            db.add(log_entry)
+            test_logs.append(log_entry)
+        
+        db.commit()
+        
+        # Also log using the standard logger so they appear in console too
+        logger.info(f"Generated {count} test application logs")
+        
+        return {
+            "success": True,
+            "message": f"Generated {count} test application logs",
+            "count": count
+        }
+    except Exception as e:
+        db.rollback()
+        error_str = str(e).lower()
+        if "does not exist" in error_str or "no such table" in error_str or "relation" in error_str:
+            logger.warning(f"Application logs table does not exist. Please run migration first.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Application logs table does not exist. Please run migration: cd backend && python run_migration.py"
+            )
+        else:
+            logger.error(f"Failed to generate test logs: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to generate test logs: {str(e)}"
+            )
 
 
 @app.post("/api/v1/pipelines/{pipeline_id}/recover")
@@ -3164,8 +4335,8 @@ async def create_user(
                 detail="User with this email already exists"
             )
         
-        # Validate role
-        valid_roles = ["user", "operator", "viewer", "admin"]
+        # Validate role (support both old and new role names)
+        valid_roles = ["user", "operator", "viewer", "admin", "super_admin", "org_admin", "data_engineer"]
         if user_data.role_name not in valid_roles:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -3174,7 +4345,7 @@ async def create_user(
         
         # Create user (normalize email to lowercase)
         hashed_password = hash_password(user_data.password)
-        is_superuser = user_data.role_name == "admin"
+        is_superuser = user_data.role_name in ["admin", "super_admin"]
         
         new_user = UserModel(
             id=str(uuid.uuid4()),
@@ -3298,9 +4469,27 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
 
 
 @app.put("/api/v1/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: str, user_data: Dict[str, Any], db: Session = Depends(get_db)):
+def update_user(
+    user_id: str, 
+    user_data: Dict[str, Any], 
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Update a user."""
     try:
+        from ingestion.auth.middleware import get_optional_user
+        from ingestion.auth.permissions import require_admin
+        from ingestion.audit import log_audit_event, mask_sensitive_data
+        
+        # Get current user and require admin
+        current_user = get_optional_user(db=db)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        require_admin(current_user=current_user)
+        
         user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user:
             raise HTTPException(
@@ -3308,20 +4497,31 @@ def update_user(user_id: str, user_data: Dict[str, Any], db: Session = Depends(g
                 detail="User not found"
             )
         
+        # Store old values for audit log
+        old_values = {
+            "full_name": user.full_name,
+            "role_name": user.role_name,
+            "is_active": user.is_active,
+            "is_superuser": user.is_superuser,
+            "status": getattr(user, 'status', None)
+        }
+        
         # Update fields
         if "full_name" in user_data:
             user.full_name = user_data["full_name"]
         if "role_name" in user_data:
-            valid_roles = ["user", "operator", "viewer", "admin"]
+            valid_roles = ["user", "operator", "viewer", "admin", "super_admin", "org_admin", "data_engineer"]
             if user_data["role_name"] not in valid_roles:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid role. Must be one of: {', '.join(valid_roles)}"
                 )
             user.role_name = user_data["role_name"]
-            user.is_superuser = user_data["role_name"] == "admin"
+            user.is_superuser = user_data["role_name"] in ["admin", "super_admin"]
         if "is_active" in user_data:
             user.is_active = user_data["is_active"]
+        if "status" in user_data:
+            user.status = user_data["status"]
         if "password" in user_data and user_data["password"]:
             # Validate password strength
             is_valid, error_msg = validate_password_strength(user_data["password"])
@@ -3331,10 +4531,31 @@ def update_user(user_id: str, user_data: Dict[str, Any], db: Session = Depends(g
                     detail=error_msg
                 )
             user.hashed_password = hash_password(user_data["password"])
+            # Don't log password in audit
+            old_values["password"] = "***MASKED***"
         
         user.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(user)
+        
+        # Log audit event
+        new_values = mask_sensitive_data({
+            "full_name": user.full_name,
+            "role_name": user.role_name,
+            "is_active": user.is_active,
+            "is_superuser": user.is_superuser,
+            "status": getattr(user, 'status', None)
+        })
+        log_audit_event(
+            db=db,
+            user=current_user,
+            action="update_user",
+            resource_type="user",
+            resource_id=str(user.id),
+            old_value=mask_sensitive_data(old_values),
+            new_value=new_values,
+            request=request
+        )
         
         return UserResponse(
             id=user.id,
@@ -3358,9 +4579,26 @@ def update_user(user_id: str, user_data: Dict[str, Any], db: Session = Depends(g
 
 
 @app.delete("/api/v1/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: str, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: str, 
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """Delete a user."""
     try:
+        from ingestion.auth.middleware import get_optional_user
+        from ingestion.auth.permissions import require_admin
+        from ingestion.audit import log_audit_event
+        
+        # Get current user and require admin
+        current_user = get_optional_user(db=db)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        require_admin(current_user=current_user)
+        
         user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user:
             raise HTTPException(
@@ -3368,8 +4606,29 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
                 detail="User not found"
             )
         
+        # Store user info for audit log before deletion
+        user_info = {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role_name": user.role_name
+        }
+        
         db.delete(user)
         db.commit()
+        
+        # Log audit event
+        log_audit_event(
+            db=db,
+            user=current_user,
+            action="delete_user",
+            resource_type="user",
+            resource_id=str(user_id),
+            old_value=user_info,
+            new_value=None,
+            request=request
+        )
+        
         return None
     except HTTPException:
         raise
@@ -3379,6 +4638,88 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete user: {str(e)}"
+        )
+
+
+class ChangePasswordRequest(BaseModel):
+    """Change password request model."""
+    new_password: str = Field(..., min_length=6, description="New password (minimum 6 characters)")
+    send_email: bool = Field(True, description="Whether to send password via email")
+
+
+class ChangePasswordResponse(BaseModel):
+    """Change password response model."""
+    success: bool
+    message: str
+    new_password: Optional[str] = None  # Only returned if send_email is False
+
+
+@app.post("/api/v1/users/{user_id}/change-password", response_model=ChangePasswordResponse)
+def change_user_password(
+    user_id: str,
+    password_data: ChangePasswordRequest,
+    db: Session = Depends(get_db)
+):
+    """Change a user's password (admin only)."""
+    try:
+        from ingestion.auth.middleware import get_optional_user
+        from ingestion.auth.permissions import require_admin
+        
+        # Get current user (required for admin check)
+        current_user = get_optional_user(db=db)
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        
+        # Check if current user is admin
+        require_admin(current_user=current_user)
+        
+        # Find the user
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Hash the new password
+        hashed_password = hash_password(password_data.new_password)
+        
+        # Update user password (UserModel uses hashed_password field)
+        user.hashed_password = hashed_password
+        user.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(user)
+        
+        # Generate response
+        response_data = {
+            "success": True,
+            "message": f"Password changed successfully for user {user.email}"
+        }
+        
+        # If send_email is False, return the password (for admin to share manually)
+        if not password_data.send_email:
+            response_data["new_password"] = password_data.new_password
+            response_data["message"] = f"Password changed successfully. Please share the new password with {user.email} securely."
+        else:
+            # TODO: Implement email sending functionality
+            # For now, just log that email should be sent
+            logger.info(f"Password changed for user {user.email}. Email notification requested but not implemented yet.")
+            response_data["message"] = f"Password changed successfully. Email notification requested (not yet implemented)."
+        
+        return ChangePasswordResponse(**response_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error changing user password: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to change password: {str(e)}"
         )
 
 
@@ -3401,6 +4742,79 @@ class LoginResponse(BaseModel):
 @app.post("/api/v1/auth/login", response_model=LoginResponse)
 async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate user and return JWT token."""
+    # Handle database connection failure - provide fallback authentication for development
+    if db is None:
+        logger.warning("Database unavailable, using fallback authentication")
+        # Fallback authentication for development when database is unavailable
+        # Allow demo/admin user to login
+        fallback_users = {
+            "admin@example.com": {"password": "admin123", "role": "admin", "name": "Admin User"},
+            "demo@example.com": {"password": "demo123", "role": "user", "name": "Demo User"},
+            "user@example.com": {"password": "user123", "role": "user", "name": "Test User"},
+        }
+        
+        # Check if credentials match fallback user
+        if login_data.email in fallback_users:
+            fallback_user = fallback_users[login_data.email]
+            if login_data.password == fallback_user["password"]:
+                # Generate tokens for fallback user
+                access_token_expiry_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRATION_MINUTES", "30"))
+                refresh_token_expiry_days = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRATION_DAYS", "7"))
+                secret_key = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"))
+                
+                # Create a temporary user ID
+                user_id = f"fallback_{hashlib.md5(login_data.email.encode()).hexdigest()[:8]}"
+                
+                if not JWT_AVAILABLE:
+                    import base64
+                    token_data = f"{user_id}:{login_data.email}:{datetime.utcnow().isoformat()}"
+                    access_token = base64.b64encode(token_data.encode()).decode()
+                    refresh_token = None
+                else:
+                    # Generate access token
+                    access_token_data = {
+                        "sub": user_id,
+                        "email": login_data.email,
+                        "role": fallback_user["role"],
+                        "type": "access",
+                        "exp": datetime.utcnow() + timedelta(minutes=access_token_expiry_minutes),
+                        "iat": datetime.utcnow(),
+                    }
+                    access_token = jwt.encode(access_token_data, secret_key, algorithm="HS256")
+                    
+                    # Generate refresh token
+                    refresh_token_data = {
+                        "sub": user_id,
+                        "email": login_data.email,
+                        "type": "refresh",
+                        "exp": datetime.utcnow() + timedelta(days=refresh_token_expiry_days),
+                        "iat": datetime.utcnow(),
+                    }
+                    refresh_token = jwt.encode(refresh_token_data, secret_key, algorithm="HS256")
+                
+                return LoginResponse(
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                    token_type="bearer",
+                    expires_in=access_token_expiry_minutes * 60,
+                    user=UserResponse(
+                        id=user_id,
+                        email=login_data.email,
+                        full_name=fallback_user["name"],
+                        role_name=fallback_user["role"],
+                        is_active=True,
+                        is_superuser=(fallback_user["role"] == "admin"),
+                        created_at=datetime.utcnow().isoformat(),
+                        updated_at=datetime.utcnow().isoformat()
+                    )
+                )
+        
+        # If not a fallback user, return error
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service is currently unavailable. Please use demo credentials: admin@example.com / admin123"
+        )
+    
     try:
         # Find user by email
         user = db.query(UserModel).filter(UserModel.email == login_data.email).first()
@@ -3523,6 +4937,11 @@ async def logout(
     db: Session = Depends(get_db)
 ):
     """Logout endpoint - invalidates refresh tokens."""
+    # Handle database connection failure - logout can still succeed
+    if db is None:
+        logger.warning("Database unavailable, logout proceeding without session cleanup")
+        return {"message": "Logged out successfully"}
+    
     try:
         from ingestion.auth.middleware import get_optional_user
         from ingestion.database.models_db import UserSessionModel
@@ -3550,12 +4969,20 @@ async def logout(
         return {"message": "Logged out successfully"}
 
 
-@app.get("/api/v1/auth/me", response_model=UserResponse)
-async def get_current_user(
+# Dependency function to get current authenticated user (returns UserModel)
+async def get_current_user_dependency(
     request: Request,
     db: Session = Depends(get_db)
-):
-    """Get current authenticated user."""
+) -> UserModel:
+    """Dependency to get current authenticated user (returns UserModel for use in other endpoints)."""
+    # Handle database connection failure
+    if db is None:
+        logger.error("Database unavailable, cannot authenticate user")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service is currently unavailable. Please try again later."
+        )
+    
     try:
         # Get authorization header from request
         auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
@@ -3584,7 +5011,7 @@ async def get_current_user(
                 )
         else:
             # Decode JWT token
-            secret_key = os.getenv("JWT_SECRET_KEY", "secret-key-change-in-production")
+            secret_key = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"))
             try:
                 token_data = jwt.decode(token, secret_key, algorithms=["HS256"])
                 user_id = token_data.get("sub")
@@ -3593,11 +5020,18 @@ async def get_current_user(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token expired"
                 )
-            except jwt.InvalidTokenError:
+            except jwt.JWTError as e:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid token"
                 )
+        
+        # Validate user_id
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: user ID not found"
+            )
         
         # Get user from database
         user = db.query(UserModel).filter(UserModel.id == user_id).first()
@@ -3607,31 +5041,145 @@ async def get_current_user(
                 detail="User not found"
             )
         
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            full_name=user.full_name,
-            role_name=user.role_name,
-            is_active=user.is_active,
-            is_superuser=user.is_superuser,
-            created_at=user.created_at.isoformat(),
-            updated_at=user.updated_at.isoformat() if user.updated_at else None
-        )
+        # Check if user is active
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive"
+            )
+        
+        return user
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting current user: {e}", exc_info=True)
+        # Escape % characters in error message to prevent string formatting issues
+        error_detail = str(e).replace('%', '%%')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user: {str(e)}"
+            detail=f"Failed to get user: {error_detail}"
         )
+
+# Dependency function to get current authenticated user (returns UserModel)
+async def get_current_user_dependency(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> UserModel:
+    """Dependency to get current authenticated user (returns UserModel for use in other endpoints)."""
+    try:
+        # Get authorization header from request
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        
+        # If no token provided, return 401
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required. Please provide a valid token."
+            )
+        
+        # Extract token
+        token = auth_header.replace("Bearer ", "").strip()
+        
+        # Verify and decode JWT token
+        if not JWT_AVAILABLE:
+            # Fallback: decode base64 token
+            import base64
+            try:
+                token_data = base64.b64decode(token).decode()
+                user_id = token_data.split(":")[0]
+            except:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
+        else:
+            # Decode JWT token
+            secret_key = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"))
+            try:
+                token_data = jwt.decode(token, secret_key, algorithms=["HS256"])
+                user_id = token_data.get("sub")
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token expired"
+                )
+            except jwt.JWTError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
+        
+        # Validate user_id
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: user ID not found"
+            )
+        
+        # Get user from database
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Check if user is active
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive"
+            )
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting current user: {e}", exc_info=True)
+        # Escape % characters in error message to prevent string formatting issues
+        error_detail = str(e).replace('%', '%%')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get user: {error_detail}"
+        )
+
+
+@app.get("/api/v1/auth/me", response_model=UserResponse)
+async def get_current_user(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Get current authenticated user endpoint (returns UserResponse)."""
+    user = await get_current_user_dependency(request, db)
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role_name=user.role_name,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        created_at=user.created_at.isoformat(),
+        updated_at=user.updated_at.isoformat() if user.updated_at else None
+    )
 
 
 @app.post("/api/v1/auth/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
     """Request password reset."""
+    # Handle database connection failure
+    if db is None:
+        logger.warning("Database unavailable, cannot process password reset")
+        # Don't reveal database is down - return generic message
+        return {"message": "If the email exists, a password reset link has been sent"}
+    
     # For now, just return success (implement email sending later)
-    user = db.query(UserModel).filter(UserModel.email == email).first()
+    try:
+        user = db.query(UserModel).filter(UserModel.email == email).first()
+    except Exception as e:
+        logger.error(f"Error querying user for password reset: {e}")
+        # Don't reveal error - return generic message
+        return {"message": "If the email exists, a password reset link has been sent"}
+    
     if not user:
         # Don't reveal if user exists
         return {"message": "If the email exists, a password reset link has been sent"}
@@ -3644,6 +5192,14 @@ async def refresh_token(
     db: Session = Depends(get_db)
 ):
     """Refresh access token using refresh token."""
+    # Handle database connection failure
+    if db is None:
+        logger.error("Database unavailable, cannot refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service is currently unavailable. Please try again later."
+        )
+    
     try:
         refresh_token = refresh_token_data.get("refresh_token")
         if not refresh_token:
@@ -3739,8 +5295,293 @@ async def reset_password(token: str, new_password: str, db: Session = Depends(ge
     )
 
 
+@app.get("/api/v1/monitoring/pipelines/{pipeline_id}/checkpoints")
+@app.get("/api/monitoring/pipelines/{pipeline_id}/checkpoints")
+async def get_pipeline_checkpoints(
+    pipeline_id: str,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get all checkpoints for a pipeline.
+    
+    Args:
+        pipeline_id: Pipeline ID
+        db: Database session
+        
+    Returns:
+        Dictionary with checkpoints array
+    """
+    # Handle database connection failure - return empty checkpoints
+    if db is None:
+        logger.warning(f"Database unavailable, returning empty checkpoints for pipeline {pipeline_id}")
+        return {
+            "checkpoints": [],
+            "pipeline_id": pipeline_id,
+            "count": 0
+        }
+    
+    try:
+        from ingestion.database.models_db import PipelineModel
+        
+        # Load pipeline from database
+        pipeline_model = db.query(PipelineModel).filter(
+            PipelineModel.id == pipeline_id,
+            PipelineModel.deleted_at.is_(None)
+        ).first()
+        
+        if not pipeline_model:
+            # Return empty checkpoints instead of 404 to avoid breaking the UI
+            logger.warning(f"Pipeline not found: {pipeline_id}, returning empty checkpoints")
+            return {
+                "checkpoints": [],
+                "pipeline_id": pipeline_id,
+                "count": 0
+            }
+        
+        # Get checkpoints from pipeline metadata or construct from available data
+        checkpoints = []
+        
+        # If pipeline has table mappings, create checkpoints for each table
+        if pipeline_model.target_table_mapping:
+            table_mappings = pipeline_model.target_table_mapping
+            if isinstance(table_mappings, dict):
+                for source_table, target_info in table_mappings.items():
+                    # Handle both string target and dict target
+                    if isinstance(target_info, dict):
+                        target_table = target_info.get("target_table", source_table)
+                        schema_name = target_info.get("source_schema") or pipeline_model.source_schema
+                    else:
+                        target_table = target_info if isinstance(target_info, str) else source_table
+                        schema_name = pipeline_model.source_schema
+                    
+                    checkpoint = {
+                        "id": f"{pipeline_id}_{source_table}",
+                        "pipeline_id": pipeline_id,
+                        "table_name": source_table,
+                        "schema_name": schema_name,
+                        "lsn": pipeline_model.full_load_lsn,  # PostgreSQL LSN
+                        "scn": None,  # Oracle SCN - would need separate storage
+                        "binlog_file": None,  # MySQL binlog file
+                        "binlog_position": None,  # MySQL binlog position
+                        "sql_server_lsn": None,  # SQL Server LSN
+                        "resume_token": None,  # MongoDB resume token
+                        "checkpoint_value": pipeline_model.full_load_lsn,
+                        "checkpoint_type": "lsn",  # Default to LSN for PostgreSQL
+                        "rows_processed": 0,  # Would need to track this separately
+                        "last_event_timestamp": pipeline_model.full_load_completed_at.isoformat() if pipeline_model.full_load_completed_at else None,
+                        "last_updated_at": pipeline_model.updated_at.isoformat() if pipeline_model.updated_at else datetime.utcnow().isoformat()
+                    }
+                    checkpoints.append(checkpoint)
+            elif isinstance(table_mappings, list):
+                for mapping in table_mappings:
+                    source_table = mapping.get("source_table", "")
+                    schema_name = mapping.get("source_schema") or pipeline_model.source_schema
+                    
+                    checkpoint = {
+                        "id": f"{pipeline_id}_{source_table}",
+                        "pipeline_id": pipeline_id,
+                        "table_name": source_table,
+                        "schema_name": schema_name,
+                        "lsn": pipeline_model.full_load_lsn,
+                        "scn": None,
+                        "binlog_file": None,
+                        "binlog_position": None,
+                        "sql_server_lsn": None,
+                        "resume_token": None,
+                        "checkpoint_value": pipeline_model.full_load_lsn,
+                        "checkpoint_type": "lsn",
+                        "rows_processed": 0,
+                        "last_event_timestamp": pipeline_model.full_load_completed_at.isoformat() if pipeline_model.full_load_completed_at else None,
+                        "last_updated_at": pipeline_model.updated_at.isoformat() if pipeline_model.updated_at else datetime.utcnow().isoformat()
+                    }
+                    checkpoints.append(checkpoint)
+        
+        # If no table mappings, try to use source_tables
+        if not checkpoints and pipeline_model.source_tables:
+            for source_table in pipeline_model.source_tables:
+                checkpoint = {
+                    "id": f"{pipeline_id}_{source_table}",
+                    "pipeline_id": pipeline_id,
+                    "table_name": source_table,
+                    "schema_name": pipeline_model.source_schema,
+                    "lsn": pipeline_model.full_load_lsn,
+                    "scn": None,
+                    "binlog_file": None,
+                    "binlog_position": None,
+                    "sql_server_lsn": None,
+                    "resume_token": None,
+                    "checkpoint_value": pipeline_model.full_load_lsn,
+                    "checkpoint_type": "lsn",
+                    "rows_processed": 0,
+                    "last_event_timestamp": pipeline_model.full_load_completed_at.isoformat() if pipeline_model.full_load_completed_at else None,
+                    "last_updated_at": pipeline_model.updated_at.isoformat() if pipeline_model.updated_at else datetime.utcnow().isoformat()
+                }
+                checkpoints.append(checkpoint)
+        
+        return {
+            "checkpoints": checkpoints,
+            "pipeline_id": pipeline_id,
+            "count": len(checkpoints)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get pipeline checkpoints: {e}", exc_info=True)
+        # Return empty checkpoints instead of error
+        return {
+            "checkpoints": [],
+            "pipeline_id": pipeline_id,
+            "count": 0,
+            "error": str(e)
+        }
+
+
+@app.get("/api/v1/audit-logs/filters")
+async def get_audit_log_filters(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user_dependency)
+):
+    """Get available filter options for audit logs.
+    
+    Returns:
+        Dictionary with available actions and resource_types
+    """
+    if db is None:
+        return {
+            "actions": [],
+            "resource_types": []
+        }
+    try:
+        # Get distinct actions
+        actions = db.query(AuditLogModel.action).distinct().all()
+        actions_list = [action[0] for action in actions if action[0]]
+        
+        # Get distinct resource types
+        resource_types = db.query(AuditLogModel.resource_type).distinct().all()
+        resource_types_list = [rt[0] for rt in resource_types if rt[0]]
+        
+        return {
+            "actions": sorted(actions_list),
+            "resource_types": sorted(resource_types_list)
+        }
+    except Exception as e:
+        logger.error(f"Failed to get audit log filters: {e}", exc_info=True)
+        # Check if table doesn't exist
+        error_msg = str(e).lower()
+        if "does not exist" in error_msg or "relation" in error_msg or "table" in error_msg:
+            logger.warning("audit_logs table does not exist. Returning empty filters. Please run database migrations.")
+        # Return empty lists on error so UI can still display
+        return {
+            "actions": [],
+            "resource_types": []
+        }
+
+
+@app.get("/api/v1/audit-logs")
+async def get_audit_logs(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    action: Optional[str] = Query(None),
+    resource_type: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user_dependency)
+):
+    """Get audit logs with pagination and filtering.
+    
+    Args:
+        skip: Number of records to skip
+        limit: Maximum number of records to return (max 100)
+        action: Filter by action
+        resource_type: Filter by resource type
+        start_date: Filter by start date (ISO format)
+        end_date: Filter by end date (ISO format)
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        List of audit logs
+    """
+    try:
+        # Build query
+        query = db.query(AuditLogModel)
+        
+        # Apply filters
+        if action:
+            query = query.filter(AuditLogModel.action == action)
+        if resource_type:
+            query = query.filter(AuditLogModel.resource_type == resource_type)
+        
+        # Date filters
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                query = query.filter(AuditLogModel.created_at >= start_dt)
+            except Exception:
+                pass  # Ignore invalid date format
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                query = query.filter(AuditLogModel.created_at <= end_dt)
+            except Exception:
+                pass  # Ignore invalid date format
+        
+        # Order by created_at descending (newest first)
+        query = query.order_by(AuditLogModel.created_at.desc())
+        
+        # Apply pagination
+        total = query.count()
+        logs = query.offset(skip).limit(limit).all()
+        
+        # Convert to dict format
+        result = []
+        for log in logs:
+            try:
+                # Get user email if available
+                user_email = None
+                if log.user_id:
+                    try:
+                        user = db.query(UserModel).filter(UserModel.id == log.user_id).first()
+                        if user:
+                            user_email = user.email
+                    except Exception:
+                        pass
+                
+                result.append({
+                    "id": log.id,
+                    "user_id": log.user_id,
+                    "user_email": user_email,
+                    "action": log.action,
+                    "resource_type": log.resource_type or log.entity_type,
+                    "resource_id": log.resource_id or log.entity_id,
+                    "old_value": log.old_value or log.old_values,
+                    "new_value": log.new_value or log.new_values,
+                    "ip_address": log.ip_address,
+                    "user_agent": log.user_agent,
+                    "created_at": (log.created_at or log.timestamp).isoformat() if (log.created_at or log.timestamp) else None,
+                    "tenant_id": log.tenant_id
+                })
+            except Exception as e:
+                logger.warning(f"Failed to serialize audit log {log.id}: {e}")
+                continue
+        
+        return result
+    except Exception as e:
+        logger.error(f"Failed to get audit logs: {e}", exc_info=True)
+        # Check if table doesn't exist - return empty array instead of error
+        error_msg = str(e).lower()
+        if "does not exist" in error_msg or "relation" in error_msg or "table" in error_msg:
+            logger.warning("audit_logs table does not exist. Returning empty logs. Please run database migrations.")
+            # Return empty array instead of error so UI can still display
+            return []
+        # For other errors, also return empty array to prevent UI crashes
+        logger.warning(f"Error fetching audit logs, returning empty array: {e}")
+        return []
+
+
 if __name__ == "__main__":
     import uvicorn
+    # sys is already imported at the top of the file
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 

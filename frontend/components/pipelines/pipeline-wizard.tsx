@@ -992,10 +992,43 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
         {step === 4 && (
           <div className="space-y-4 flex flex-col h-full overflow-hidden">
             <div className="flex-shrink-0">
-              <h3 className="text-xl font-bold text-foreground mb-2">Step 4: Configure Target Tables</h3>
-              <p className="text-sm text-foreground-muted">
-                Edit target table names and review source and target table schemas side by side.
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Step 4: Configure Target Tables</h3>
+                  <p className="text-sm text-foreground-muted">
+                    Edit target table names and review source and target table schemas side by side.
+                  </p>
+                </div>
+                {targetConnection && (
+                  <Button
+                    onClick={handleLoadTargetTables}
+                    disabled={loadingTargetTables}
+                    variant="outline"
+                    className="bg-primary/10 border-primary/30 hover:bg-primary/20 gap-2"
+                    title="Load existing tables from target connection"
+                  >
+                    {loadingTargetTables ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-4 h-4" />
+                        Load Target Tables
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              {targetAvailableTables.length > 0 && (
+                <div className="mt-3 p-3 bg-info/10 border border-info/30 rounded text-sm text-foreground">
+                  <p className="font-semibold">Found {targetAvailableTables.length} existing table{targetAvailableTables.length !== 1 ? 's' : ''} in target connection</p>
+                  <p className="text-xs text-foreground-muted mt-1">
+                    These tables are available in your target database. You can map source tables to these existing tables or create new ones.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 flex-1 overflow-y-auto pr-2 min-h-0">
@@ -1096,10 +1129,71 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
                               Target Table Name *
                             </Label>
                             <div className="flex gap-3">
+                              {/* Show dropdown if target tables are available */}
+                              {targetAvailableTables.length > 0 && (
+                                <Select
+                                  value={(() => {
+                                    const mapped = tableMapping[sourceTable] || sourceTable
+                                    const parsed = parseTableName(mapped)
+                                    // Try to find matching table in available tables
+                                    const matchingTable = targetAvailableTables.find(t => 
+                                      (t.full_name || t.name) === mapped || 
+                                      t.name === parsed.table ||
+                                      (t.full_name && t.full_name.includes(parsed.table))
+                                    )
+                                    return matchingTable ? (matchingTable.full_name || matchingTable.name) : ""
+                                  })()}
+                                  onValueChange={(value) => {
+                                    if (value === "__new__") {
+                                      // User wants to create new table - clear selection
+                                      return
+                                    }
+                                    const selectedTable = targetAvailableTables.find(t => 
+                                      (t.full_name || t.name) === value
+                                    )
+                                    if (selectedTable) {
+                                      const newTarget = selectedTable.full_name || selectedTable.name
+                                      handleTableRename(sourceTable, newTarget)
+                                      // Update target schema if available
+                                      if (selectedTable.columns) {
+                                        setTargetTableSchemas((prev) => ({
+                                          ...prev,
+                                          [newTarget]: selectedTable
+                                        }))
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="flex-1 text-base">
+                                    <SelectValue placeholder="Select existing table or create new" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-surface border-border max-h-60">
+                                    <SelectItem value="__new__">+ Create New Table</SelectItem>
+                                    {targetAvailableTables.map((table: any) => (
+                                      <SelectItem 
+                                        key={table.full_name || table.name} 
+                                        value={table.full_name || table.name}
+                                      >
+                                        {table.full_name || table.name} 
+                                        {table.columns && ` (${table.columns.length} columns)`}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
                               <Input
                                 value={(() => {
                                   const mapped = tableMapping[sourceTable] || sourceTable
                                   const parsed = parseTableName(mapped)
+                                  // If dropdown is shown and a table is selected, show empty for new table input
+                                  if (targetAvailableTables.length > 0) {
+                                    const matchingTable = targetAvailableTables.find(t => 
+                                      (t.full_name || t.name) === mapped
+                                    )
+                                    if (matchingTable) {
+                                      return "" // Show empty when existing table is selected
+                                    }
+                                  }
                                   return parsed.table
                                 })()}
                                 onChange={(e) => {
@@ -1126,7 +1220,7 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
                                   }
                                 }}
                                 className="flex-1 text-base"
-                                placeholder="Enter target table name"
+                                placeholder={targetAvailableTables.length > 0 ? "Or enter new table name" : "Enter target table name"}
                               />
                               {(() => {
                                 // Only show Copy Schema button if schema hasn't been copied yet

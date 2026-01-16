@@ -83,18 +83,20 @@ export default function PipelineMonitorPage() {
   }, [dispatch, isAuthenticated, pipelineId])
 
   // Filter events for this pipeline - handle both string and number IDs
-  const pipelineEvents = events.filter(e => {
+  // Ensure events is an array before filtering
+  const pipelineEvents = Array.isArray(events) ? events.filter(e => {
     const eventPipelineId = String(e.pipeline_id || '')
     const currentPipelineId = String(pipelineId || '')
     return eventPipelineId === currentPipelineId
-  })
+  }) : []
 
   // Filter metrics for this pipeline - handle both string and number IDs
-  const pipelineMetrics = metrics.filter(m => {
+  // Ensure metrics is an array before filtering
+  const pipelineMetrics = Array.isArray(metrics) ? metrics.filter(m => {
     const metricPipelineId = String(m.pipeline_id || '')
     const currentPipelineId = String(pipelineId || '')
     return metricPipelineId === currentPipelineId
-  })
+  }) : []
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -271,7 +273,7 @@ export default function PipelineMonitorPage() {
             <div>
               <p className="text-sm font-medium text-foreground-muted mb-1">Avg Latency</p>
               <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-                {avgLatency > 0 ? `${avgLatency.toFixed(0)}ms` : 'N/A'}
+                {avgLatency > 0 ? `${avgLatency.toFixed(0)}ms` : '0ms'}
               </p>
             </div>
             <div className="p-3 bg-purple-500/20 rounded-lg">

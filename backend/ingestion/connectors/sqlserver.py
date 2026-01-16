@@ -84,6 +84,69 @@ class SQLServerConnector(BaseConnector):
         missing = [key for key in required if not self.config.get(key)]
         if missing:
             raise ValueError(f"Missing required connection parameters: {', '.join(missing)}")
+    
+    def _escape_odbc_password(self, password: str) -> str:
+        """Escape special characters in password for ODBC connection strings.
+        
+        ODBC connection strings require special characters to be escaped:
+        - { must be escaped as {{ (double brace) - this is critical
+        - } must be escaped as }} (double brace) - this is critical
+        - ; (semicolon) is a delimiter - ODBC Driver 18 may not support it in passwords
+        - = (equals) separates key=value pairs - may cause issues
+        
+        For ODBC Driver 18, we need to properly escape braces and handle other special chars.
+        Note: Some ODBC drivers don't support certain special characters in passwords at all.
+        
+        Args:
+            password: Raw password string
+            
+        Returns:
+            Escaped password string safe for ODBC connection strings
+        """
+        if not password:
+            return ""
+        
+        # Convert to string and handle None
+        password_str = str(password) if password is not None else ""
+        if not password_str:
+            return ""
+        
+        # Critical: Escape braces first (these MUST be escaped for ODBC)
+        # { must become {{ and } must become }}
+        escaped = password_str.replace("{", "{{")
+        escaped = escaped.replace("}", "}}")
+        
+        # For semicolons and equals, ODBC Driver 18 may not support URL encoding
+        # Instead, we'll try to escape them or handle them differently
+        # However, if the password contains these characters, it might not work with ODBC
+        # The best solution is to URL-encode them and hope the driver supports it
+        # If not, the user may need to change their password
+        
+        # For semicolons and equals, ODBC Driver 18 has issues
+        # Try multiple approaches:
+        # 1. First try URL encoding (some drivers support this)
+        # 2. If that doesn't work, we'll need to handle it differently
+        
+        # URL-encode problematic characters
+        # Note: ODBC may not decode URL-encoded passwords, but it's worth trying
+        escaped = escaped.replace(";", "%3B")  # Semicolon - connection string delimiter
+        escaped = escaped.replace("=", "%3D")   # Equals - key=value separator
+        
+        # Also handle backslashes which can cause issues
+        escaped = escaped.replace("\\", "\\\\")
+        
+        # Log a warning if password contains problematic characters
+        problematic_chars = set(password_str) & set(';={}\\')
+        if problematic_chars:
+            logger.warning(
+                f"Password contains special characters that may cause ODBC connection issues: {problematic_chars}. "
+                f"Attempting to escape/encode them. If connection still fails, consider changing the password."
+            )
+        
+        logger.debug(f"Password escaped: original length={len(password_str)}, escaped length={len(escaped)}, "
+                    f"has_special_chars={bool(problematic_chars)}")
+        
+        return escaped
 
     def _build_connection_string(self) -> str:
         """Build SQL Server connection string.
@@ -95,10 +158,21 @@ class SQLServerConnector(BaseConnector):
         port = self.config.get("port", 1433)
         database = self.config.get("database", "master")
         user = self.config["user"]
-        password = self.config["password"]
+        password = self.config.get("password")
         driver = self.config.get("driver")
         trust_cert = self.config.get("trust_server_certificate", False)
         encrypt = self.config.get("encrypt", True)
+        
+        # Validate password is not None or empty
+        if password is None:
+            raise ValueError("Password cannot be None for SQL Server connection")
+        if not isinstance(password, str) and password is not None:
+            password = str(password)
+        if password == "":
+            raise ValueError("Password cannot be empty for SQL Server connection")
+        
+        # Escape password for ODBC connection string
+        escaped_password = self._escape_odbc_password(password)
         
         # Try to detect available ODBC driver if not specified
         if not driver:
@@ -113,7 +187,7 @@ class SQLServerConnector(BaseConnector):
                 f"SERVER={server},{port};"
                 f"DATABASE={database};"
                 f"UID={user};"
-                f"PWD={password};"
+                f"PWD={escaped_password};"
                 f"TrustServerCertificate={'yes' if trust_cert else 'no'};"
                 f"Encrypt={'yes' if encrypt else 'no'};"
             )
@@ -133,7 +207,7 @@ class SQLServerConnector(BaseConnector):
                             f"SERVER={server},{port};"
                             f"DATABASE={database};"
                             f"UID={user};"
-                            f"PWD={password};"
+                            f"PWD={escaped_password};"
                             f"TrustServerCertificate={'yes' if trust_cert else 'no'};"
                             f"Encrypt={'yes' if encrypt else 'no'};"
                         )
@@ -243,8 +317,19 @@ class SQLServerConnector(BaseConnector):
         port = self.config.get("port", 1433)
         database = self.config.get("database", "master")
         user = self.config["user"]
-        password = self.config["password"]
+        password = self.config.get("password")
         trust_cert = self.config.get("trust_server_certificate", False)
+        
+        # Validate password is not None or empty
+        if password is None:
+            raise ValueError("Password cannot be None for SQL Server connection")
+        if not isinstance(password, str) and password is not None:
+            password = str(password)
+        if password == "":
+            raise ValueError("Password cannot be empty for SQL Server connection")
+        
+        # Escape password for ODBC connection string
+        escaped_password = self._escape_odbc_password(password)
         
         # On Windows Docker, use host.docker.internal to access host machine
         # If server is a Windows hostname, try host.docker.internal
@@ -259,7 +344,7 @@ class SQLServerConnector(BaseConnector):
             f"PORT={port};"
             f"DATABASE={database};"
             f"UID={user};"
-            f"PWD={password};"
+            f"PWD={escaped_password};"
             f"TDS_Version=7.4;"
         )
         
@@ -295,7 +380,65 @@ class SQLServerConnector(BaseConnector):
                             self.config["driver"] = fallback_driver
                             conn_str = self._build_connection_string()
             
-            conn = pyodbc.connect(conn_str, timeout=30)
+            # Use pyodbc.connect with connection string
+            # The password is already escaped in conn_str
+            try:
+                conn = pyodbc.connect(conn_str, timeout=30)
+            except (pyodbc.Error, Exception) as e:
+                # If connection fails with password error, try alternative methods
+                error_msg = str(e)
+                is_password_error = ("PWD" in error_msg or "password" in error_msg.lower() or 
+                                   "08001" in error_msg or "Invalid value" in error_msg)
+                
+                if is_password_error:
+                    logger.warning(f"ODBC password error detected. Trying alternative password handling...")
+                    logger.debug(f"Error: {error_msg}")
+                    
+                    # Get the original password for alternative escaping
+                    original_password = self.config.get("password", "")
+                    # Get driver and connection parameters from config
+                    driver = self.config.get("driver")
+                    if not driver:
+                        driver = self._detect_odbc_driver()
+                    server = self.config["server"]
+                    port = self.config.get("port", 1433)
+                    database = self.config.get("database", "master")
+                    user = self.config["user"]
+                    trust_cert = self.config.get("trust_server_certificate", False)
+                    encrypt = self.config.get("encrypt", True)
+                    
+                    if original_password and driver:
+                        # Try alternative: Use password without URL encoding (just brace escaping)
+                        # Some ODBC drivers don't support URL-encoded passwords
+                        simple_escaped = str(original_password).replace("{", "{{").replace("}", "}}")
+                        # Get the escaped password from the original connection string for comparison
+                        escaped_password = self._escape_odbc_password(original_password)
+                        if simple_escaped != escaped_password:
+                            try:
+                                alt_conn_str = (
+                                    f"DRIVER={{{driver}}};"
+                                    f"SERVER={server},{port};"
+                                    f"DATABASE={database};"
+                                    f"UID={user};"
+                                    f"PWD={simple_escaped};"
+                                    f"TrustServerCertificate={'yes' if trust_cert else 'no'};"
+                                    f"Encrypt={'yes' if encrypt else 'no'};"
+                                )
+                                logger.info("Trying connection with simpler password escaping (no URL encoding)...")
+                                conn = pyodbc.connect(alt_conn_str, timeout=30)
+                                logger.info("Connected successfully with alternative password escaping")
+                                return conn
+                            except Exception as e2:
+                                logger.warning(f"Alternative escaping also failed: {e2}")
+                    
+                    # If all else fails, provide helpful error message
+                    raise ValueError(
+                        f"SQL Server connection failed due to password format issue. "
+                        f"ODBC Driver 18 may not support certain special characters in passwords "
+                        f"(semicolons, equals signs, or braces). Please check your password. "
+                        f"Original error: {error_msg}"
+                    ) from e
+                raise
             logger.info(f"Connected to SQL Server: {self.config['server']}")
             return conn
         except Exception as e:
@@ -312,6 +455,30 @@ class SQLServerConnector(BaseConnector):
                     self.config["driver"] = driver
                     try:
                         conn_str = self._build_connection_string()
+                        # Re-escape password for the new connection string
+                        password = self.config.get("password")
+                        if password:
+                            escaped_password = self._escape_odbc_password(password)
+                            # Update connection string with escaped password
+                            # Extract driver and other params
+                            driver = self.config.get("driver")
+                            server = self.config["server"]
+                            port = self.config.get("port", 1433)
+                            database = self.config.get("database", "master")
+                            user = self.config["user"]
+                            trust_cert = self.config.get("trust_server_certificate", False)
+                            encrypt = self.config.get("encrypt", True)
+                            
+                            conn_str = (
+                                f"DRIVER={{{driver}}};"
+                                f"SERVER={server},{port};"
+                                f"DATABASE={database};"
+                                f"UID={user};"
+                                f"PWD={escaped_password};"
+                                f"TrustServerCertificate={'yes' if trust_cert else 'no'};"
+                                f"Encrypt={'yes' if encrypt else 'no'};"
+                            )
+                        
                         conn = pyodbc.connect(conn_str, timeout=30)
                         logger.info(f"Connected to SQL Server after driver fix: {self.config['server']}")
                         return conn
@@ -374,7 +541,7 @@ class SQLServerConnector(BaseConnector):
             """
 
             logger.info(f"Querying tables from {database}.{schema}")
-            cursor.execute(query, database, schema)
+            cursor.execute(query, (database, schema))
 
             for row in cursor.fetchall():
                 catalog, schema_name, table_name, table_type = row
@@ -461,7 +628,7 @@ class SQLServerConnector(BaseConnector):
             ORDER BY ORDINAL_POSITION
             """
 
-            cursor.execute(query, database, schema, table)
+            cursor.execute(query, (database, schema, table))
 
             for row in cursor.fetchall():
                 (
@@ -597,7 +764,7 @@ class SQLServerConnector(BaseConnector):
                 AND ep.name = 'MS_Description'
             """
             
-            cursor.execute(query, schema, table, column)
+            cursor.execute(query, (schema, table, column))
             result = cursor.fetchone()
             
             cursor.close()
@@ -671,7 +838,7 @@ class SQLServerConnector(BaseConnector):
             logger.info(f"Extracting query statistics (last {days_back} days)")
             
             if database:
-                cursor.execute(query, -days_back, database)
+                cursor.execute(query, (-days_back, database))
             else:
                 cursor.execute(query, -days_back)
 
@@ -881,7 +1048,9 @@ class SQLServerConnector(BaseConnector):
         try:
             conn = self.connect()
             cursor = conn.cursor()
-            cursor.execute(f"USE [{database}]")
+            # Ensure database is a string
+            db_str = str(database) if database else "master"
+            cursor.execute(f"USE [{db_str}]")
             
             query = """
                 SELECT 
@@ -897,7 +1066,51 @@ class SQLServerConnector(BaseConnector):
                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
                 ORDER BY ORDINAL_POSITION
             """
-            cursor.execute(query, schema, table)
+            # Ensure schema and table are strings and not None
+            schema_str = str(schema) if schema else "dbo"
+            table_str = str(table) if table else ""
+            if not table_str:
+                raise ValueError("Table name cannot be empty")
+            
+            # Validate that schema and table are strings before passing to cursor.execute
+            if not isinstance(schema_str, str):
+                schema_str = str(schema_str)
+            if not isinstance(table_str, str):
+                table_str = str(table_str)
+            
+            # Clean schema and table strings - remove any special characters that might cause issues
+            schema_str = schema_str.strip()
+            table_str = table_str.strip()
+            
+            # Log before executing query
+            logger.info("[SQL Server get_table_columns] Executing query with: schema=%r, table=%r", schema_str, table_str)
+            logger.info("[SQL Server get_table_columns] Query: %s", query)
+            
+            # Execute query with parameters as a tuple
+            # Wrap in try-except to catch any pyodbc-specific errors
+            try:
+                cursor.execute(query, (schema_str, table_str))
+                logger.info("[SQL Server get_table_columns] Query executed successfully, fetching results...")
+            except Exception as query_error:
+                # Import safe_error_message to handle the error safely
+                try:
+                    from ingestion.connection_service import safe_error_message
+                    safe_query_error = safe_error_message(query_error)
+                except Exception:
+                    # Use string concatenation instead of f-string to avoid formatting issues
+                    safe_query_error = "Query execution failed: " + type(query_error).__name__
+                
+                # Log the error safely - use %r (repr) to avoid any formatting issues
+                try:
+                    logger.error("Query execution failed. Schema: %r, Table: %r, Error: %r", 
+                               schema_str, table_str, safe_query_error)
+                except Exception as log_err:
+                    # If logging fails, just print to avoid cascading errors
+                    try:
+                        print(f"Query execution failed for schema={repr(schema_str)}, table={repr(table_str)}")
+                    except Exception:
+                        print("Query execution failed")
+                raise
             
             columns = []
             for row in cursor.fetchall():
@@ -926,12 +1139,74 @@ class SQLServerConnector(BaseConnector):
                 })
             
             cursor.close()
-            conn.close()
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass  # Ignore errors when closing connection
             return columns
             
         except Exception as e:
-            logger.error(f"Failed to get table columns: {e}")
-            raise
+            # Safely get error message using a helper function
+            # Import safe_error_message from connection_service
+            safe_error_msg = None
+            try:
+                from ingestion.connection_service import safe_error_message
+                safe_error_msg = safe_error_message(e)
+            except Exception as import_error:
+                # If import or safe_error_message fails, use ultra-safe fallback
+                try:
+                    # Try to get error from args without calling __str__
+                    if hasattr(e, 'args') and e.args and len(e.args) > 0:
+                        first_arg = e.args[0]
+                        if isinstance(first_arg, str):
+                            # Escape % characters immediately
+                            safe_error_msg = first_arg.replace('%', '%%')
+                        else:
+                            # Use repr() to avoid __str__ formatting issues
+                            safe_error_msg = repr(first_arg).replace('%', '%%')
+                    else:
+                        # Use exception type name as fallback
+                        safe_error_msg = "Error type: " + type(e).__name__
+                except Exception:
+                    safe_error_msg = "Unknown error occurred"
+            
+            # Ensure we have a safe error message
+            if not safe_error_msg:
+                safe_error_msg = "Unknown error occurred"
+            
+            # Use logger with explicit formatting to avoid any issues
+            # Use %r (repr) instead of %s to avoid any formatting issues
+            try:
+                logger.error("Failed to get table columns: %r", safe_error_msg, exc_info=True)
+            except Exception as log_error:
+                # If logging fails, just print to avoid cascading errors
+                try:
+                    # Use repr() to avoid any formatting issues
+                    print("Failed to get table columns:", repr(safe_error_msg))
+                except Exception:
+                    print("Failed to get table columns: [Error message could not be formatted]")
+            
+            # Re-raise with a safe error message that won't cause formatting issues
+            # Use string concatenation to build the exception message (avoid f-strings and % formatting)
+            error_prefix = "Failed to get table columns: "
+            try:
+                # Ensure safe_error_msg is a string and escape any % characters
+                if isinstance(safe_error_msg, str):
+                    # Replace % with %% to prevent formatting issues
+                    escaped_msg = safe_error_msg.replace('%', '%%')
+                    final_error_msg = error_prefix + escaped_msg
+                else:
+                    # If not a string, convert safely
+                    try:
+                        escaped_msg = str(safe_error_msg).replace('%', '%%')
+                        final_error_msg = error_prefix + escaped_msg
+                    except Exception:
+                        final_error_msg = error_prefix + "Unknown error"
+            except Exception:
+                final_error_msg = error_prefix + "Unknown error"
+            
+            raise Exception(final_error_msg) from e
 
     def get_primary_keys(
         self,
@@ -969,7 +1244,7 @@ class SQLServerConnector(BaseConnector):
                 WHERE s.name = ? AND t.name = ?
                 ORDER BY ic.key_ordinal
             """
-            cursor.execute(query, schema, table)
+            cursor.execute(query, (schema, table))
             primary_keys = [row[0] for row in cursor.fetchall()]
             
             cursor.close()
@@ -1084,7 +1359,7 @@ class SQLServerConnector(BaseConnector):
                     AND t.type = 'U'
                 GROUP BY p.rows
                 """
-                cursor.execute(stats_query, schema, table)
+                cursor.execute(stats_query, (schema, table))
                 stats = cursor.fetchone()
                 if stats:
                     properties["row_count"] = stats[0] if stats[0] else 0
@@ -1109,7 +1384,7 @@ class SQLServerConnector(BaseConnector):
                     AND t.name = ?
                 ORDER BY ic.key_ordinal
                 """
-                cursor.execute(pk_query, schema, table)
+                cursor.execute(pk_query, (schema, table))
                 pk_columns = [row[0] for row in cursor.fetchall()]
                 if pk_columns:
                     properties["primary_keys"] = pk_columns
@@ -1138,7 +1413,7 @@ class SQLServerConnector(BaseConnector):
                 WHERE s.name = ?
                     AND t.name = ?
                 """
-                cursor.execute(fk_query, schema, table)
+                cursor.execute(fk_query, (schema, table))
                 foreign_keys = []
                 for row in cursor.fetchall():
                     foreign_keys.append({
@@ -1173,7 +1448,7 @@ class SQLServerConnector(BaseConnector):
                 GROUP BY i.name, i.type_desc, i.is_unique, i.is_primary_key
                 ORDER BY i.is_primary_key DESC, i.name
                 """
-                cursor.execute(index_query, schema, table)
+                cursor.execute(index_query, (schema, table))
                 indexes = []
                 for row in cursor.fetchall():
                     indexes.append({
@@ -1212,7 +1487,7 @@ class SQLServerConnector(BaseConnector):
                     AND t.name = ?
                     AND uc.type = 'UQ'
                 """
-                cursor.execute(constraint_query, schema, table, schema, table)
+                cursor.execute(constraint_query, (schema, table, schema, table))
                 constraints = []
                 for row in cursor.fetchall():
                     constraints.append({
@@ -1236,7 +1511,7 @@ class SQLServerConnector(BaseConnector):
                     WHERE s.name = ?
                         AND v.name = ?
                     """
-                    cursor.execute(view_query, schema, table)
+                    cursor.execute(view_query, (schema, table))
                     view_def = cursor.fetchone()
                     if view_def and view_def[0]:
                         properties["view_definition"] = view_def[0]
@@ -1254,7 +1529,7 @@ class SQLServerConnector(BaseConnector):
                 WHERE s.name = ?
                     AND t.name = ?
                 """
-                cursor.execute(date_query, schema, table)
+                cursor.execute(date_query, (schema, table))
                 dates = cursor.fetchone()
                 if dates:
                     properties["create_date"] = dates[0].isoformat() if dates[0] else None
@@ -1318,7 +1593,7 @@ class SQLServerConnector(BaseConnector):
                 AND t.name = ?
                 AND c.name = ?
             """
-            cursor.execute(col_query, schema, table, column)
+            cursor.execute(col_query, (schema, table, column))
             col_info = cursor.fetchone()
             
             if col_info:
@@ -1347,7 +1622,7 @@ class SQLServerConnector(BaseConnector):
                             AND name = ?
                         """
                         full_name = f"[{database}].[{schema}].[{table}]"
-                        cursor.execute(identity_query, full_name, column)
+                        cursor.execute(identity_query, (full_name, column))
                         identity_info = cursor.fetchone()
                         if identity_info:
                             metadata["identity_seed"] = str(identity_info[0]) if identity_info[0] else None
@@ -1366,7 +1641,7 @@ class SQLServerConnector(BaseConnector):
                             AND name = ?
                         """
                         full_name = f"[{database}].[{schema}].[{table}]"
-                        cursor.execute(computed_query, full_name, column)
+                        cursor.execute(computed_query, (full_name, column))
                         computed_def = cursor.fetchone()
                         if computed_def and computed_def[0]:
                             metadata["computed_definition"] = computed_def[0]
@@ -1546,7 +1821,7 @@ class SQLServerConnector(BaseConnector):
                 INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id
                 WHERE t.name = ? AND SCHEMA_NAME(t.schema_id) = ?
             """
-            cursor.execute(size_query, table_name, schema)
+            cursor.execute(size_query, (table_name, schema))
             size_row = cursor.fetchone()
             size_bytes = int(size_row[0] * 1024) if size_row and size_row[0] else 0
             
@@ -1558,7 +1833,7 @@ class SQLServerConnector(BaseConnector):
                 INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
                 WHERE t.name = ? AND s.name = ?
             """
-            cursor.execute(column_count_query, table_name, schema)
+            cursor.execute(column_count_query, (table_name, schema))
             column_count = cursor.fetchone()[0]
             
             # Get column information
@@ -1577,7 +1852,7 @@ class SQLServerConnector(BaseConnector):
                 WHERE tab.name = ? AND s.name = ?
                 ORDER BY c.column_id
             """
-            cursor.execute(columns_query, table_name, schema)
+            cursor.execute(columns_query, (table_name, schema))
             columns_info = cursor.fetchall()
             
             column_profiles = []
@@ -1792,7 +2067,7 @@ class SQLServerConnector(BaseConnector):
             
             if database:
                 fk_query += " AND (OBJECT_SCHEMA_NAME(fk.parent_object_id) = ? OR OBJECT_SCHEMA_NAME(fk.referenced_object_id) = ?)"
-                cursor.execute(fk_query, database, database)
+                cursor.execute(fk_query, (database, database))
             else:
                 cursor.execute(fk_query)
             
@@ -1889,7 +2164,7 @@ class SQLServerConnector(BaseConnector):
                 
                 if database:
                     query_log_query += " AND DB_NAME(qt.dbid) = ?"
-                    cursor.execute(query_log_query, -days_back, database)
+                    cursor.execute(query_log_query, (-days_back, database))
                 else:
                     cursor.execute(query_log_query, -days_back)
                 
@@ -2070,7 +2345,7 @@ class SQLServerConnector(BaseConnector):
                     AND TABLE_NAME = ?
                 ORDER BY ORDINAL_POSITION
             """
-            cursor.execute(columns_query, database, schema, table_name)
+            cursor.execute(columns_query, (database, schema, table_name))
             column_names = [row[0] for row in cursor.fetchall()]
             
             if not column_names:

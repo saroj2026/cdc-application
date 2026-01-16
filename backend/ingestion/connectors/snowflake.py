@@ -272,14 +272,24 @@ class SnowflakeConnector(BaseConnector):
             conn = self._get_connection()
             cursor = conn.cursor()
             
+            # For Snowflake, we need to use the correct database context
+            # First, ensure we're using the correct database
+            if db:
+                cursor.execute(f"USE DATABASE {db}")
+            
+            # Use the correct schema
+            if schema_name:
+                cursor.execute(f"USE SCHEMA {schema_name}")
+            
+            # Query tables - Snowflake INFORMATION_SCHEMA uses uppercase schema names
             query = """
                 SELECT TABLE_NAME
                 FROM INFORMATION_SCHEMA.TABLES
-                WHERE TABLE_SCHEMA = ?
+                WHERE TABLE_SCHEMA = UPPER(%s)
                     AND TABLE_TYPE = 'BASE TABLE'
                 ORDER BY TABLE_NAME
             """
-            cursor.execute(query, (schema_name,))
+            cursor.execute(query, (schema_name.upper() if schema_name else "PUBLIC",))
             tables = [row[0] for row in cursor.fetchall()]
             cursor.close()
             
@@ -308,7 +318,7 @@ class SnowflakeConnector(BaseConnector):
             query = """
                 SELECT SCHEMA_NAME
                 FROM INFORMATION_SCHEMA.SCHEMATA
-                WHERE CATALOG_NAME = ?
+                WHERE CATALOG_NAME = %s
                 ORDER BY SCHEMA_NAME
             """
             cursor.execute(query, (db,))
@@ -374,7 +384,7 @@ class SnowflakeConnector(BaseConnector):
                 query = """
                     SELECT TABLE_NAME, TABLE_TYPE, COMMENT
                     FROM INFORMATION_SCHEMA.TABLES
-                    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+                    WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
                     ORDER BY TABLE_NAME
                 """
                 cursor.execute(query, (schema_name, table))
@@ -382,7 +392,7 @@ class SnowflakeConnector(BaseConnector):
                 query = """
                     SELECT TABLE_NAME, TABLE_TYPE, COMMENT
                     FROM INFORMATION_SCHEMA.TABLES
-                    WHERE TABLE_SCHEMA = ?
+                    WHERE TABLE_SCHEMA = %s
                     ORDER BY TABLE_NAME
                 """
                 cursor.execute(query, (schema_name,))
@@ -405,7 +415,7 @@ class SnowflakeConnector(BaseConnector):
                         COLUMN_DEFAULT,
                         COMMENT
                     FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+                    WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
                     ORDER BY ORDINAL_POSITION
                 """
                 cursor.execute(columns_query, (schema_name, table_name))
@@ -627,6 +637,7 @@ class SnowflakeConnector(BaseConnector):
             conn = self._get_connection()
             cursor = conn.cursor()
             
+            # Use pyformat (%s) instead of qmark (?) for Snowflake connector
             query = """
                 SELECT 
                     COLUMN_NAME,
@@ -639,7 +650,7 @@ class SnowflakeConnector(BaseConnector):
                     COLUMN_DEFAULT,
                     COMMENT
                 FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
                 ORDER BY ORDINAL_POSITION
             """
             cursor.execute(query, (schema_name, table))
@@ -722,8 +733,8 @@ class SnowflakeConnector(BaseConnector):
                     AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
                     AND tc.TABLE_CATALOG = kcu.TABLE_CATALOG
                 WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    AND tc.TABLE_SCHEMA = ?
-                    AND tc.TABLE_NAME = ?
+                    AND tc.TABLE_SCHEMA = %s
+                    AND tc.TABLE_NAME = %s
                 ORDER BY kcu.ORDINAL_POSITION
             """
             cursor.execute(query, (schema_name, table))

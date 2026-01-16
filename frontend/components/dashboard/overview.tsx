@@ -93,13 +93,13 @@ export function DashboardOverview() {
 
     // Only subscribe if pipeline IDs have changed
     if (currentPipelineIds !== prevPipelineIdsRef.current) {
-      // Convert pipeline IDs properly - handle both numeric and MongoDB ObjectId strings
+      // Convert pipeline IDs properly - handle both numeric and string IDs
       const pipelineIds = pipelinesArray
         .filter(p => p.id)
         .map(p => {
           const idStr = String(p.id)
           const numId = Number(p.id)
-          // Use number if valid, otherwise use string (for MongoDB ObjectIds)
+          // Use number if valid, otherwise use string
           return !isNaN(numId) && isFinite(numId) ? numId : idStr
         })
         .filter(id => id && id !== 'NaN' && id !== 'undefined') // Filter out invalid IDs

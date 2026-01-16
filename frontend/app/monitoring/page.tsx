@@ -370,15 +370,17 @@ export default function MonitoringPage() {
       })
       
       const eventsCount = hourEvents.length
-      const latency = eventsCount > 0
-        ? hourEvents.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsCount
+      // Calculate average latency from events that have latency_ms > 0
+      const eventsWithLatency = hourEvents.filter(e => e.latency_ms != null && e.latency_ms !== undefined && e.latency_ms > 0)
+      const latency = eventsWithLatency.length > 0
+        ? eventsWithLatency.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsWithLatency.length
         : 0
       const errorsCount = hourEvents.filter(e => e.status === 'failed' || e.status === 'error').length
       
       return {
         time: hourStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
         events: eventsCount,
-        latency: Math.round(latency),
+        latency: Math.round(latency) || 0,  // Ensure we always have a number, not NaN
         errors: errorsCount,
       }
     })
@@ -447,7 +449,7 @@ export default function MonitoringPage() {
                 if (value === 'all') {
                   dispatch(setSelectedPipeline(null))
                 } else {
-                  // Handle both numeric IDs and MongoDB ObjectId strings
+                  // Handle both numeric IDs and string IDs
                   const pipelineId = !isNaN(Number(value)) ? Number(value) : value
                   dispatch(setSelectedPipeline(pipelineId))
                 }
@@ -510,7 +512,7 @@ export default function MonitoringPage() {
               {eventStats.avgLatency != null ? (
                 <p className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">{Math.round(eventStats.avgLatency)}ms</p>
               ) : (
-                <p className="text-3xl font-extrabold text-foreground-muted">N/A</p>
+                <p className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">0ms</p>
               )}
               <p className="text-xs text-foreground-muted mt-1">
                 {eventStats.avgLatency != null 
@@ -712,25 +714,57 @@ export default function MonitoringPage() {
                       </td>
                       <td className="px-4 py-3 text-foreground text-xs font-medium">{event.table_name}</td>
                       <td className="px-4 py-3 text-foreground text-xs font-mono">
-                        {event.source_lsn ? (
-                          <span className="text-cyan-400" title="PostgreSQL LSN">
-                            LSN: {event.source_lsn}
-                          </span>
-                        ) : event.source_scn ? (
-                          <span className="text-blue-400" title="Oracle SCN">
-                            SCN: {event.source_scn}
-                          </span>
-                        ) : event.source_binlog_file ? (
-                          <span className="text-green-400" title="MySQL Binlog">
-                            {event.source_binlog_file}:{event.source_binlog_position}
-                          </span>
-                        ) : event.sql_server_lsn ? (
-                          <span className="text-purple-400" title="SQL Server LSN">
-                            LSN: {event.sql_server_lsn}
-                          </span>
-                        ) : (
-                          <span className="text-foreground-muted">N/A</span>
-                        )}
+                        {(() => {
+                          // Extract LSN/SCN from various possible locations
+                          const sourceLsn = event.source_lsn || (event as any).lsn
+                          const sourceScn = event.source_scn || (event as any).scn
+                          const binlogFile = event.source_binlog_file || (event as any).binlog_file || (event as any).file
+                          const binlogPos = event.source_binlog_position || (event as any).binlog_position || (event as any).pos || (event as any).position
+                          const sqlServerLsn = event.sql_server_lsn || (event as any).sql_server_lsn
+                          
+                          // Also check run_metadata if available
+                          const runMetadata = (event as any).run_metadata
+                          const metadataLsn = runMetadata?.source_lsn || runMetadata?.lsn || runMetadata?.offset
+                          const metadataScn = runMetadata?.source_scn || runMetadata?.scn
+                          const metadataBinlogFile = runMetadata?.source_binlog_file || runMetadata?.binlog_file || runMetadata?.file
+                          const metadataBinlogPos = runMetadata?.source_binlog_position || runMetadata?.binlog_position || runMetadata?.pos || runMetadata?.position
+                          const metadataSqlServerLsn = runMetadata?.sql_server_lsn || runMetadata?.lsn
+                          
+                          // Use metadata values if direct values are not available
+                          const finalLsn = sourceLsn || metadataLsn
+                          const finalScn = sourceScn || metadataScn
+                          const finalBinlogFile = binlogFile || metadataBinlogFile
+                          const finalBinlogPos = binlogPos || metadataBinlogPos
+                          const finalSqlServerLsn = sqlServerLsn || metadataSqlServerLsn
+                          
+                          if (finalLsn) {
+                            return (
+                              <span className="text-cyan-400" title="PostgreSQL LSN">
+                                LSN: {String(finalLsn)}
+                              </span>
+                            )
+                          } else if (finalScn) {
+                            return (
+                              <span className="text-blue-400" title="Oracle SCN">
+                                SCN: {String(finalScn)}
+                              </span>
+                            )
+                          } else if (finalBinlogFile) {
+                            return (
+                              <span className="text-green-400" title="MySQL Binlog">
+                                {String(finalBinlogFile)}:{finalBinlogPos || '0'}
+                              </span>
+                            )
+                          } else if (finalSqlServerLsn) {
+                            return (
+                              <span className="text-purple-400" title="SQL Server LSN">
+                                LSN: {String(finalSqlServerLsn)}
+                              </span>
+                            )
+                          } else {
+                            return <span className="text-foreground-muted">N/A</span>
+                          }
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

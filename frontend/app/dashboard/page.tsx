@@ -38,8 +38,10 @@ export default function DashboardPage() {
     return null
   }
 
+  // Dashboard should be accessible to all authenticated users
+  // Don't pass path prop - let ProtectedPage allow all authenticated users
   return (
-    <ProtectedPage path="/dashboard" requiredPermission="view_metrics">
+    <ProtectedPage>
       <div className="p-6 space-y-6" suppressHydrationWarning>
         <PageHeader
           title="Dashboard"
