@@ -28,6 +28,8 @@ export default function PipelineMonitorPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const [retryingEventId, setRetryingEventId] = useState<string | null>(null)
+  const [wsConnected, setWsConnected] = useState(false)
+  const [wsAvailable, setWsAvailable] = useState(true) // Default to true to show status
 
   // Get current pipeline - handle both string and number IDs
   const pipeline = pipelines.find(p => String(p.id) === String(pipelineId))
@@ -62,6 +64,10 @@ export default function PipelineMonitorPage() {
       // Connect WebSocket and subscribe to this pipeline
       wsClient.connect()
       wsClient.subscribePipeline(numericId)
+      
+      // Update WebSocket status immediately
+      setWsConnected(wsClient.isConnected())
+      setWsAvailable(wsClient.isAvailable())
     }
 
     fetchData().catch(err => {
@@ -73,9 +79,32 @@ export default function PipelineMonitorPage() {
       dispatch(fetchReplicationEvents({ pipelineId: numericId, limit: 1000, todayOnly: false }))
     }, 5000)
 
+    // Update WebSocket status function
+    const updateWsStatus = () => {
+      const connected = wsClient.isConnected()
+      const available = wsClient.isAvailable()
+      setWsConnected(connected)
+      setWsAvailable(available)
+      // Debug logging
+      if (connected) {
+        console.log('[Monitor] WebSocket is connected - updating status')
+      }
+    }
+
+    // Check WebSocket connection status periodically (every 2 seconds)
+    const wsStatusInterval = setInterval(updateWsStatus, 2000)
+
+    // Also listen for real-time status changes
+    const unsubscribeStatus = wsClient.onStatusChange(updateWsStatus)
+
+    // Update immediately
+    updateWsStatus()
+
     // Cleanup: Unsubscribe and optionally disconnect when leaving page
     return () => {
       clearInterval(interval)
+      clearInterval(wsStatusInterval)
+      unsubscribeStatus() // Remove status listener
       if (pipelineId) {
         wsClient.unsubscribePipeline(numericId)
       }
@@ -197,16 +226,39 @@ export default function PipelineMonitorPage() {
           icon={Eye}
           action={
             <div className="flex items-center gap-2">
-          <Badge className={wsClient.isConnected() ? "bg-success/20 text-success" : "bg-error/20 text-error"}>
-            {wsClient.isConnected() ? (
+          {/* WebSocket Connection Status - Always show when attempting connection */}
+          <Badge 
+            className={
+              wsConnected 
+                ? "bg-success/20 text-success border border-success/30 shadow-sm cursor-pointer hover:bg-success/30" 
+                : wsAvailable 
+                  ? "bg-warning/20 text-warning border border-warning/30 shadow-sm cursor-pointer hover:bg-warning/30" 
+                  : "bg-blue-500/15 text-blue-400 border border-blue-400/40 shadow-sm font-semibold cursor-pointer hover:bg-blue-500/25"
+            }
+            onClick={() => {
+              if (!wsConnected && !wsAvailable) {
+                // Retry connection if unavailable
+                wsClient.retryConnection();
+                setWsAvailable(true);
+                setWsConnected(false);
+              }
+            }}
+            title={!wsConnected && !wsAvailable ? "Click to retry WebSocket connection" : undefined}
+          >
+            {wsConnected ? (
               <>
-                <Activity className="w-3 h-3 mr-1" />
-                Connected
+                <Activity className="w-3 h-3 mr-1.5 animate-pulse" />
+                <span className="font-medium">WebSocket Connected</span>
+              </>
+            ) : wsAvailable ? (
+              <>
+                <RotateCw className="w-3 h-3 mr-1.5 animate-spin" />
+                <span className="font-medium">Connecting WebSocket...</span>
               </>
             ) : (
               <>
-                <AlertCircle className="w-3 h-3 mr-1" />
-                Disconnected
+                <AlertCircle className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
+                <span className="font-semibold">WebSocket Unavailable (Click to Retry)</span>
               </>
             )}
           </Badge>

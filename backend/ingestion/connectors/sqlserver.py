@@ -1082,9 +1082,9 @@ class SQLServerConnector(BaseConnector):
             schema_str = schema_str.strip()
             table_str = table_str.strip()
             
-            # Log before executing query
+            # Log before executing query - use %r to avoid formatting issues
             logger.info("[SQL Server get_table_columns] Executing query with: schema=%r, table=%r", schema_str, table_str)
-            logger.info("[SQL Server get_table_columns] Query: %s", query)
+            logger.info("[SQL Server get_table_columns] Query: %r", query)
             
             # Execute query with parameters as a tuple
             # Wrap in try-except to catch any pyodbc-specific errors

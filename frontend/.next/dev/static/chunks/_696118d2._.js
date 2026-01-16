@@ -1395,11 +1395,21 @@ class ApiClient {
             if (typeof errorDetail === 'string') {
                 errorDetail = errorDetail.replace(/%%/g, '%');
             }
-            // Check if this is an Oracle-related error
-            const isOracleError = typeof errorDetail === 'string' && (errorDetail.toLowerCase().includes('oracle') || errorDetail.toLowerCase().includes('ora-') || errorDetail.toLowerCase().includes('service name') || errorDetail.toLowerCase().includes('listener'));
+            // Check if this is an Oracle-related error (but exclude other database types)
+            // Only treat as Oracle error if it's clearly an Oracle error, not S3, Snowflake, etc.
+            const errorDetailLower = typeof errorDetail === 'string' ? errorDetail.toLowerCase() : '';
+            const isOracleError = typeof errorDetail === 'string' && !errorDetailLower.includes('aws_s3') && !errorDetailLower.includes('s3') && !errorDetailLower.includes('snowflake') && !errorDetailLower.includes('object storage') && !errorDetailLower.includes('table comparison is not supported') && (errorDetailLower.includes('ora-') || errorDetailLower.includes('oracle') && (errorDetailLower.includes('listener') || errorDetailLower.includes('service name') || errorDetailLower.includes('tns') || errorDetailLower.includes('does not exist') || errorDetailLower.includes('connection')));
             if (isOracleError) {
                 throw new Error(`Oracle Database Error:\n\n${errorDetail}\n\n` + `Troubleshooting Steps:\n` + `1. Verify Oracle server is running and accessible\n` + `2. Check Oracle listener: Run 'lsnrctl status' on Oracle server\n` + `3. Test network connectivity: ping the Oracle host and telnet to the Oracle port\n` + `4. Verify service name: Should be XE, ORCL, PDB1, etc. (NOT your username)\n` + `5. Check firewall: Ensure Oracle port (usually 1521) is not blocked\n` + `6. Verify credentials: Username and password are correct\n\n` + `Please check the backend terminal logs for more details.`);
             }
+            // Check if this is an S3/object storage error
+            const isS3Error = typeof errorDetail === 'string' && (errorDetailLower.includes('aws_s3') || errorDetailLower.includes('s3') && errorDetailLower.includes('object storage') || errorDetailLower.includes('table comparison is not supported') && errorDetailLower.includes('s3'));
+            // For S3 errors, use the backend message as-is (it's already clear and informative)
+            // Don't add generic "Server Error" prefix
+            if (isS3Error) {
+                throw new Error(errorDetail);
+            }
+            // For other errors, include status code for debugging
             throw new Error(`Server Error (${error.response.status}): ${errorDetail}\n\nPlease check the backend terminal logs for more details.`);
         }
         // Check for gateway timeout (504)
@@ -1721,11 +1731,41 @@ class ApiClient {
     }
     async getDashboardStats() {
         try {
-            const response = await this.client.get('/api/v1/monitoring/dashboard');
+            const response = await this.client.get('/api/v1/monitoring/dashboard', {
+                timeout: 5000 // 5 second timeout
+            });
             return response.data;
         } catch (error) {
-            console.error('Error fetching dashboard stats:', error);
-            throw error;
+            // Handle all errors gracefully - return empty dashboard data
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK';
+            const isServerError = error.response?.status >= 500;
+            if (isTimeout || isNetworkError || isServerError) {
+                // Return empty dashboard data on errors
+                return {
+                    total_pipelines: 0,
+                    active_pipelines: 0,
+                    stopped_pipelines: 0,
+                    error_pipelines: 0,
+                    total_events: 0,
+                    failed_events: 0,
+                    success_events: 0,
+                    recent_metrics: [],
+                    timestamp: new Date().toISOString()
+                };
+            }
+            // For other errors, also return empty dashboard
+            return {
+                total_pipelines: 0,
+                active_pipelines: 0,
+                stopped_pipelines: 0,
+                error_pipelines: 0,
+                total_events: 0,
+                failed_events: 0,
+                success_events: 0,
+                recent_metrics: [],
+                timestamp: new Date().toISOString()
+            };
         }
     }
     async getMonitoringMetrics(pipelineId, startTime, endTime, retries = 1) {
@@ -1741,9 +1781,9 @@ class ApiClient {
         const requestKey = `metrics-${pipelineIdStr}-${formattedStartTime || ''}-${formattedEndTime || ''}`;
         return this.retryRequest(()=>this.client.get('/api/v1/monitoring/metrics', {
                 params: {
-                    pipeline_id: pipelineIdStr,
-                    start_time: formattedStartTime,
-                    end_time: formattedEndTime
+                    pipelineId: pipelineIdStr,
+                    startTime: formattedStartTime,
+                    endTime: formattedEndTime
                 },
                 timeout: 10000
             }).then((res)=>res.data), 'monitoring metrics', retries, 10000, requestKey);
@@ -4187,37 +4227,65 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$mo
 ;
 ;
 const WS_URL = ("TURBOPACK compile-time value", "http://localhost:8000") || 'http://localhost:8000';
+const WS_ENABLED = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_WS_ENABLED !== 'false'; // Default to true unless explicitly disabled
 class WebSocketClient {
     socket = null;
     subscribedPipelines = new Set();
     isConnecting = false;
     connectionFailed = false;
+    errorCount = 0;
+    maxErrorCount = 3;
+    statusListeners = new Set();
     connect() {
+        // Check if WebSocket is enabled
+        if (!WS_ENABLED) {
+            console.log('[WebSocket] WebSocket is disabled via configuration');
+            this.connectionFailed = true;
+            return;
+        }
+        // If connection has permanently failed, don't retry automatically
+        // User can still manually retry via retryConnection()
+        if (this.connectionFailed && this.errorCount >= 5) {
+            console.log('[WebSocket] Connection permanently failed. Use retryConnection() to manually retry.');
+            return;
+        }
         // Prevent multiple connection attempts
         if (this.socket?.connected) {
+            console.log('[WebSocket] Already connected');
             return;
         }
         if (this.isConnecting) {
+            console.log('[WebSocket] Connection already in progress');
             return;
         }
-        // If connection has previously failed, don't retry (backend may not have Socket.IO)
-        if (this.connectionFailed) {
-            return;
+        // Reset failed state to allow retry (if error count is low)
+        if (this.connectionFailed && this.errorCount < 5) {
+            console.log('[WebSocket] Resetting failed state and attempting reconnection');
+            this.connectionFailed = false;
+            // Clean up old socket if exists
+            if (this.socket) {
+                this.socket.removeAllListeners();
+                this.socket.disconnect();
+                this.socket = null;
+            }
         }
         this.isConnecting = true;
+        console.log('[WebSocket] Attempting to connect to:', WS_URL);
         this.socket = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$socket$2e$io$2d$client$2f$build$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["io"])(WS_URL, {
             path: '/socket.io',
             transports: [
-                'websocket',
-                'polling'
+                'polling',
+                'websocket'
             ],
-            reconnection: false,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: 0,
-            timeout: 5000,
+            reconnection: this.errorCount < 3,
+            reconnectionDelay: 2000,
+            reconnectionDelayMax: 10000,
+            reconnectionAttempts: 2,
+            timeout: 3000,
             forceNew: false,
-            autoConnect: true
+            autoConnect: true,
+            // Suppress default error logging
+            withCredentials: false
         });
         this.socket.on('connect', ()=>{
             console.log('========================================');
@@ -4227,6 +4295,9 @@ class WebSocketClient {
             console.log('[Frontend] Previously subscribed pipelines:', Array.from(this.subscribedPipelines));
             this.isConnecting = false;
             this.connectionFailed = false; // Reset failure flag on successful connection
+            this.errorCount = 0; // Reset error count on successful connection
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
             // Re-subscribe to previously subscribed pipelines
             this.subscribedPipelines.forEach((pipelineId)=>{
                 if (this.socket?.connected) {
@@ -4241,24 +4312,68 @@ class WebSocketClient {
         this.socket.on('disconnect', (reason)=>{
             console.log('WebSocket disconnected:', reason);
             this.isConnecting = false;
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
             if (reason === 'io server disconnect') {
                 // Server disconnected, try to reconnect manually
                 this.socket?.connect();
             }
         });
         this.socket.on('connect_error', (error)=>{
-            // Suppress WebSocket connection errors - backend may not have Socket.IO configured
-            // This is not critical for the application to function
+            this.errorCount++;
             this.isConnecting = false;
-            this.connectionFailed = true; // Mark as failed to prevent future attempts
-            // Disable reconnection to prevent spam
+            // Only log first few errors to avoid console spam
+            if (this.errorCount <= this.maxErrorCount) {
+                console.warn(`[WebSocket] Connection error (${this.errorCount}/${this.maxErrorCount}):`, error.message);
+                if (this.errorCount === this.maxErrorCount) {
+                    console.warn('[WebSocket] Suppressing further connection errors. Backend may not have Socket.IO configured.');
+                }
+            }
+            // If we've had multiple errors quickly, mark as failed to stop retries
+            // This prevents infinite retry loops when backend doesn't support WebSocket
+            if (this.errorCount >= 3) {
+                this.connectionFailed = true;
+                if (this.socket) {
+                    this.socket.io.reconnecting = false;
+                    this.socket.disconnect();
+                    this.socket = null; // Clean up socket to prevent further attempts
+                }
+                console.warn('[WebSocket] Stopped connection attempts. Backend does not appear to support WebSocket. Using polling mode.');
+            }
+        });
+        this.socket.on('reconnect_attempt', (attemptNumber)=>{
+            // Only log first few attempts to avoid spam
+            if (attemptNumber <= 2) {
+                console.log(`[WebSocket] Reconnection attempt ${attemptNumber}`);
+            }
+        });
+        this.socket.on('reconnect_failed', ()=>{
+            if (this.errorCount <= this.maxErrorCount) {
+                console.warn('[WebSocket] All reconnection attempts failed. WebSocket unavailable. Using polling mode.');
+            }
+            this.connectionFailed = true;
+            this.isConnecting = false;
+            // Stop reconnection attempts
             if (this.socket) {
                 this.socket.io.reconnecting = false;
-                // Disconnect to clean up
-                this.socket.disconnect();
             }
-        // Silently fail - WebSocket is optional for real-time updates
-        // Don't log to console to avoid cluttering logs
+        });
+        this.socket.on('reconnect', (attemptNumber)=>{
+            console.log(`[WebSocket] Successfully reconnected after ${attemptNumber} attempts`);
+            this.connectionFailed = false;
+            this.isConnecting = false;
+            this.errorCount = 0; // Reset error count on reconnect
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
+            // Re-subscribe to all previously subscribed pipelines
+            this.subscribedPipelines.forEach((pipelineId)=>{
+                if (this.socket?.connected) {
+                    console.log(`[WebSocket] Re-subscribing to pipeline: ${pipelineId}`);
+                    this.socket.emit('subscribe_pipeline', {
+                        pipeline_id: pipelineId
+                    });
+                }
+            });
         });
         this.socket.on('error', (error)=>{
             // Suppress WebSocket errors - backend may not have Socket.IO configured
@@ -4391,7 +4506,86 @@ class WebSocketClient {
         }
     }
     isConnected() {
-        return this.socket?.connected || false;
+        // Check actual connection state - if socket is connected, always return true
+        return this.socket?.connected === true;
+    }
+    isAvailable() {
+        // WebSocket is available if:
+        // 1. It's connected (always available if connected, regardless of connectionFailed flag)
+        // 2. It's still trying to connect (isConnecting)
+        // 3. Socket exists and hasn't permanently failed (for initial connection attempts)
+        // Priority: connected > connecting > not failed
+        if (this.socket?.connected === true) {
+            return true; // Always available if connected
+        }
+        if (this.isConnecting) {
+            return true; // Available if connecting
+        }
+        // If not connected and not connecting, only available if not permanently failed
+        return !this.connectionFailed && this.socket !== null;
+    }
+    reset() {
+        // Reset connection state to allow retry
+        console.log('[WebSocket] Resetting connection state');
+        this.connectionFailed = false;
+        this.isConnecting = false;
+        this.errorCount = 0; // Reset error count
+        if (this.socket) {
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+    retryConnection() {
+        // Manually trigger reconnection
+        console.log('[WebSocket] Manual reconnection requested');
+        this.reset();
+        // Check if WebSocket is enabled
+        if (!WS_ENABLED) {
+            console.warn('[WebSocket] WebSocket is disabled via configuration. Enable it in environment variables.');
+            this.connectionFailed = true;
+            return;
+        }
+        this.connect();
+    }
+    disable() {
+        // Manually disable WebSocket (useful for testing or when backend doesn't support it)
+        console.log('[WebSocket] Manually disabling WebSocket');
+        this.connectionFailed = true;
+        this.isConnecting = false;
+        if (this.socket) {
+            this.socket.io.reconnecting = false;
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+    isDisabled() {
+        // Check if WebSocket is disabled or permanently failed
+        return !WS_ENABLED || this.connectionFailed && this.errorCount >= 3;
+    }
+    hasFailed() {
+        // Check if WebSocket connection has permanently failed (backend doesn't support Socket.IO)
+        return this.connectionFailed;
+    }
+    // Status change notification system
+    onStatusChange(callback) {
+        // Add listener
+        this.statusListeners.add(callback);
+        // Return unsubscribe function
+        return ()=>{
+            this.statusListeners.delete(callback);
+        };
+    }
+    notifyStatusListeners() {
+        // Notify all listeners about status change
+        this.statusListeners.forEach((listener)=>{
+            try {
+                listener();
+            } catch (error) {
+                console.error('Error in status listener:', error);
+            }
+        });
     }
 }
 const wsClient = new WebSocketClient();

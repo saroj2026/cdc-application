@@ -911,6 +911,10 @@
     margin-right: calc(var(--spacing) * 1);
   }
 
+  .mr-1\.5 {
+    margin-right: calc(var(--spacing) * 1.5);
+  }
+
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
@@ -1803,6 +1807,16 @@
     }
   }
 
+  .border-blue-400\/40 {
+    border-color: #54a2ff66;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-blue-400\/40 {
+      border-color: color-mix(in oklab, var(--color-blue-400) 40%, transparent);
+    }
+  }
+
   .border-blue-500\/10 {
     border-color: #3080ff1a;
   }
@@ -2021,6 +2035,16 @@
 
   .border-input {
     border-color: var(--input);
+  }
+
+  .border-muted\/30 {
+    border-color: var(--muted);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-muted\/30 {
+      border-color: color-mix(in oklab, var(--muted) 30%, transparent);
+    }
   }
 
   .border-primary {
@@ -2317,6 +2341,16 @@
     }
   }
 
+  .bg-blue-500\/15 {
+    background-color: #3080ff26;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-blue-500\/15 {
+      background-color: color-mix(in oklab, var(--color-blue-500) 15%, transparent);
+    }
+  }
+
   .bg-blue-500\/20 {
     background-color: #3080ff33;
   }
@@ -2543,6 +2577,16 @@
 
   .bg-muted {
     background-color: var(--muted);
+  }
+
+  .bg-muted\/20 {
+    background-color: var(--muted);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-muted\/20 {
+      background-color: color-mix(in oklab, var(--muted) 20%, transparent);
+    }
   }
 
   .bg-popover {
@@ -4643,6 +4687,10 @@
     color: var(--info);
   }
 
+  .text-muted {
+    color: var(--muted);
+  }
+
   .text-muted-foreground {
     color: var(--muted-foreground);
   }
@@ -5687,6 +5735,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-blue-500\/25:hover {
+      background-color: #3080ff40;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-blue-500\/25:hover {
+        background-color: color-mix(in oklab, var(--color-blue-500) 25%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-blue-600:hover {
       background-color: var(--color-blue-600);
     }
@@ -5885,6 +5945,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-success\/30:hover {
+      background-color: var(--success);
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-success\/30:hover {
+        background-color: color-mix(in oklab, var(--success) 30%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-surface:hover {
       background-color: var(--surface);
     }
@@ -5952,6 +6024,18 @@
     @supports (color: color-mix(in lab, red, red)) {
       .hover\:bg-teal-500\/30:hover {
         background-color: color-mix(in oklab, var(--color-teal-500) 30%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-warning\/30:hover {
+      background-color: var(--warning);
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-warning\/30:hover {
+        background-color: color-mix(in oklab, var(--warning) 30%, transparent);
       }
     }
   }

@@ -60,6 +60,15 @@ from ingestion.monitoring import CDCMonitor
 from ingestion.recovery import RecoveryManager
 from ingestion.cdc_health_monitor import CDCHealthMonitor
 from ingestion.background_monitor import start_background_monitor
+
+# WebSocket support
+try:
+    import socketio
+    from socketio import ASGIApp
+    SOCKETIO_AVAILABLE = True
+except ImportError:
+    SOCKETIO_AVAILABLE = False
+    logger.warning("python-socketio not available. WebSocket features will be disabled.")
 from ingestion.models import Connection, Pipeline, PipelineStatus, FullLoadStatus, CDCStatus, PipelineMode
 from ingestion.database import get_db
 from ingestion.database.models_db import ConnectionModel, PipelineModel, UserModel, AuditLogModel
@@ -132,6 +141,95 @@ async def global_exception_handler(request: Request, exc: Exception):
             "Access-Control-Allow-Headers": "*",
         }
     )
+
+# Initialize WebSocket server if available
+socketio_server = None
+if SOCKETIO_AVAILABLE:
+    try:
+        socketio_server = socketio.AsyncServer(
+            cors_allowed_origins=["http://localhost:3000", "http://localhost:3001", "*"],
+            async_mode='asgi',
+            logger=True,
+            engineio_logger=False
+        )
+        logger.info("Socket.IO server initialized successfully")
+    except Exception as e:
+        logger.warning(f"Failed to initialize Socket.IO server: {e}")
+        socketio_server = None
+
+# Track subscribed pipelines for WebSocket
+subscribed_pipelines: Dict[str, set] = {}  # Pipeline ID -> Set of session IDs
+
+# Helper function to emit WebSocket events
+async def emit_replication_event(event_data: Dict[str, Any]):
+    """Emit replication event to subscribed clients via WebSocket."""
+    if not socketio_server:
+        return
+    
+    pipeline_id = str(event_data.get('pipeline_id', ''))
+    if pipeline_id and pipeline_id in subscribed_pipelines:
+        sessions = subscribed_pipelines[pipeline_id]
+        if sessions:
+            try:
+                await socketio_server.emit('replication_event', event_data, room=list(sessions))
+                logger.debug(f"Emitted replication event to {len(sessions)} sessions for pipeline {pipeline_id}")
+            except Exception as e:
+                logger.warning(f"Failed to emit replication event: {e}")
+
+async def emit_monitoring_metric(metric_data: Dict[str, Any]):
+    """Emit monitoring metric to subscribed clients via WebSocket."""
+    if not socketio_server:
+        return
+    
+    pipeline_id = str(metric_data.get('pipeline_id', ''))
+    if pipeline_id and pipeline_id in subscribed_pipelines:
+        sessions = subscribed_pipelines[pipeline_id]
+        if sessions:
+            try:
+                await socketio_server.emit('monitoring_metric', metric_data, room=list(sessions))
+                logger.debug(f"Emitted monitoring metric to {len(sessions)} sessions for pipeline {pipeline_id}")
+            except Exception as e:
+                logger.warning(f"Failed to emit monitoring metric: {e}")
+
+# WebSocket event handlers
+if socketio_server:
+    @socketio_server.on('connect')
+    async def on_connect(sid, environ):
+        """Handle client connection."""
+        logger.info(f"WebSocket client connected: {sid}")
+
+    @socketio_server.on('disconnect')
+    async def on_disconnect(sid):
+        """Handle client disconnection."""
+        logger.info(f"WebSocket client disconnected: {sid}")
+        # Remove from all subscribed pipelines
+        for pipeline_id, sessions in list(subscribed_pipelines.items()):
+            sessions.discard(sid)
+            if not sessions:
+                del subscribed_pipelines[pipeline_id]
+
+    @socketio_server.on('subscribe_pipeline')
+    async def on_subscribe_pipeline(sid, data):
+        """Subscribe to pipeline events."""
+        pipeline_id = str(data.get('pipeline_id', ''))
+        if pipeline_id:
+            if pipeline_id not in subscribed_pipelines:
+                subscribed_pipelines[pipeline_id] = set()
+            subscribed_pipelines[pipeline_id].add(sid)
+            logger.info(f"Client {sid} subscribed to pipeline {pipeline_id}")
+            # Join a room for this pipeline for easier broadcasting
+            await socketio_server.enter_room(sid, f"pipeline_{pipeline_id}")
+
+    @socketio_server.on('unsubscribe_pipeline')
+    async def on_unsubscribe_pipeline(sid, data):
+        """Unsubscribe from pipeline events."""
+        pipeline_id = str(data.get('pipeline_id', ''))
+        if pipeline_id and pipeline_id in subscribed_pipelines:
+            subscribed_pipelines[pipeline_id].discard(sid)
+            await socketio_server.leave_room(sid, f"pipeline_{pipeline_id}")
+            if not subscribed_pipelines[pipeline_id]:
+                del subscribed_pipelines[pipeline_id]
+            logger.info(f"Client {sid} unsubscribed from pipeline {pipeline_id}")
 
 # Initialize services
 # Get Kafka Connect URL from environment or use remote server
@@ -2675,6 +2773,53 @@ async def get_pipeline_progress(pipeline_id: str, db: Session = Depends(get_db))
         if "status" not in cdc_info:
             cdc_info["status"] = cdc_status_value.lower() if isinstance(cdc_status_value, str) else str(cdc_status_value).lower()
         
+        # Calculate CDC event counts from replication events if not provided
+        if "events_captured" not in cdc_info or "events_applied" not in cdc_info or "events_failed" not in cdc_info:
+            try:
+                from ingestion.database.models_db import ReplicationEventModel
+                from sqlalchemy import func
+                
+                # Count all events for this pipeline (captured = total)
+                total_events = db.query(func.count(ReplicationEventModel.id)).filter(
+                    ReplicationEventModel.pipeline_id == pipeline_id,
+                    ReplicationEventModel.deleted_at.is_(None)
+                ).scalar() or 0
+                
+                # Count applied events (status = 'applied' or 'success')
+                applied_events = db.query(func.count(ReplicationEventModel.id)).filter(
+                    ReplicationEventModel.pipeline_id == pipeline_id,
+                    ReplicationEventModel.status.in_(['applied', 'success']),
+                    ReplicationEventModel.deleted_at.is_(None)
+                ).scalar() or 0
+                
+                # Count failed events (status = 'failed' or 'error')
+                failed_events = db.query(func.count(ReplicationEventModel.id)).filter(
+                    ReplicationEventModel.pipeline_id == pipeline_id,
+                    ReplicationEventModel.status.in_(['failed', 'error']),
+                    ReplicationEventModel.deleted_at.is_(None)
+                ).scalar() or 0
+                
+                # Get latest event time
+                latest_event = db.query(ReplicationEventModel).filter(
+                    ReplicationEventModel.pipeline_id == pipeline_id,
+                    ReplicationEventModel.deleted_at.is_(None)
+                ).order_by(ReplicationEventModel.created_at.desc()).first()
+                
+                cdc_info["events_captured"] = total_events
+                cdc_info["events_applied"] = applied_events
+                cdc_info["events_failed"] = failed_events
+                if latest_event:
+                    cdc_info["last_event_time"] = latest_event.created_at.isoformat() if latest_event.created_at else None
+            except Exception as e:
+                logger.warning(f"Failed to calculate CDC event counts: {e}")
+                # Set defaults if calculation fails
+                if "events_captured" not in cdc_info:
+                    cdc_info["events_captured"] = 0
+                if "events_applied" not in cdc_info:
+                    cdc_info["events_applied"] = 0
+                if "events_failed" not in cdc_info:
+                    cdc_info["events_failed"] = 0
+        
         return {
             "pipeline_id": pipeline_id,
             "status": pipeline_status_str,
@@ -2868,16 +3013,19 @@ async def get_monitoring_dashboard(db: Session = Depends(get_db)) -> Dict[str, A
         from sqlalchemy import desc, func, or_
         from datetime import timedelta
         
-        # Get recent metrics
-        recent_metrics = db.query(PipelineMetricsModel).order_by(desc(PipelineMetricsModel.timestamp)).limit(10).all()
+        # Get recent metrics - limit to last 24 hours for performance
+        one_day_ago = datetime.utcnow() - timedelta(days=1)
+        recent_metrics = db.query(PipelineMetricsModel).filter(
+            PipelineMetricsModel.timestamp >= one_day_ago
+        ).order_by(desc(PipelineMetricsModel.timestamp)).limit(10).all()
         
         # Calculate event statistics from pipeline runs (last 7 days)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         
-        # Get all pipeline runs from last 7 days
+        # Get all pipeline runs from last 7 days - limit query for performance
         recent_runs = db.query(PipelineRunModel).filter(
             PipelineRunModel.started_at >= seven_days_ago
-        ).all()
+        ).limit(1000).all()  # Limit to 1000 most recent runs
         
         # Count events by status from pipeline runs
         total_runs = len(recent_runs)
@@ -2987,6 +3135,15 @@ async def get_monitoring_metrics(
     Returns:
         Dictionary with metrics data
     """
+    # Handle database connection failure - return empty metrics
+    if db is None:
+        logger.warning("Database unavailable, returning empty metrics")
+        return {
+            "metrics": [],
+            "count": 0,
+            "pipeline_id": pipelineId
+        }
+    
     try:
         from ingestion.database.models_db import PipelineMetricsModel
         from sqlalchemy import desc
@@ -3027,15 +3184,22 @@ async def get_monitoring_metrics(
             # Calculate avg_latency_ms from lag_seconds
             avg_latency_ms = float(metric.lag_seconds * 1000) if metric.lag_seconds and metric.lag_seconds > 0 else 0.0
             
+            # Calculate total_events more accurately
+            # If throughput is events/sec, multiply by 3600 to get events per hour
+            # Or use a better estimate based on actual event counts
+            throughput = float(metric.throughput_events_per_sec) if metric.throughput_events_per_sec else 0.0
+            # Estimate events per hour from throughput (events/sec * 3600 seconds)
+            estimated_events_per_hour = int(throughput * 3600) if throughput > 0 else 0
+            
             metrics_list.append({
                 "timestamp": metric.timestamp.isoformat() if metric.timestamp else datetime.utcnow().isoformat(),
-                "throughput_events_per_sec": float(metric.throughput_events_per_sec) if metric.throughput_events_per_sec else 0.0,
+                "throughput_events_per_sec": throughput,
                 "lag_seconds": float(metric.lag_seconds) if metric.lag_seconds else 0.0,
                 "avg_latency_ms": avg_latency_ms,  # Add avg_latency_ms for frontend compatibility
                 "error_count": int(metric.error_count) if metric.error_count else 0,
                 "bytes_processed": int(metric.bytes_processed) if metric.bytes_processed else 0,
                 "pipeline_id": metric.pipeline_id,
-                "total_events": int(metric.throughput_events_per_sec or 0)  # Estimate total events from throughput
+                "total_events": estimated_events_per_hour  # Better estimate: events per hour from throughput
             })
         
         return {
@@ -3430,13 +3594,37 @@ async def get_replication_events(
             source_binlog_position = None
             sql_server_lsn = None
             
-            # Try to get from run_metadata first
+            # Try to get from run_metadata first (most reliable source)
             if run.run_metadata and isinstance(run.run_metadata, dict):
-                source_lsn = run.run_metadata.get("source_lsn") or run.run_metadata.get("lsn") or run.run_metadata.get("offset")
-                source_scn = run.run_metadata.get("source_scn") or run.run_metadata.get("scn")
-                source_binlog_file = run.run_metadata.get("source_binlog_file") or run.run_metadata.get("binlog_file") or run.run_metadata.get("file")
-                source_binlog_position = run.run_metadata.get("source_binlog_position") or run.run_metadata.get("binlog_position") or run.run_metadata.get("pos") or run.run_metadata.get("position")
-                sql_server_lsn = run.run_metadata.get("sql_server_lsn") or run.run_metadata.get("lsn")
+                # Check all possible keys for LSN/Offset
+                source_lsn = (run.run_metadata.get("source_lsn") or 
+                             run.run_metadata.get("lsn") or 
+                             run.run_metadata.get("offset") or
+                             run.run_metadata.get("transaction_id") or
+                             run.run_metadata.get("txId"))
+                source_scn = (run.run_metadata.get("source_scn") or 
+                             run.run_metadata.get("scn") or
+                             run.run_metadata.get("transaction_id"))
+                source_binlog_file = (run.run_metadata.get("source_binlog_file") or 
+                                     run.run_metadata.get("binlog_file") or 
+                                     run.run_metadata.get("file"))
+                source_binlog_position = (run.run_metadata.get("source_binlog_position") or 
+                                         run.run_metadata.get("binlog_position") or 
+                                         run.run_metadata.get("pos") or 
+                                         run.run_metadata.get("position"))
+                sql_server_lsn = (run.run_metadata.get("sql_server_lsn") or 
+                                 run.run_metadata.get("change_lsn") or
+                                 run.run_metadata.get("commit_lsn") or
+                                 run.run_metadata.get("lsn"))
+                
+                # Also check if there's a nested offset structure
+                if not source_lsn and "offset" in run.run_metadata and isinstance(run.run_metadata["offset"], dict):
+                    offset_dict = run.run_metadata["offset"]
+                    source_lsn = (offset_dict.get("lsn") or 
+                                 offset_dict.get("transaction_id") or
+                                 offset_dict.get("txId"))
+                    if isinstance(source_lsn, (int, float)):
+                        source_lsn = str(source_lsn)
             
             # Try to get from recent metrics (source_offset field)
             if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]) and db is not None:
@@ -3602,16 +3790,46 @@ async def get_replication_events(
             }
             
             # Add LSN/SCN/Offset fields if available
+            # First try extracted values, then fallback to run_metadata
             if source_lsn:
                 event["source_lsn"] = str(source_lsn)
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                # Fallback: try to extract from run_metadata directly
+                metadata_lsn = run.run_metadata.get("source_lsn") or run.run_metadata.get("lsn") or run.run_metadata.get("offset")
+                if metadata_lsn:
+                    event["source_lsn"] = str(metadata_lsn)
+            
             if source_scn:
                 event["source_scn"] = str(source_scn)
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                metadata_scn = run.run_metadata.get("source_scn") or run.run_metadata.get("scn")
+                if metadata_scn:
+                    event["source_scn"] = str(metadata_scn)
+            
             if source_binlog_file:
                 event["source_binlog_file"] = str(source_binlog_file)
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                metadata_binlog_file = run.run_metadata.get("source_binlog_file") or run.run_metadata.get("binlog_file") or run.run_metadata.get("file")
+                if metadata_binlog_file:
+                    event["source_binlog_file"] = str(metadata_binlog_file)
+            
             if source_binlog_position:
                 event["source_binlog_position"] = int(source_binlog_position) if source_binlog_position else None
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                metadata_binlog_pos = run.run_metadata.get("source_binlog_position") or run.run_metadata.get("binlog_position") or run.run_metadata.get("pos") or run.run_metadata.get("position")
+                if metadata_binlog_pos:
+                    event["source_binlog_position"] = int(metadata_binlog_pos) if metadata_binlog_pos else None
+            
             if sql_server_lsn:
                 event["sql_server_lsn"] = str(sql_server_lsn)
+            elif run.run_metadata and isinstance(run.run_metadata, dict):
+                metadata_sql_lsn = run.run_metadata.get("sql_server_lsn") or run.run_metadata.get("lsn")
+                if metadata_sql_lsn:
+                    event["sql_server_lsn"] = str(metadata_sql_lsn)
+            
+            # Also include run_metadata in event for frontend to extract directly if needed
+            if run.run_metadata:
+                event["run_metadata"] = run.run_metadata
             
             events.append(event)
         
@@ -5579,10 +5797,23 @@ async def get_audit_logs(
         return []
 
 
+# Mount Socket.IO app if available
+if socketio_server and SOCKETIO_AVAILABLE:
+    try:
+        from socketio import ASGIApp
+        socketio_asgi = ASGIApp(socketio_server, app)
+        # Replace app with socketio-wrapped app
+        app = socketio_asgi
+        logger.info("Socket.IO mounted successfully")
+    except Exception as e:
+        logger.warning(f"Failed to mount Socket.IO: {e}")
+
 if __name__ == "__main__":
     import uvicorn
     # sys is already imported at the top of the file
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use socketio-wrapped app if available
+    final_app = app if socketio_server and SOCKETIO_AVAILABLE else app
+    uvicorn.run(final_app, host="0.0.0.0", port=8000)
 
 
 

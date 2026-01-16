@@ -6,40 +6,70 @@ import { store } from '@/lib/store/store';
 import { addReplicationEvent, addMonitoringMetric, fetchReplicationEvents } from '@/lib/store/slices/monitoringSlice';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8000';
+const WS_ENABLED = process.env.NEXT_PUBLIC_WS_ENABLED !== 'false'; // Default to true unless explicitly disabled
 
 class WebSocketClient {
   private socket: Socket | null = null;
   private subscribedPipelines: Set<number | string> = new Set();
   private isConnecting: boolean = false;
   private connectionFailed: boolean = false; // Track if connection has failed to prevent retries
+  private errorCount: number = 0; // Track consecutive errors to suppress spam
+  private maxErrorCount: number = 3; // Stop logging after 3 errors
+  private statusListeners: Set<() => void> = new Set(); // Listeners for status changes
 
   connect() {
+    // Check if WebSocket is enabled
+    if (!WS_ENABLED) {
+      console.log('[WebSocket] WebSocket is disabled via configuration');
+      this.connectionFailed = true;
+      return;
+    }
+
+    // If connection has permanently failed, don't retry automatically
+    // User can still manually retry via retryConnection()
+    if (this.connectionFailed && this.errorCount >= 5) {
+      console.log('[WebSocket] Connection permanently failed. Use retryConnection() to manually retry.');
+      return;
+    }
+
     // Prevent multiple connection attempts
     if (this.socket?.connected) {
+      console.log('[WebSocket] Already connected');
       return;
     }
     
     if (this.isConnecting) {
+      console.log('[WebSocket] Connection already in progress');
       return;
     }
 
-    // If connection has previously failed, don't retry (backend may not have Socket.IO)
-    if (this.connectionFailed) {
-      return;
+    // Reset failed state to allow retry (if error count is low)
+    if (this.connectionFailed && this.errorCount < 5) {
+      console.log('[WebSocket] Resetting failed state and attempting reconnection');
+      this.connectionFailed = false;
+      // Clean up old socket if exists
+      if (this.socket) {
+        this.socket.removeAllListeners();
+        this.socket.disconnect();
+        this.socket = null;
+      }
     }
 
     this.isConnecting = true;
+    console.log('[WebSocket] Attempting to connect to:', WS_URL);
 
     this.socket = io(WS_URL, {
       path: '/socket.io',
-      transports: ['websocket', 'polling'],
-      reconnection: false, // Disable automatic reconnection - backend may not have Socket.IO
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 0, // Don't attempt reconnection
-      timeout: 5000, // Shorter timeout to fail faster
+      transports: ['polling', 'websocket'], // Try polling first (more reliable fallback)
+      reconnection: this.errorCount < 3, // Only enable reconnection if we haven't failed too many times
+      reconnectionDelay: 2000, // Start with 2 second delay
+      reconnectionDelayMax: 10000, // Max 10 second delay
+      reconnectionAttempts: 2, // Reduced to 2 attempts to fail faster if backend doesn't support it
+      timeout: 3000, // 3 second timeout (reduced to fail faster)
       forceNew: false, // Reuse existing connection if available
-      autoConnect: true, // Still try to connect, but don't retry on failure
+      autoConnect: true,
+      // Suppress default error logging
+      withCredentials: false,
     });
 
     this.socket.on('connect', () => {
@@ -50,6 +80,9 @@ class WebSocketClient {
       console.log('[Frontend] Previously subscribed pipelines:', Array.from(this.subscribedPipelines));
       this.isConnecting = false;
       this.connectionFailed = false; // Reset failure flag on successful connection
+      this.errorCount = 0; // Reset error count on successful connection
+      // Notify all listeners about status change
+      this.notifyStatusListeners();
       // Re-subscribe to previously subscribed pipelines
       this.subscribedPipelines.forEach((pipelineId) => {
         if (this.socket?.connected) {
@@ -63,6 +96,8 @@ class WebSocketClient {
     this.socket.on('disconnect', (reason) => {
       console.log('WebSocket disconnected:', reason);
       this.isConnecting = false;
+      // Notify all listeners about status change
+      this.notifyStatusListeners();
       if (reason === 'io server disconnect') {
         // Server disconnected, try to reconnect manually
         this.socket?.connect();
@@ -70,18 +105,63 @@ class WebSocketClient {
     });
 
     this.socket.on('connect_error', (error) => {
-      // Suppress WebSocket connection errors - backend may not have Socket.IO configured
-      // This is not critical for the application to function
+      this.errorCount++;
       this.isConnecting = false;
-      this.connectionFailed = true; // Mark as failed to prevent future attempts
-      // Disable reconnection to prevent spam
+      
+      // Only log first few errors to avoid console spam
+      if (this.errorCount <= this.maxErrorCount) {
+        console.warn(`[WebSocket] Connection error (${this.errorCount}/${this.maxErrorCount}):`, error.message);
+        if (this.errorCount === this.maxErrorCount) {
+          console.warn('[WebSocket] Suppressing further connection errors. Backend may not have Socket.IO configured.');
+        }
+      }
+      
+      // If we've had multiple errors quickly, mark as failed to stop retries
+      // This prevents infinite retry loops when backend doesn't support WebSocket
+      if (this.errorCount >= 3) {
+        this.connectionFailed = true;
+        if (this.socket) {
+          this.socket.io.reconnecting = false;
+          this.socket.disconnect();
+          this.socket = null; // Clean up socket to prevent further attempts
+        }
+        console.warn('[WebSocket] Stopped connection attempts. Backend does not appear to support WebSocket. Using polling mode.');
+      }
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      // Only log first few attempts to avoid spam
+      if (attemptNumber <= 2) {
+        console.log(`[WebSocket] Reconnection attempt ${attemptNumber}`);
+      }
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      if (this.errorCount <= this.maxErrorCount) {
+        console.warn('[WebSocket] All reconnection attempts failed. WebSocket unavailable. Using polling mode.');
+      }
+      this.connectionFailed = true;
+      this.isConnecting = false;
+      // Stop reconnection attempts
       if (this.socket) {
         this.socket.io.reconnecting = false;
-        // Disconnect to clean up
-        this.socket.disconnect();
       }
-      // Silently fail - WebSocket is optional for real-time updates
-      // Don't log to console to avoid cluttering logs
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log(`[WebSocket] Successfully reconnected after ${attemptNumber} attempts`);
+      this.connectionFailed = false;
+      this.isConnecting = false;
+      this.errorCount = 0; // Reset error count on reconnect
+      // Notify all listeners about status change
+      this.notifyStatusListeners();
+      // Re-subscribe to all previously subscribed pipelines
+      this.subscribedPipelines.forEach((pipelineId) => {
+        if (this.socket?.connected) {
+          console.log(`[WebSocket] Re-subscribing to pipeline: ${pipelineId}`);
+          this.socket.emit('subscribe_pipeline', { pipeline_id: pipelineId });
+        }
+      });
     });
 
     this.socket.on('error', (error) => {
@@ -233,7 +313,96 @@ class WebSocketClient {
   }
 
   isConnected(): boolean {
-    return this.socket?.connected || false;
+    // Check actual connection state - if socket is connected, always return true
+    return this.socket?.connected === true;
+  }
+
+  isAvailable(): boolean {
+    // WebSocket is available if:
+    // 1. It's connected (always available if connected, regardless of connectionFailed flag)
+    // 2. It's still trying to connect (isConnecting)
+    // 3. Socket exists and hasn't permanently failed (for initial connection attempts)
+    // Priority: connected > connecting > not failed
+    if (this.socket?.connected === true) {
+      return true; // Always available if connected
+    }
+    if (this.isConnecting) {
+      return true; // Available if connecting
+    }
+    // If not connected and not connecting, only available if not permanently failed
+    return !this.connectionFailed && this.socket !== null;
+  }
+
+  reset(): void {
+    // Reset connection state to allow retry
+    console.log('[WebSocket] Resetting connection state');
+    this.connectionFailed = false;
+    this.isConnecting = false;
+    this.errorCount = 0; // Reset error count
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+    }
+  }
+
+  retryConnection(): void {
+    // Manually trigger reconnection
+    console.log('[WebSocket] Manual reconnection requested');
+    this.reset();
+    
+    // Check if WebSocket is enabled
+    if (!WS_ENABLED) {
+      console.warn('[WebSocket] WebSocket is disabled via configuration. Enable it in environment variables.');
+      this.connectionFailed = true;
+      return;
+    }
+    
+    this.connect();
+  }
+
+  disable(): void {
+    // Manually disable WebSocket (useful for testing or when backend doesn't support it)
+    console.log('[WebSocket] Manually disabling WebSocket');
+    this.connectionFailed = true;
+    this.isConnecting = false;
+    if (this.socket) {
+      this.socket.io.reconnecting = false;
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+    }
+  }
+
+  isDisabled(): boolean {
+    // Check if WebSocket is disabled or permanently failed
+    return !WS_ENABLED || (this.connectionFailed && this.errorCount >= 3);
+  }
+
+  hasFailed(): boolean {
+    // Check if WebSocket connection has permanently failed (backend doesn't support Socket.IO)
+    return this.connectionFailed;
+  }
+
+  // Status change notification system
+  onStatusChange(callback: () => void): () => void {
+    // Add listener
+    this.statusListeners.add(callback);
+    // Return unsubscribe function
+    return () => {
+      this.statusListeners.delete(callback);
+    };
+  }
+
+  private notifyStatusListeners(): void {
+    // Notify all listeners about status change
+    this.statusListeners.forEach(listener => {
+      try {
+        listener();
+      } catch (error) {
+        console.error('Error in status listener:', error);
+      }
+    });
   }
 }
 

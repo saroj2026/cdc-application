@@ -673,7 +673,7 @@ class OracleConnector(BaseConnector):
                 schema_escaped = schema_upper.replace('"', '""')
                 table_escaped = table_upper.replace('"', '""')
                 count_query = f'SELECT COUNT(*) FROM "{schema_escaped}"."{table_escaped}"'
-                logger.info("[Oracle get_table_data] Executing count query (uppercase): %s", count_query)
+                logger.info("[Oracle get_table_data] Executing count query (uppercase): %r", count_query)
                 cursor.execute(count_query)
                 total_rows = cursor.fetchone()[0]
                 use_quotes = False
@@ -683,7 +683,7 @@ class OracleConnector(BaseConnector):
                     schema_escaped_orig = schema.replace('"', '""')
                     table_escaped_orig = table_name.replace('"', '""')
                     count_query = f'SELECT COUNT(*) FROM "{schema_escaped_orig}"."{table_escaped_orig}"'
-                    logger.info("[Oracle get_table_data] Executing count query (original case): %s", count_query)
+                    logger.info("[Oracle get_table_data] Executing count query (original case): %r", count_query)
                     cursor.execute(count_query)
                     total_rows = cursor.fetchone()[0]
                     use_quotes = True

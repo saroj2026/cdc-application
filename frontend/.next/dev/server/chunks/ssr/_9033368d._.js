@@ -669,6 +669,9 @@ function MonitoringPage() {
     const rowsPerPage = 10;
     const [retryingEventId, setRetryingEventId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [isRefreshing, setIsRefreshing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [wsConnected, setWsConnected] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [wsAvailable, setWsAvailable] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true) // Default to true to show status
+    ;
     // Handle client-side mounting
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         setMounted(true);
@@ -690,9 +693,41 @@ function MonitoringPage() {
                 limit: 500,
                 todayOnly: false
             }));
+            // Connect WebSocket for real-time updates
+            __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].connect();
+            // Update WebSocket status immediately
+            setWsConnected(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isConnected());
+            setWsAvailable(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isAvailable());
         }
     }, [
         dispatch,
+        isAuthenticated
+    ]);
+    // Check WebSocket connection status periodically and on changes
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!isAuthenticated) return;
+        // Update WebSocket status function
+        const updateWsStatus = ()=>{
+            const connected = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isConnected();
+            const available = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isAvailable();
+            setWsConnected(connected);
+            setWsAvailable(available);
+            // Debug logging
+            if (connected) {
+                console.log('[Monitoring] WebSocket is connected - updating status');
+            }
+        };
+        // Check periodically (every 2 seconds)
+        const wsStatusInterval = setInterval(updateWsStatus, 2000);
+        // Also listen for real-time status changes
+        const unsubscribeStatus = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].onStatusChange(updateWsStatus);
+        // Update immediately
+        updateWsStatus();
+        return ()=>{
+            clearInterval(wsStatusInterval);
+            unsubscribeStatus(); // Remove status listener
+        };
+    }, [
         isAuthenticated
     ]);
     // Track last fetched pipeline ID to prevent unnecessary refetches
@@ -1037,12 +1072,12 @@ function MonitoringPage() {
                 className: "w-6 h-6 animate-spin text-foreground-muted"
             }, void 0, false, {
                 fileName: "[project]/app/monitoring/page.tsx",
-                lineNumber: 392,
+                lineNumber: 432,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/app/monitoring/page.tsx",
-            lineNumber: 391,
+            lineNumber: 431,
             columnNumber: 7
         }, this);
     }
@@ -1063,6 +1098,77 @@ function MonitoringPage() {
                     action: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center gap-3",
                         children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
+                                className: wsConnected ? "bg-success/20 text-success border border-success/30 shadow-sm cursor-pointer hover:bg-success/30" : wsAvailable ? "bg-warning/20 text-warning border border-warning/30 shadow-sm cursor-pointer hover:bg-warning/30" : "bg-blue-500/15 text-blue-400 border border-blue-400/40 shadow-sm font-semibold cursor-pointer hover:bg-blue-500/25",
+                                onClick: ()=>{
+                                    if (!wsConnected && !wsAvailable) {
+                                        // Retry connection if unavailable
+                                        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].retryConnection();
+                                        setWsAvailable(true);
+                                        setWsConnected(false);
+                                    }
+                                },
+                                title: !wsConnected && !wsAvailable ? "Click to retry WebSocket connection" : undefined,
+                                children: wsConnected ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                            className: "w-3 h-3 mr-1.5 animate-pulse"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 471,
+                                            columnNumber: 19
+                                        }, void 0),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-medium",
+                                            children: "WebSocket Connected"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 472,
+                                            columnNumber: 19
+                                        }, void 0)
+                                    ]
+                                }, void 0, true) : wsAvailable ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__["RotateCw"], {
+                                            className: "w-3 h-3 mr-1.5 animate-spin"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 476,
+                                            columnNumber: 19
+                                        }, void 0),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-medium",
+                                            children: "Connecting WebSocket..."
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 477,
+                                            columnNumber: 19
+                                        }, void 0)
+                                    ]
+                                }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                            className: "w-3.5 h-3.5 mr-1.5 text-blue-400"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 481,
+                                            columnNumber: 19
+                                        }, void 0),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-semibold",
+                                            children: "WebSocket Unavailable (Click to Retry)"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/monitoring/page.tsx",
+                                            lineNumber: 482,
+                                            columnNumber: 19
+                                        }, void 0)
+                                    ]
+                                }, void 0, true)
+                            }, void 0, false, {
+                                fileName: "[project]/app/monitoring/page.tsx",
+                                lineNumber: 451,
+                                columnNumber: 13
+                            }, void 0),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md",
                                 children: [
@@ -1070,7 +1176,7 @@ function MonitoringPage() {
                                         className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 411,
+                                        lineNumber: 487,
                                         columnNumber: 15
                                     }, void 0),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1078,13 +1184,13 @@ function MonitoringPage() {
                                         children: "Auto Sync: ON"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 412,
+                                        lineNumber: 488,
                                         columnNumber: 15
                                     }, void 0)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 410,
+                                lineNumber: 486,
                                 columnNumber: 13
                             }, void 0),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1130,14 +1236,14 @@ function MonitoringPage() {
                                                 className: `w-4 h-4 transition-transform ${isRefreshing ? 'animate-spin' : ''}`
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 443,
+                                                lineNumber: 519,
                                                 columnNumber: 15
                                             }, void 0),
                                             isRefreshing ? 'Refreshing...' : 'Refresh'
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 415,
+                                        lineNumber: 491,
                                         columnNumber: 13
                                     }, void 0),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1158,12 +1264,12 @@ function MonitoringPage() {
                                                     placeholder: "All Pipelines"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 459,
+                                                    lineNumber: 535,
                                                     columnNumber: 17
                                                 }, void 0)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 458,
+                                                lineNumber: 534,
                                                 columnNumber: 15
                                             }, void 0),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1174,7 +1280,7 @@ function MonitoringPage() {
                                                         children: "All Pipelines"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 462,
+                                                        lineNumber: 538,
                                                         columnNumber: 17
                                                     }, void 0),
                                                     Array.isArray(pipelines) ? pipelines.map((p)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1182,36 +1288,36 @@ function MonitoringPage() {
                                                             children: p.name
                                                         }, p.id, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 464,
+                                                            lineNumber: 540,
                                                             columnNumber: 19
                                                         }, void 0)) : null
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 461,
+                                                lineNumber: 537,
                                                 columnNumber: 15
                                             }, void 0)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 446,
+                                        lineNumber: 522,
                                         columnNumber: 13
                                     }, void 0)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 414,
+                                lineNumber: 490,
                                 columnNumber: 11
                             }, void 0)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/monitoring/page.tsx",
-                        lineNumber: 409,
+                        lineNumber: 449,
                         columnNumber: 11
                     }, void 0)
                 }, void 0, false, {
                     fileName: "[project]/app/monitoring/page.tsx",
-                    lineNumber: 404,
+                    lineNumber: 444,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1229,7 +1335,7 @@ function MonitoringPage() {
                                                 children: "Total Events"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 480,
+                                                lineNumber: 556,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1237,31 +1343,31 @@ function MonitoringPage() {
                                                 children: eventStats.total
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 481,
+                                                lineNumber: 557,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 479,
+                                        lineNumber: 555,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                         className: "w-10 h-10 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 483,
+                                        lineNumber: 559,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 478,
+                                lineNumber: 554,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 477,
+                            lineNumber: 553,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1276,7 +1382,7 @@ function MonitoringPage() {
                                                 children: "Successfully Applied"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 489,
+                                                lineNumber: 565,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1284,7 +1390,7 @@ function MonitoringPage() {
                                                 children: eventStats.success
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 490,
+                                                lineNumber: 566,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1295,31 +1401,31 @@ function MonitoringPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 491,
+                                                lineNumber: 567,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 488,
+                                        lineNumber: 564,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                         className: "w-10 h-10 text-green-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 495,
+                                        lineNumber: 571,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 487,
+                                lineNumber: 563,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 486,
+                            lineNumber: 562,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1334,7 +1440,7 @@ function MonitoringPage() {
                                                 children: "Captured/Pending"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 501,
+                                                lineNumber: 577,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1342,7 +1448,7 @@ function MonitoringPage() {
                                                 children: eventStats.captured
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 502,
+                                                lineNumber: 578,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1350,31 +1456,31 @@ function MonitoringPage() {
                                                 children: "Awaiting application"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 503,
+                                                lineNumber: 579,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 500,
+                                        lineNumber: 576,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                         className: "w-10 h-10 text-cyan-400 animate-pulse"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 505,
+                                        lineNumber: 581,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 499,
+                                lineNumber: 575,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 498,
+                            lineNumber: 574,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1389,7 +1495,7 @@ function MonitoringPage() {
                                                 children: "Avg Latency"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 511,
+                                                lineNumber: 587,
                                                 columnNumber: 15
                                             }, this),
                                             eventStats.avgLatency != null ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1400,14 +1506,14 @@ function MonitoringPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 513,
+                                                lineNumber: 589,
                                                 columnNumber: 17
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent",
                                                 children: "0ms"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 515,
+                                                lineNumber: 591,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1415,31 +1521,31 @@ function MonitoringPage() {
                                                 children: eventStats.avgLatency != null ? `${filteredEvents.filter((e)=>e.latency_ms != null && e.latency_ms > 0).length} events with latency` : 'No events applied yet'
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 517,
+                                                lineNumber: 593,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 510,
+                                        lineNumber: 586,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
                                         className: "w-10 h-10 text-purple-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 523,
+                                        lineNumber: 599,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 509,
+                                lineNumber: 585,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 508,
+                            lineNumber: 584,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1454,7 +1560,7 @@ function MonitoringPage() {
                                                 children: "Failed Events"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 529,
+                                                lineNumber: 605,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1462,37 +1568,37 @@ function MonitoringPage() {
                                                 children: eventStats.failed
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 530,
+                                                lineNumber: 606,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 528,
+                                        lineNumber: 604,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                         className: "w-10 h-10 text-red-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 532,
+                                        lineNumber: 608,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 527,
+                                lineNumber: 603,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 526,
+                            lineNumber: 602,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/monitoring/page.tsx",
-                    lineNumber: 476,
+                    lineNumber: 552,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1506,7 +1612,7 @@ function MonitoringPage() {
                                     children: "Event Types"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 540,
+                                    lineNumber: 616,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1520,7 +1626,7 @@ function MonitoringPage() {
                                                     children: "Insert"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 543,
+                                                    lineNumber: 619,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1529,13 +1635,13 @@ function MonitoringPage() {
                                                     children: eventStats.insert
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 544,
+                                                    lineNumber: 620,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 542,
+                                            lineNumber: 618,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1546,7 +1652,7 @@ function MonitoringPage() {
                                                     children: "Update"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 547,
+                                                    lineNumber: 623,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1555,13 +1661,13 @@ function MonitoringPage() {
                                                     children: eventStats.update
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 548,
+                                                    lineNumber: 624,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 546,
+                                            lineNumber: 622,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1572,7 +1678,7 @@ function MonitoringPage() {
                                                     children: "Delete"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 551,
+                                                    lineNumber: 627,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1581,25 +1687,25 @@ function MonitoringPage() {
                                                     children: eventStats.delete
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 552,
+                                                    lineNumber: 628,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 550,
+                                            lineNumber: 626,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 541,
+                                    lineNumber: 617,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 539,
+                            lineNumber: 615,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1610,7 +1716,7 @@ function MonitoringPage() {
                                     children: "Status"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 557,
+                                    lineNumber: 633,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1624,7 +1730,7 @@ function MonitoringPage() {
                                                     children: "Success"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 560,
+                                                    lineNumber: 636,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1633,13 +1739,13 @@ function MonitoringPage() {
                                                     children: eventStats.success
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 561,
+                                                    lineNumber: 637,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 559,
+                                            lineNumber: 635,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1650,7 +1756,7 @@ function MonitoringPage() {
                                                     children: "Failed"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 564,
+                                                    lineNumber: 640,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1659,13 +1765,13 @@ function MonitoringPage() {
                                                     children: eventStats.failed
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 565,
+                                                    lineNumber: 641,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 563,
+                                            lineNumber: 639,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1676,7 +1782,7 @@ function MonitoringPage() {
                                                     children: "Pending"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 568,
+                                                    lineNumber: 644,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1685,25 +1791,25 @@ function MonitoringPage() {
                                                     children: eventStats.total - eventStats.success - eventStats.failed
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 569,
+                                                    lineNumber: 645,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 567,
+                                            lineNumber: 643,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 558,
+                                    lineNumber: 634,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 556,
+                            lineNumber: 632,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1714,7 +1820,7 @@ function MonitoringPage() {
                                     children: "WebSocket Status"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 576,
+                                    lineNumber: 652,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1727,7 +1833,7 @@ function MonitoringPage() {
                                                     className: `w-2 h-2 rounded-full ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isConnected() ? 'bg-success' : 'bg-error'}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 580,
+                                                    lineNumber: 656,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1735,7 +1841,7 @@ function MonitoringPage() {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["wsClient"].isConnected() ? 'Connected' : 'Disconnected'
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 581,
+                                                    lineNumber: 657,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
@@ -1746,7 +1852,7 @@ function MonitoringPage() {
                                                     className: "w-2 h-2 rounded-full bg-foreground-muted"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 588,
+                                                    lineNumber: 664,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1754,7 +1860,7 @@ function MonitoringPage() {
                                                     children: "Loading..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 589,
+                                                    lineNumber: 665,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
@@ -1762,19 +1868,19 @@ function MonitoringPage() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 577,
+                                    lineNumber: 653,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 575,
+                            lineNumber: 651,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/monitoring/page.tsx",
-                    lineNumber: 538,
+                    lineNumber: 614,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1788,7 +1894,7 @@ function MonitoringPage() {
                                     children: "Events Over Time (24h)"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 599,
+                                    lineNumber: 675,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1802,7 +1908,7 @@ function MonitoringPage() {
                                                 stroke: "#2d3448"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 602,
+                                                lineNumber: 678,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1810,14 +1916,14 @@ function MonitoringPage() {
                                                 stroke: "#9ca3af"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 603,
+                                                lineNumber: 679,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
                                                 stroke: "#9ca3af"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 604,
+                                                lineNumber: 680,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1828,7 +1934,7 @@ function MonitoringPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 605,
+                                                lineNumber: 681,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Line"], {
@@ -1842,24 +1948,24 @@ function MonitoringPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 612,
+                                                lineNumber: 688,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 601,
+                                        lineNumber: 677,
                                         columnNumber: 13
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 600,
+                                    lineNumber: 676,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 598,
+                            lineNumber: 674,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1870,7 +1976,7 @@ function MonitoringPage() {
                                     children: "Latency & Errors"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 624,
+                                    lineNumber: 700,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1884,7 +1990,7 @@ function MonitoringPage() {
                                                 stroke: "#2d3448"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 627,
+                                                lineNumber: 703,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1892,14 +1998,14 @@ function MonitoringPage() {
                                                 stroke: "#9ca3af"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 628,
+                                                lineNumber: 704,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
                                                 stroke: "#9ca3af"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 629,
+                                                lineNumber: 705,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1910,7 +2016,7 @@ function MonitoringPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 630,
+                                                lineNumber: 706,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
@@ -1924,7 +2030,7 @@ function MonitoringPage() {
                                                 ]
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 637,
+                                                lineNumber: 713,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
@@ -1938,30 +2044,30 @@ function MonitoringPage() {
                                                 ]
                                             }, void 0, false, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 638,
+                                                lineNumber: 714,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/monitoring/page.tsx",
-                                        lineNumber: 626,
+                                        lineNumber: 702,
                                         columnNumber: 13
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 625,
+                                    lineNumber: 701,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 623,
+                            lineNumber: 699,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/monitoring/page.tsx",
-                    lineNumber: 597,
+                    lineNumber: 673,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1972,7 +2078,7 @@ function MonitoringPage() {
                             children: "Recent CDC Events"
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 646,
+                            lineNumber: 722,
                             columnNumber: 9
                         }, this),
                         isLoading && filteredEvents.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1982,7 +2088,7 @@ function MonitoringPage() {
                                     className: "w-6 h-6 animate-spin text-foreground-muted"
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 649,
+                                    lineNumber: 725,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1990,13 +2096,13 @@ function MonitoringPage() {
                                     children: "Loading events..."
                                 }, void 0, false, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 650,
+                                    lineNumber: 726,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 648,
+                            lineNumber: 724,
                             columnNumber: 11
                         }, this) : filteredEvents.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "overflow-x-auto",
@@ -2013,7 +2119,7 @@ function MonitoringPage() {
                                                         children: "Time"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 657,
+                                                        lineNumber: 733,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2021,7 +2127,7 @@ function MonitoringPage() {
                                                         children: "Pipeline"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 658,
+                                                        lineNumber: 734,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2029,7 +2135,7 @@ function MonitoringPage() {
                                                         children: "Event Type"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 659,
+                                                        lineNumber: 735,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2037,7 +2143,7 @@ function MonitoringPage() {
                                                         children: "Table"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 660,
+                                                        lineNumber: 736,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2045,7 +2151,7 @@ function MonitoringPage() {
                                                         children: "LSN/Offset"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 661,
+                                                        lineNumber: 737,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2053,7 +2159,7 @@ function MonitoringPage() {
                                                         children: "Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 662,
+                                                        lineNumber: 738,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2061,7 +2167,7 @@ function MonitoringPage() {
                                                         children: "Latency"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 663,
+                                                        lineNumber: 739,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2069,18 +2175,18 @@ function MonitoringPage() {
                                                         children: "Error"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                        lineNumber: 664,
+                                                        lineNumber: 740,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                lineNumber: 656,
+                                                lineNumber: 732,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 655,
+                                            lineNumber: 731,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2107,20 +2213,20 @@ function MonitoringPage() {
                                                                                 className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                                lineNumber: 691,
+                                                                                lineNumber: 767,
                                                                                 columnNumber: 31
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                 className: "absolute inset-0 w-2 h-2 bg-cyan-400/50 rounded-full animate-ping"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                                lineNumber: 692,
+                                                                                lineNumber: 768,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 690,
+                                                                        lineNumber: 766,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$formatDistanceToNow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["formatDistanceToNow"])(new Date(event.created_at), {
@@ -2129,12 +2235,12 @@ function MonitoringPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 688,
+                                                                lineNumber: 764,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 687,
+                                                            lineNumber: 763,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2142,7 +2248,7 @@ function MonitoringPage() {
                                                             children: pipeline?.name || `Pipeline ${event.pipeline_id}`
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 698,
+                                                            lineNumber: 774,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2153,12 +2259,12 @@ function MonitoringPage() {
                                                                 children: event.event_type.toUpperCase()
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 702,
+                                                                lineNumber: 778,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 701,
+                                                            lineNumber: 777,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2166,7 +2272,7 @@ function MonitoringPage() {
                                                             children: event.table_name
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 715,
+                                                            lineNumber: 791,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2201,7 +2307,7 @@ function MonitoringPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 742,
+                                                                        lineNumber: 818,
                                                                         columnNumber: 31
                                                                     }, this);
                                                                 } else if (finalScn) {
@@ -2214,7 +2320,7 @@ function MonitoringPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 748,
+                                                                        lineNumber: 824,
                                                                         columnNumber: 31
                                                                     }, this);
                                                                 } else if (finalBinlogFile) {
@@ -2228,7 +2334,7 @@ function MonitoringPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 754,
+                                                                        lineNumber: 830,
                                                                         columnNumber: 31
                                                                     }, this);
                                                                 } else if (finalSqlServerLsn) {
@@ -2241,7 +2347,7 @@ function MonitoringPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 760,
+                                                                        lineNumber: 836,
                                                                         columnNumber: 31
                                                                     }, this);
                                                                 } else {
@@ -2250,14 +2356,14 @@ function MonitoringPage() {
                                                                         children: "N/A"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 765,
+                                                                        lineNumber: 841,
                                                                         columnNumber: 36
                                                                     }, this);
                                                                 }
                                                             })()
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 716,
+                                                            lineNumber: 792,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2272,38 +2378,38 @@ function MonitoringPage() {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                            lineNumber: 781,
+                                                                            lineNumber: 857,
                                                                             columnNumber: 43
                                                                         }, this),
                                                                         isFailed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                            lineNumber: 782,
+                                                                            lineNumber: 858,
                                                                             columnNumber: 42
                                                                         }, this),
                                                                         isCaptured && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                                                             className: "w-3 h-3 mr-1 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                            lineNumber: 783,
+                                                                            lineNumber: 859,
                                                                             columnNumber: 44
                                                                         }, this),
                                                                         event.status
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                                    lineNumber: 771,
+                                                                    lineNumber: 847,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 770,
+                                                                lineNumber: 846,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 769,
+                                                            lineNumber: 845,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2316,12 +2422,12 @@ function MonitoringPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 790,
+                                                                lineNumber: 866,
                                                                 columnNumber: 27
                                                             }, this) : 'N/A'
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 788,
+                                                            lineNumber: 864,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2339,7 +2445,7 @@ function MonitoringPage() {
                                                                                         className: "w-4 h-4 flex-shrink-0"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                                        lineNumber: 801,
+                                                                                        lineNumber: 877,
                                                                                         columnNumber: 33
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2347,13 +2453,13 @@ function MonitoringPage() {
                                                                                         children: "Error"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                                        lineNumber: 802,
+                                                                                        lineNumber: 878,
                                                                                         columnNumber: 33
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                                lineNumber: 800,
+                                                                                lineNumber: 876,
                                                                                 columnNumber: 31
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2366,7 +2472,7 @@ function MonitoringPage() {
                                                                                             children: "Replication Failed"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                                            lineNumber: 806,
+                                                                                            lineNumber: 882,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2374,7 +2480,7 @@ function MonitoringPage() {
                                                                                             children: event.error_message.length > 200 ? event.error_message.substring(0, 200) + '...' : event.error_message
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                                            lineNumber: 807,
+                                                                                            lineNumber: 883,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2387,24 +2493,24 @@ function MonitoringPage() {
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                                            lineNumber: 812,
+                                                                                            lineNumber: 888,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                                                    lineNumber: 805,
+                                                                                    lineNumber: 881,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                                lineNumber: 804,
+                                                                                lineNumber: 880,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 799,
+                                                                        lineNumber: 875,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2433,24 +2539,24 @@ function MonitoringPage() {
                                                                             className: "w-3 h-3 animate-spin"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                            lineNumber: 842,
+                                                                            lineNumber: 918,
                                                                             columnNumber: 33
                                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__["RotateCw"], {
                                                                             className: "w-3 h-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                                            lineNumber: 844,
+                                                                            lineNumber: 920,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 818,
+                                                                        lineNumber: 894,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 798,
+                                                                lineNumber: 874,
                                                                 columnNumber: 29
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "flex items-center gap-1 text-red-400",
@@ -2459,20 +2565,20 @@ function MonitoringPage() {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 850,
+                                                                        lineNumber: 926,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Failed"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 851,
+                                                                        lineNumber: 927,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 849,
+                                                                lineNumber: 925,
                                                                 columnNumber: 29
                                                             }, this) : isApplied && !event.error_message ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "flex items-center gap-1 text-green-400",
@@ -2481,20 +2587,20 @@ function MonitoringPage() {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 856,
+                                                                        lineNumber: 932,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Success"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 857,
+                                                                        lineNumber: 933,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 855,
+                                                                lineNumber: 931,
                                                                 columnNumber: 27
                                                             }, this) : isCaptured && !event.error_message ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "flex items-center gap-1 text-cyan-400",
@@ -2503,20 +2609,20 @@ function MonitoringPage() {
                                                                         className: "w-4 h-4 animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 861,
+                                                                        lineNumber: 937,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Captured"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 862,
+                                                                        lineNumber: 938,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 860,
+                                                                lineNumber: 936,
                                                                 columnNumber: 27
                                                             }, this) : event.error_message ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "flex items-center gap-1 text-red-400",
@@ -2525,50 +2631,50 @@ function MonitoringPage() {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 866,
+                                                                        lineNumber: 942,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Error"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/monitoring/page.tsx",
-                                                                        lineNumber: 867,
+                                                                        lineNumber: 943,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 865,
+                                                                lineNumber: 941,
                                                                 columnNumber: 27
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-foreground-muted",
                                                                 children: "-"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/monitoring/page.tsx",
-                                                                lineNumber: 870,
+                                                                lineNumber: 946,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 795,
+                                                            lineNumber: 871,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, event.id, true, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 679,
+                                                    lineNumber: 755,
                                                     columnNumber: 21
                                                 }, this);
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 667,
+                                            lineNumber: 743,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 654,
+                                    lineNumber: 730,
                                     columnNumber: 13
                                 }, this),
                                 totalPages > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2587,7 +2693,7 @@ function MonitoringPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 882,
+                                            lineNumber: 958,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2602,7 +2708,7 @@ function MonitoringPage() {
                                                     children: "Previous"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 886,
+                                                    lineNumber: 962,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2628,13 +2734,13 @@ function MonitoringPage() {
                                                             children: pageNum
                                                         }, pageNum, false, {
                                                             fileName: "[project]/app/monitoring/page.tsx",
-                                                            lineNumber: 908,
+                                                            lineNumber: 984,
                                                             columnNumber: 25
                                                         }, this);
                                                     })
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 895,
+                                                    lineNumber: 971,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2646,25 +2752,25 @@ function MonitoringPage() {
                                                     children: "Next"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/monitoring/page.tsx",
-                                                    lineNumber: 923,
+                                                    lineNumber: 999,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/monitoring/page.tsx",
-                                            lineNumber: 885,
+                                            lineNumber: 961,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/monitoring/page.tsx",
-                                    lineNumber: 881,
+                                    lineNumber: 957,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 653,
+                            lineNumber: 729,
                             columnNumber: 11
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-12 text-foreground-muted",
@@ -2672,29 +2778,29 @@ function MonitoringPage() {
                                 children: "No events found. Events will appear here as they are captured."
                             }, void 0, false, {
                                 fileName: "[project]/app/monitoring/page.tsx",
-                                lineNumber: 938,
+                                lineNumber: 1014,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/monitoring/page.tsx",
-                            lineNumber: 937,
+                            lineNumber: 1013,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/monitoring/page.tsx",
-                    lineNumber: 645,
+                    lineNumber: 721,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/monitoring/page.tsx",
-            lineNumber: 403,
+            lineNumber: 443,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/monitoring/page.tsx",
-        lineNumber: 402,
+        lineNumber: 442,
         columnNumber: 5
     }, this);
 }

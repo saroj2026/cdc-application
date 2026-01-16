@@ -350,46 +350,75 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     const safeEvents = Array.isArray(events) ? events : []
     const pipelineIdStr = String(pipeline?.id || '')
     
-    if (safeMetrics.length === 0) {
-      // If no metrics, create from events
+    // Filter events by pipeline ID first
+    const pipelineEvents = safeEvents.filter(e => {
+      if (!e || !e.created_at) return false
+      const eventPipelineId = String(e.pipeline_id || '')
+      return eventPipelineId === pipelineIdStr
+    })
+    
+    // Filter metrics by pipeline ID
+    const pipelineMetrics = safeMetrics.filter(m => {
+      const metricPipelineId = String(m.pipeline_id || '')
+      return metricPipelineId === pipelineIdStr
+    })
+    
+    // If we have metrics, use them (preferred source)
+    if (pipelineMetrics.length > 0) {
+      const metricsData = pipelineMetrics.slice(-7).map(metric => {
+        const date = new Date(metric.timestamp)
+        const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+        return {
+          time,
+          records: metric.total_events || metric.throughput_events_per_sec || 0,
+          latency: Math.round(metric.avg_latency_ms || metric.lag_seconds * 1000 || 0),
+        }
+      })
+      
+      // If we have data, return it
+      if (metricsData.length > 0) {
+        return metricsData
+      }
+    }
+    
+    // If no metrics, create from events grouped by hour
+    if (pipelineEvents.length > 0) {
       const now = new Date()
-      return Array.from({ length: 7 }, (_, i) => {
+      const hourlyData = Array.from({ length: 7 }, (_, i) => {
         const hour = new Date(now.getTime() - (6 - i) * 60 * 60 * 1000)
         const time = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
 
-        const hourEvents = safeEvents.filter(e => {
+        const hourEvents = pipelineEvents.filter(e => {
           if (!e || !e.created_at) return false
-          // Filter by pipeline ID to ensure stability
-          const eventPipelineId = String(e.pipeline_id || '')
-          if (eventPipelineId !== pipelineIdStr) return false
           const eventTime = new Date(e.created_at)
           return eventTime >= hour && eventTime < new Date(hour.getTime() + 60 * 60 * 1000)
         })
 
         // Count all event types (insert, update, delete) for records
-        const records = hourEvents.filter(e => e.event_type === 'insert' || e.event_type === 'update' || e.event_type === 'delete').length
+        const records = hourEvents.filter(e => {
+          const eventType = String(e.event_type || '').toLowerCase()
+          return eventType === 'insert' || eventType === 'update' || eventType === 'delete'
+        }).length
+        
         const latency = hourEvents.length > 0
           ? hourEvents.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / hourEvents.length
           : 0
 
         return { time, records, latency: Math.round(latency) }
       })
-    }
-
-    // Filter metrics by pipeline ID for stability
-    const pipelineMetrics = safeMetrics.filter(m => {
-      const metricPipelineId = String(m.pipeline_id || '')
-      return metricPipelineId === pipelineIdStr
-    })
-
-    return pipelineMetrics.slice(-7).map(metric => {
-      const date = new Date(metric.timestamp)
-      const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-      return {
-        time,
-        records: metric.total_events || 0,
-        latency: Math.round(metric.avg_latency_ms || 0),
+      
+      // If we have any data, return it
+      if (hourlyData.some(d => d.records > 0 || d.latency > 0)) {
+        return hourlyData
       }
+    }
+    
+    // Fallback: Return empty data structure so graph still renders
+    const now = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const hour = new Date(now.getTime() - (6 - i) * 60 * 60 * 1000)
+      const time = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+      return { time, records: 0, latency: 0 }
     })
   }, [metrics, events, pipeline?.id]) // Add pipeline.id to dependencies for stability
 
@@ -574,7 +603,30 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         }
       } catch (sourceError: any) {
         console.error("[Compare] Failed to fetch source table:", sourceError)
-        const sourceErrMsg = sourceError?.message || sourceError?.response?.data?.detail || "Failed to fetch source table data"
+        let sourceErrMsg = sourceError?.message || sourceError?.response?.data?.detail || "Failed to fetch source table data"
+        
+        // Improve error messages for common error codes
+        // 08001 is PostgreSQL connection error code
+        if (sourceErrMsg.includes('08001') || (sourceError?.code && String(sourceError.code).includes('08001'))) {
+          sourceErrMsg = `Database connection error (08001): Cannot connect to source database. ` +
+            `This usually means:\n` +
+            `1. Database server is not running or unreachable\n` +
+            `2. Connection host/port is incorrect\n` +
+            `3. Network connectivity issues (firewall blocking)\n` +
+            `4. Database credentials are incorrect\n` +
+            `Please verify the source database connection configuration and ensure the database server is accessible.`
+        }
+        
+        // Remove misleading prefixes like "Oracle Database Error:" if it's not actually an Oracle error
+        const sourceErrMsgLower = sourceErrMsg.toLowerCase()
+        if (sourceErrMsgLower.includes('oracle database error:') && 
+            !sourceErrMsgLower.includes('ora-') &&
+            (sourceErrMsgLower.includes('08001') || 
+             sourceErrMsgLower.includes('postgresql') ||
+             sourceErrMsgLower.includes('connection refused'))) {
+          // This is incorrectly labeled as Oracle error - remove the prefix
+          sourceErrMsg = sourceErrMsg.replace(/^Oracle Database Error:\s*/i, '').trim()
+        }
         
         // Check if it's a connection not found error - try to fix automatically
         if (sourceErrMsg.includes('Connection not found') && pipeline?.id) {
@@ -787,15 +839,28 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           targetErrMsg = targetError.message
         }
 
+        // Remove misleading prefixes like "Oracle Database Error:" if it's not actually an Oracle error
+        // This can happen if error detection is too broad
+        const targetErrMsgLower = targetErrMsg.toLowerCase()
+        if (targetErrMsgLower.includes('oracle database error:') && 
+            !targetErrMsgLower.includes('ora-') &&
+            (targetErrMsgLower.includes('aws_s3') || 
+             targetErrMsgLower.includes('s3') || 
+             targetErrMsgLower.includes('object storage') ||
+             targetErrMsgLower.includes('table comparison is not supported'))) {
+          // This is incorrectly labeled as Oracle error - remove the prefix
+          targetErrMsg = targetErrMsg.replace(/^Oracle Database Error:\s*/i, '').trim()
+        }
+
         // Simplify long error messages but keep important parts
-        if (targetErrMsg.length > 300) {
+        if (targetErrMsg.length > 400) {
           // Keep the first part and important keywords
-          const importantKeywords = ['timeout', 'connection', 'network', 'database', 'unreachable', 'oracle', 'not found', 'does not exist']
+          const importantKeywords = ['timeout', 'connection', 'network', 'database', 'unreachable', 'oracle', 'not found', 'does not exist', 's3', 'aws_s3', 'object storage']
           const hasImportant = importantKeywords.some(kw => targetErrMsg.toLowerCase().includes(kw))
           if (hasImportant) {
-            targetErrMsg = targetErrMsg.substring(0, 300) + "..."
+            targetErrMsg = targetErrMsg.substring(0, 400) + "..."
           } else {
-            targetErrMsg = targetErrMsg.substring(0, 150) + "..."
+            targetErrMsg = targetErrMsg.substring(0, 200) + "..."
           }
         }
 
@@ -1193,11 +1258,14 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         // If CDC is enabled, use full_load_cdc to do both
                         runType = "full_load_cdc"
                       }
-                      // Reset progress
+                      // Reset progress before starting
                       setReplicationProgress(null)
+                      
                       await dispatch(triggerPipeline({ id: pipeline.id, runType })).unwrap()
+                      
                       // Refresh pipelines to get updated status
                       await dispatch(fetchPipelines())
+                      
                       // Also fetch the specific pipeline to update selectedPipeline
                       if (pipeline.id) {
                         try {
@@ -1207,26 +1275,19 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           console.error("Failed to fetch updated pipeline:", error)
                         }
                       }
-                      // Start polling for progress
-                      const fetchProgress = async () => {
-                        try {
-                          const progress = await apiClient.getPipelineProgress(pipeline.id)
-                          setReplicationProgress(progress)
-                        } catch (error: any) {
-                          // Handle timeout errors gracefully - don't spam console
-                          if (error?.isTimeout || error?.code === 'ECONNABORTED') {
-                            // Silently handle timeout - progress endpoint may be slow
-                            // The main useEffect polling will continue
-                            return
+                      
+                      // Progress polling is handled by the useEffect hook
+                      // Trigger an immediate fetch after pipeline starts
+                      if (fetchProgressRef.current) {
+                        // Small delay to let backend update pipeline status
+                        setTimeout(() => {
+                          if (fetchProgressRef.current) {
+                            fetchProgressRef.current().catch((err) => {
+                              console.debug("Initial progress fetch after trigger:", err)
+                            })
                           }
-                          console.error("Error fetching progress:", error)
-                        }
+                        }, 1000)
                       }
-                      // Poll every 5 seconds (reduced frequency to avoid timeouts)
-                      if (progressPollIntervalRef.current) {
-                        clearInterval(progressPollIntervalRef.current)
-                      }
-                      progressPollIntervalRef.current = setInterval(fetchProgress, 5000)
                     } catch (error: any) {
                       console.error("Failed to trigger pipeline:", error)
                       // Extract detailed error message

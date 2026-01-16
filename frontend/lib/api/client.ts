@@ -661,13 +661,25 @@ class ApiClient {
           errorDetail = errorDetail.replace(/%%/g, '%');
         }
         
-        // Check if this is an Oracle-related error
+        // Check if this is an Oracle-related error (but exclude other database types)
+        // Only treat as Oracle error if it's clearly an Oracle error, not S3, Snowflake, etc.
+        const errorDetailLower = typeof errorDetail === 'string' ? errorDetail.toLowerCase() : '';
         const isOracleError = (
-          typeof errorDetail === 'string' && (
-            errorDetail.toLowerCase().includes('oracle') ||
-            errorDetail.toLowerCase().includes('ora-') ||
-            errorDetail.toLowerCase().includes('service name') ||
-            errorDetail.toLowerCase().includes('listener')
+          typeof errorDetail === 'string' && 
+          !errorDetailLower.includes('aws_s3') &&
+          !errorDetailLower.includes('s3') &&
+          !errorDetailLower.includes('snowflake') &&
+          !errorDetailLower.includes('object storage') &&
+          !errorDetailLower.includes('table comparison is not supported') &&
+          (
+            errorDetailLower.includes('ora-') ||  // Oracle error codes like ORA-00942
+            (errorDetailLower.includes('oracle') && (
+              errorDetailLower.includes('listener') ||
+              errorDetailLower.includes('service name') ||
+              errorDetailLower.includes('tns') ||
+              errorDetailLower.includes('does not exist') ||
+              errorDetailLower.includes('connection')
+            ))
           )
         );
         
@@ -685,6 +697,23 @@ class ApiClient {
           );
         }
         
+        // Check if this is an S3/object storage error
+        const isS3Error = (
+          typeof errorDetail === 'string' &&
+          (
+            errorDetailLower.includes('aws_s3') ||
+            errorDetailLower.includes('s3') && errorDetailLower.includes('object storage') ||
+            errorDetailLower.includes('table comparison is not supported') && errorDetailLower.includes('s3')
+          )
+        );
+        
+        // For S3 errors, use the backend message as-is (it's already clear and informative)
+        // Don't add generic "Server Error" prefix
+        if (isS3Error) {
+          throw new Error(errorDetail);
+        }
+        
+        // For other errors, include status code for debugging
         throw new Error(`Server Error (${error.response.status}): ${errorDetail}\n\nPlease check the backend terminal logs for more details.`);
       }
       
@@ -1119,11 +1148,42 @@ class ApiClient {
 
   async getDashboardStats() {
     try {
-      const response = await this.client.get('/api/v1/monitoring/dashboard');
+      const response = await this.client.get('/api/v1/monitoring/dashboard', {
+        timeout: 5000 // 5 second timeout
+      });
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
+      // Handle all errors gracefully - return empty dashboard data
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK'
+      const isServerError = error.response?.status >= 500
+      
+      if (isTimeout || isNetworkError || isServerError) {
+        // Return empty dashboard data on errors
+        return {
+          total_pipelines: 0,
+          active_pipelines: 0,
+          stopped_pipelines: 0,
+          error_pipelines: 0,
+          total_events: 0,
+          failed_events: 0,
+          success_events: 0,
+          recent_metrics: [],
+          timestamp: new Date().toISOString()
+        }
+      }
+      // For other errors, also return empty dashboard
+      return {
+        total_pipelines: 0,
+        active_pipelines: 0,
+        stopped_pipelines: 0,
+        error_pipelines: 0,
+        total_events: 0,
+        failed_events: 0,
+        success_events: 0,
+        recent_metrics: [],
+        timestamp: new Date().toISOString()
+      }
     }
   }
 
@@ -1148,9 +1208,9 @@ class ApiClient {
     return this.retryRequest(
       () => this.client.get('/api/v1/monitoring/metrics', {
         params: { 
-          pipeline_id: pipelineIdStr, 
-          start_time: formattedStartTime, 
-          end_time: formattedEndTime 
+          pipelineId: pipelineIdStr,  // Use pipelineId (camelCase) to match backend
+          startTime: formattedStartTime, 
+          endTime: formattedEndTime 
         },
         timeout: 10000, // Reduced to 10 seconds
       }).then(res => res.data),

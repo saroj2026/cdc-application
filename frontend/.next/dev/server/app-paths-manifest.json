@@ -5,6 +5,7 @@
   "/dashboard/page": "app/dashboard/page.js",
   "/governance/page": "app/governance/page.js",
   "/monitoring/page": "app/monitoring/page.js",
+  "/pipelines/[id]/monitor/page": "app/pipelines/[id]/monitor/page.js",
   "/pipelines/page": "app/pipelines/page.js",
   "/users/page": "app/users/page.js"
 }

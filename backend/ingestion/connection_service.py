@@ -654,23 +654,26 @@ class ConnectionService:
                     "error": error_message
                 }
             
+            # Get primary keys - but don't fail if we can't get them
+            # Some tables may not have PKs, or user may not have permission
+            # We'll still return table schema successfully without PKs
+            primary_keys = []
             try:
                 primary_keys = connector.get_primary_keys(
                     table=table_name,
                     database=target_db,
                     schema=target_schema
                 )
+                # get_primary_keys now returns empty list on error instead of raising
+                # So this should always succeed
             except Exception as pk_error:
-                if hasattr(connector, 'disconnect') and conn:
-                    try:
-                        connector.disconnect(conn)
-                    except Exception:
-                        pass
+                # Fallback: if get_primary_keys still raises (shouldn't happen after fix)
+                # log warning but continue - empty PK list is acceptable
                 safe_error = safe_error_message(pk_error)
-                return {
-                    "success": False,
-                    "error": f"Failed to get primary keys: {safe_error}"
-                }
+                logger.warning(f"Could not get primary keys for table {target_schema}.{table_name}: {safe_error}. "
+                             f"Continuing with empty primary key list. This may be due to insufficient permissions "
+                             f"or the table may not have a primary key.")
+                primary_keys = []  # Use empty list as fallback
             
             if hasattr(connector, 'disconnect') and conn:
                 connector.disconnect(conn)
@@ -765,6 +768,23 @@ class ConnectionService:
                 return {
                     "success": False,
                     "error": "Table name cannot be empty"
+                }
+            
+            # Check if database type supports table queries (S3 is object storage, not queryable)
+            db_type_for_check = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+            # Normalize aws_s3 to s3
+            if db_type_for_check == "aws_s3":
+                db_type_for_check = "s3"
+            
+            # Non-queryable database types (object storage, etc.)
+            non_queryable_types = ["s3", "aws_s3"]
+            if db_type_for_check in non_queryable_types:
+                return {
+                    "success": False,
+                    "error": f"Table comparison is not supported for {connection.database_type.value} connections. "
+                            f"{connection.database_type.value} is object storage (S3), not a queryable database. "
+                            f"Please use a database connection (PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, etc.) "
+                            f"for table comparison operations."
                 }
             
             # For Oracle, handle database parameter
@@ -880,14 +900,31 @@ class ConnectionService:
                     else:
                         query = f'SELECT * FROM `{table_name}` LIMIT {limit}'
                 elif db_type == "snowflake":
-                    # Snowflake: SELECT * FROM "DATABASE"."SCHEMA"."TABLE" LIMIT n
-                    # Use uppercase for database and schema names (Snowflake convention)
-                    if target_db and target_schema:
-                        query = f'SELECT * FROM "{target_db}"."{target_schema}"."{table_name}" LIMIT {limit}'
-                    elif target_schema:
-                        query = f'SELECT * FROM "{target_schema}"."{table_name}" LIMIT {limit}'
-                    else:
-                        query = f'SELECT * FROM "{table_name}" LIMIT {limit}'
+                    # Snowflake: Use USE DATABASE/SCHEMA context, then use simple table name
+                    # Strip any quotes from database/schema names before using
+                    clean_db = (target_db or connection.database or "").strip('"\'')
+                    clean_schema = (target_schema or "PUBLIC").strip('"\'')
+                    clean_table = clean_table_name.strip('"\'')
+                    
+                    # Uppercase database and schema names (Snowflake convention)
+                    db_upper = clean_db.upper() if clean_db else None
+                    schema_upper = clean_schema.upper() if clean_schema else "PUBLIC"
+                    
+                    # For Snowflake, after setting USE DATABASE/SCHEMA context,
+                    # we can use just the table name (not fully qualified)
+                    # Try uppercase first (most common), then quoted if needed
+                    # Store for use in execution block - will try uppercase first
+                    snowflake_table_upper = clean_table.upper()
+                    snowflake_table_quoted = clean_table  # Preserve case for quoted attempt
+                    
+                    # Build query using context (will be set in execution block)
+                    # Start with uppercase unquoted (most common case in Snowflake)
+                    query = f'SELECT * FROM {snowflake_table_upper} LIMIT {limit}'
+                    # Store both for fallback
+                    snowflake_query_upper = query
+                    snowflake_query_quoted = f'SELECT * FROM "{snowflake_table_quoted}" LIMIT {limit}'
+                    
+                    logger.info(f"[get_table_data] Snowflake will use context: db={db_upper}, schema={schema_upper}, table={snowflake_table_upper} (will try uppercase first)")
                 else:
                     return {
                         "success": False,
@@ -1072,11 +1109,71 @@ class ConnectionService:
                     count_cursor.close()
                     
                 elif db_type == "snowflake":
-                    # Snowflake uses uppercase identifiers by default, but we'll use the provided case
-                    # Snowflake query syntax: SELECT * FROM "DATABASE"."SCHEMA"."TABLE" LIMIT n
+                    # Snowflake: Re-extract cleaned names for execution block
+                    snowflake_clean_db = (target_db or connection.database or "").strip('"\'')
+                    snowflake_clean_schema = (target_schema or "PUBLIC").strip('"\'')
+                    snowflake_clean_table = clean_table_name.strip('"\'')
+                    snowflake_db_upper = snowflake_clean_db.upper() if snowflake_clean_db else None
+                    snowflake_schema_upper = snowflake_clean_schema.upper() if snowflake_clean_schema else "PUBLIC"
+                    snowflake_table_upper = snowflake_clean_table.upper()
+                    snowflake_table_quoted = snowflake_clean_table
+                    
+                    # Set database and schema context first
                     cursor = conn.cursor()
-                    cursor.execute(query)
-                    rows = cursor.fetchall()
+                    
+                    try:
+                        if snowflake_db_upper:
+                            cursor.execute(f'USE DATABASE "{snowflake_db_upper}"')
+                            logger.debug(f"[get_table_data] Set Snowflake database context: {snowflake_db_upper}")
+                        if snowflake_schema_upper:
+                            cursor.execute(f'USE SCHEMA "{snowflake_schema_upper}"')
+                            logger.debug(f"[get_table_data] Set Snowflake schema context: {snowflake_schema_upper}")
+                    except Exception as context_error:
+                        logger.warning(f"[get_table_data] Could not set database/schema context: {context_error}, will try fully qualified query")
+                        cursor.close()
+                        # Fallback to fully qualified query
+                        if snowflake_db_upper and snowflake_schema_upper:
+                            snowflake_query_upper = f'SELECT * FROM "{snowflake_db_upper}"."{snowflake_schema_upper}".{snowflake_table_upper} LIMIT {limit}'
+                            snowflake_query_quoted = f'SELECT * FROM "{snowflake_db_upper}"."{snowflake_schema_upper}"."{snowflake_table_quoted}" LIMIT {limit}'
+                        elif snowflake_schema_upper:
+                            snowflake_query_upper = f'SELECT * FROM "{snowflake_schema_upper}".{snowflake_table_upper} LIMIT {limit}'
+                            snowflake_query_quoted = f'SELECT * FROM "{snowflake_schema_upper}"."{snowflake_table_quoted}" LIMIT {limit}'
+                        else:
+                            snowflake_query_upper = f'SELECT * FROM {snowflake_table_upper} LIMIT {limit}'
+                            snowflake_query_quoted = f'SELECT * FROM "{snowflake_table_quoted}" LIMIT {limit}'
+                        cursor = conn.cursor()
+                    
+                    # After setting USE DATABASE/SCHEMA context, use simple table name
+                    # Try uppercase unquoted first (most common in Snowflake - unquoted identifiers are uppercase)
+                    try:
+                        query_to_use = f'SELECT * FROM {snowflake_table_upper} LIMIT {limit}'
+                        logger.info(f"[get_table_data] Executing Snowflake query (uppercase, using context): {query_to_use}")
+                        cursor.execute(query_to_use)
+                        rows = cursor.fetchall()
+                    except Exception as upper_error:
+                        # If uppercase fails, try quoted (preserve case)
+                        error_msg = str(upper_error).lower()
+                        if "does not exist" in error_msg or "not authorized" in error_msg:
+                            try:
+                                query_to_use = f'SELECT * FROM "{snowflake_table_quoted}" LIMIT {limit}'
+                                logger.info(f"[get_table_data] Uppercase failed, trying quoted: {query_to_use}")
+                                cursor.execute(query_to_use)
+                                rows = cursor.fetchall()
+                            except Exception as quoted_error:
+                                # If both fail, provide helpful error
+                                cursor.close()
+                                safe_error = safe_error_message(quoted_error)
+                                return {
+                                    "success": False,
+                                    "error": f"Table does not exist: {snowflake_clean_table} in schema: {snowflake_schema_upper}. "
+                                            f"Tried: {snowflake_table_upper} and \"{snowflake_table_quoted}\". "
+                                            f"Please verify the table exists and you have SELECT permissions. "
+                                            f"Original error: {safe_error}"
+                                }
+                        else:
+                            cursor.close()
+                            raise upper_error
+                    
                     # Get column names from cursor description
                     column_names_from_cursor = [desc[0] for desc in cursor.description] if cursor.description else column_names
                     for row in rows:
@@ -1093,12 +1190,34 @@ class ConnectionService:
                         records.append(record)
                     cursor.close()
                     
-                    # Get count
-                    count_query = f'SELECT COUNT(*) FROM "{target_db}"."{target_schema}"."{table_name}"' if target_db and target_schema else f'SELECT COUNT(*) FROM "{target_schema}"."{table_name}"' if target_schema else f'SELECT COUNT(*) FROM "{table_name}"'
-                    count_cursor = conn.cursor()
-                    count_cursor.execute(count_query)
-                    total_count = count_cursor.fetchone()[0]
-                    count_cursor.close()
+                    # Get count - use same approach (try uppercase, then quoted)
+                    try:
+                        count_cursor = conn.cursor()
+                        try:
+                            if snowflake_db_upper:
+                                count_cursor.execute(f'USE DATABASE "{snowflake_db_upper}"')
+                            if snowflake_schema_upper:
+                                count_cursor.execute(f'USE SCHEMA "{snowflake_schema_upper}"')
+                        except Exception:
+                            pass  # Context may already be set
+                        
+                        # Try uppercase first
+                        try:
+                            count_query = f'SELECT COUNT(*) FROM {snowflake_table_upper}'
+                            logger.debug(f"[get_table_data] Executing Snowflake count query (uppercase): {count_query}")
+                            count_cursor.execute(count_query)
+                            total_count = count_cursor.fetchone()[0]
+                        except Exception:
+                            # Try quoted
+                            count_query = f'SELECT COUNT(*) FROM "{snowflake_table_quoted}"'
+                            logger.debug(f"[get_table_data] Executing Snowflake count query (quoted): {count_query}")
+                            count_cursor.execute(count_query)
+                            total_count = count_cursor.fetchone()[0]
+                        count_cursor.close()
+                    except Exception as count_error:
+                        # If count query fails, use row count as fallback
+                        logger.warning(f"[get_table_data] Failed to get table count: {count_error}, using row count as fallback")
+                        total_count = len(records)
                 else:
                     return {
                         "success": False,
@@ -1356,6 +1475,9 @@ class ConnectionService:
             if hasattr(db_type, 'value'):
                 db_type = db_type.value
             db_type = str(db_type).lower()
+            # Normalize aws_s3 to s3 for compatibility
+            if db_type == "aws_s3":
+                db_type = "s3"
         else:
             raise ValueError("Connection must have database_type")
         
@@ -1443,6 +1565,10 @@ class ConnectionService:
         if hasattr(db_type, 'value'):
             db_type = db_type.value
         db_type = str(db_type).lower()
+        
+        # Normalize aws_s3 to s3 for compatibility
+        if db_type == "aws_s3":
+            db_type = "s3"
         
         if db_type == "postgresql":
             config = {

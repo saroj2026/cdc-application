@@ -637,7 +637,13 @@ class SnowflakeConnector(BaseConnector):
             conn = self._get_connection()
             cursor = conn.cursor()
             
-            # Use pyformat (%s) instead of qmark (?) for Snowflake connector
+            # Snowflake INFORMATION_SCHEMA uses uppercase schema names
+            # Use pyformat (%s) for Snowflake connector
+            schema_upper = schema_name.upper() if schema_name else "PUBLIC"
+            table_upper = table.upper() if table else table
+            
+            # Build query with proper parameter binding
+            # Use %s placeholders for Snowflake pyformat style
             query = """
                 SELECT 
                     COLUMN_NAME,
@@ -650,10 +656,11 @@ class SnowflakeConnector(BaseConnector):
                     COLUMN_DEFAULT,
                     COMMENT
                 FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+                WHERE TABLE_SCHEMA = %(schema)s AND TABLE_NAME = %(table)s
                 ORDER BY ORDINAL_POSITION
             """
-            cursor.execute(query, (schema_name, table))
+            # Use named parameters to avoid formatting issues
+            cursor.execute(query, {"schema": schema_upper, "table": table_upper})
             
             columns = []
             for row in cursor.fetchall():
@@ -713,38 +720,70 @@ class SnowflakeConnector(BaseConnector):
             schema: Schema name (optional, uses config default if not provided)
 
         Returns:
-            List of primary key column names
+            List of primary key column names (empty list if no PK or error)
         """
         db = database or self.config.get("database")
         schema_name = schema or self.config.get("schema", "PUBLIC")
         
         if not db:
-            raise ValueError("Database name is required")
+            logger.warning("Database name is required for get_primary_keys, returning empty list")
+            return []
         
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             
+            # Snowflake INFORMATION_SCHEMA is at database level, not schema level
+            # Use database qualification to avoid schema prefix issues (SEG.INFORMATION_SCHEMA)
+            # Also ensure schema and table names are uppercase as Snowflake requires
+            schema_upper = schema_name.upper() if schema_name else "PUBLIC"
+            table_upper = table.upper() if table else table
+            
+            # Set database context to ensure INFORMATION_SCHEMA is accessed correctly
+            try:
+                cursor.execute(f'USE DATABASE "{db}"')
+            except Exception as db_use_error:
+                logger.debug(f"Could not USE DATABASE {db}: {db_use_error}, continuing with query")
+            
+            # Use database-qualified INFORMATION_SCHEMA to avoid schema prefix issues
+            # In Snowflake, INFORMATION_SCHEMA is at DATABASE level, not schema level
             query = """
-                SELECT COLUMN_NAME
-                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                SELECT kcu.COLUMN_NAME
+                FROM {}.INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                JOIN {}.INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
                     ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
                     AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
                     AND tc.TABLE_CATALOG = kcu.TABLE_CATALOG
+                    AND tc.TABLE_NAME = kcu.TABLE_NAME
                 WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-                    AND tc.TABLE_SCHEMA = %s
-                    AND tc.TABLE_NAME = %s
+                    AND tc.TABLE_SCHEMA = %(schema)s
+                    AND tc.TABLE_NAME = %(table)s
                 ORDER BY kcu.ORDINAL_POSITION
-            """
-            cursor.execute(query, (schema_name, table))
+            """.format(db, db)
+            
+            cursor.execute(query, {"schema": schema_upper, "table": table_upper})
             primary_keys = [row[0] for row in cursor.fetchall()]
             
             cursor.close()
+            
+            # Log warning if no primary keys found (not an error, some tables don't have PKs)
+            if not primary_keys:
+                logger.debug(f"No primary keys found for table {schema_upper}.{table_upper} in database {db}")
+            
             return primary_keys
             
         except Exception as e:
-            logger.error(f"Failed to get primary keys: {e}")
-            raise
+            # Don't fail the entire operation if we can't get primary keys
+            # Some tables may not have PKs, or user may not have permission
+            # Log the error but return empty list instead of raising
+            error_msg = str(e).lower()
+            if "does not exist" in error_msg or "not authorized" in error_msg or "permission" in error_msg:
+                logger.warning(f"Cannot access primary key information for table {schema_name}.{table} in database {db}: {e}. "
+                             f"This may be due to insufficient permissions or the table may not have a primary key. "
+                             f"Returning empty primary key list.")
+            else:
+                logger.warning(f"Failed to get primary keys for table {schema_name}.{table} in database {db}: {e}. "
+                             f"Returning empty primary key list.")
+            return []  # Return empty list instead of raising - allows table data to still be fetched
 
 
