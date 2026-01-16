@@ -68,33 +68,51 @@ def get_db() -> Generator[Optional[Session], None, None]:
             return
     
     db = None
+    session_yielded = False
     try:
         db = SessionLocal()
         # Test the connection
         db.execute(text("SELECT 1"))
         _db_available = True
+        # Yield the session
         yield db
+        session_yielded = True
     except (OperationalError, DisconnectionError) as e:
         logger.error(f"Database connection error: {e}")
         _db_available = False
+        # Clean up failed session
         if db:
             try:
                 db.rollback()
+            except:
+                pass
+            try:
                 db.close()
             except:
                 pass
-        yield None
+            db = None
+        # Only yield None if we haven't yielded yet
+        if not session_yielded:
+            yield None
     except Exception as e:
         logger.error(f"Unexpected database error: {e}")
+        # Clean up failed session
         if db:
             try:
                 db.rollback()
+            except:
+                pass
+            try:
                 db.close()
             except:
                 pass
-        yield None
+            db = None
+        # Only yield None if we haven't yielded yet
+        if not session_yielded:
+            yield None
     finally:
-        if db:
+        # Only close if session wasn't already closed and we yielded it
+        if db and session_yielded:
             try:
                 db.close()
             except:
