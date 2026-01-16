@@ -68,15 +68,11 @@ def get_db() -> Generator[Optional[Session], None, None]:
             return
     
     db = None
-    session_yielded = False
     try:
         db = SessionLocal()
         # Test the connection
         db.execute(text("SELECT 1"))
         _db_available = True
-        # Yield the session
-        yield db
-        session_yielded = True
     except (OperationalError, DisconnectionError) as e:
         logger.error(f"Database connection error: {e}")
         _db_available = False
@@ -91,9 +87,8 @@ def get_db() -> Generator[Optional[Session], None, None]:
             except:
                 pass
             db = None
-        # Only yield None if we haven't yielded yet
-        if not session_yielded:
-            yield None
+        yield None
+        return
     except Exception as e:
         logger.error(f"Unexpected database error: {e}")
         # Clean up failed session
@@ -107,12 +102,36 @@ def get_db() -> Generator[Optional[Session], None, None]:
             except:
                 pass
             db = None
-        # Only yield None if we haven't yielded yet
-        if not session_yielded:
-            yield None
+        yield None
+        return
+    
+    # If we get here, db is valid - yield it
+    # If an exception is thrown into the generator from outside (e.g., by FastAPI),
+    # we need to handle it and ensure cleanup
+    try:
+        yield db
+    except GeneratorExit:
+        # Generator is being closed normally or by garbage collector
+        # Close the session and re-raise
+        if db:
+            try:
+                db.close()
+            except:
+                pass
+        raise
+    except Exception:
+        # Exception was thrown into the generator from outside (e.g., by FastAPI)
+        # Rollback and re-raise so FastAPI can handle it
+        if db:
+            try:
+                db.rollback()
+            except:
+                pass
+        raise
     finally:
-        # Only close if session wasn't already closed and we yielded it
-        if db and session_yielded:
+        # Always close the session in finally block
+        # This runs whether we yielded normally or an exception was thrown in
+        if db:
             try:
                 db.close()
             except:
