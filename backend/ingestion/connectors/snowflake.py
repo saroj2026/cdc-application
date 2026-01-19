@@ -14,7 +14,7 @@ except ImportError:
     snowflake_connector = None  # type: ignore
 
 try:
-    from app.ingestion.models import ConnectorColumn, ConnectorTable
+    from ingestion.models import ConnectorColumn, ConnectorTable
 except ImportError:
     # Fallback classes for when models are not available
     class ConnectorColumn:

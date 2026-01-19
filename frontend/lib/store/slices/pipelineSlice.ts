@@ -191,6 +191,21 @@ export const triggerPipeline = createAsyncThunk(
         }
       }
       
+      // Remove HTTP error wrapper if present
+      if (errorMessage.includes("400 Client Error") || errorMessage.includes("Bad Request")) {
+        // Extract the actual error message
+        if (errorMessage.includes("for url:")) {
+          const parts = errorMessage.split("for url:")
+          if (parts.length > 0) {
+            errorMessage = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").trim()
+          }
+        }
+        // Also check if there's a detail in the response
+        if (error?.response?.data?.detail) {
+          errorMessage = error.response.data.detail
+        }
+      }
+      
       return rejectWithValue(errorMessage);
     }
   }

@@ -97,62 +97,90 @@ class AS400Connector(BaseConnector):
         Returns:
             Connection string for pyodbc
         """
-        server = self.config["server"]
+        server = self.config.get("server")
+        if not server:
+            raise ValueError("Server is required for AS400 connection")
+        
         port = self.config.get("port", 446)  # Default AS400 port
         # Use library from additional_config if database is not provided
         database = self.config.get("database") or self.config.get("additional_config", {}).get("library", "")
-        user = self.config["user"]
-        password = self.config["password"]
+        user = self.config.get("user")
+        password = self.config.get("password")
+        
+        if not user:
+            raise ValueError("User is required for AS400 connection")
+        if not password:
+            raise ValueError("Password is required for AS400 connection")
+        
         driver = self.config.get("driver")
         
         # Try to detect available ODBC driver if not specified
         if not driver:
             driver = self._detect_odbc_driver()
         
-        # Build connection string for AS400/IBM i
-        # Format: DRIVER={IBM i Access ODBC Driver};SYSTEM=server;UID=user;PWD=password;DBQ=database
-        if driver:
-            conn_str = (
-                f"DRIVER={{{driver}}};"
-                f"SYSTEM={server};"
-                f"UID={user};"
-                f"PWD={password};"
-                f"DBQ={database};"
-            )
-            if port != 446:
-                conn_str += f"PORT={port};"
-            logger.info(f"Using ODBC driver: {driver}")
-        else:
-            # Try to find any IBM i driver
+        # If still no driver, try to find any IBM i driver
+        if not driver:
             try:
                 if pyodbc:
                     available_drivers = pyodbc.drivers()
-                    ibm_drivers = [d for d in available_drivers if 'IBM' in d.upper() or 'i' in d.lower()]
+                    # More specific filter to avoid SQL Server drivers
+                    ibm_drivers = [
+                        d for d in available_drivers 
+                        if any(keyword in d.upper() for keyword in ["IBM", "AS400", "ISERIES"]) 
+                        and ("ODBC" in d.upper() or "DRIVER" in d.upper())
+                        and "SQL SERVER" not in d.upper()  # Explicitly exclude SQL Server
+                    ]
                     if ibm_drivers:
-                        fallback_driver = ibm_drivers[0]
-                        logger.warning(f"Using detected IBM driver: {fallback_driver}")
-                        conn_str = (
-                            f"DRIVER={{{fallback_driver}}};"
-                            f"SYSTEM={server};"
-                            f"UID={user};"
-                            f"PWD={password};"
-                            f"DBQ={database};"
-                        )
-                        if port != 446:
-                            conn_str += f"PORT={port};"
+                        driver = ibm_drivers[0]
+                        logger.warning(f"Using detected IBM driver: {driver}")
                     else:
-                        raise ValueError("No IBM i Access ODBC Driver found. Please install IBM i Access Client Solutions.")
+                        # List available drivers for debugging
+                        logger.error(f"No IBM i Access ODBC Driver found. Available drivers: {available_drivers}")
+                        available_list = ', '.join(available_drivers[:10]) if len(available_drivers) > 10 else ', '.join(available_drivers)
+                        error_msg = (
+                            "No IBM i Access ODBC Driver found on this system. "
+                            "To connect to AS400/IBM i, you need to install IBM i Access Client Solutions.\n\n"
+                            "Installation Steps:\n"
+                            "1. Download IBM i Access Client Solutions from IBM's website\n"
+                            "2. Install the software (includes ODBC driver)\n"
+                            "3. Restart the application after installation\n\n"
+                            f"Currently available ODBC drivers: {available_list}"
+                        )
+                        raise ValueError(error_msg)
                 else:
                     raise ValueError("pyodbc not available. Cannot create connection.")
+            except ValueError:
+                raise  # Re-raise ValueError as-is
             except Exception as e:
                 error_msg = (
-                    f"No ODBC driver found for AS400/IBM i. "
-                    f"Please install IBM i Access Client Solutions. "
-                    f"Error: {str(e)}"
+                    f"Error detecting ODBC driver for AS400/IBM i: {str(e)}. "
+                    f"Please install IBM i Access Client Solutions."
                 )
                 logger.error(error_msg)
                 raise ValueError(error_msg)
         
+        # Validate driver name is not empty
+        if not driver or not driver.strip():
+            raise ValueError("ODBC driver name cannot be empty. Please specify 'driver' in connection config or install IBM i Access Client Solutions.")
+        
+        # Build connection string for AS400/IBM i
+        # Format: DRIVER={IBM i Access ODBC Driver};SYSTEM=server;UID=user;PWD=password;DBQ=database
+        conn_str = (
+            f"DRIVER={{{driver}}};"
+            f"SYSTEM={server};"
+            f"UID={user};"
+            f"PWD={password};"
+        )
+        
+        # Add database/library if provided
+        if database:
+            conn_str += f"DBQ={database};"
+        
+        # Add port if not default
+        if port != 446:
+            conn_str += f"PORT={port};"
+        
+        logger.info(f"AS400 connection string: DRIVER={{...}};SYSTEM={server};UID={user};DBQ={database if database else '(none)'};PORT={port}")
         return conn_str
 
     def _detect_odbc_driver(self) -> Optional[str]:
@@ -166,8 +194,9 @@ class AS400Connector(BaseConnector):
         
         try:
             available_drivers = pyodbc.drivers()
+            logger.debug(f"Available ODBC drivers: {available_drivers}")
             
-            # Common AS400/IBM i driver names
+            # Common AS400/IBM i driver names (exact matches first)
             driver_patterns = [
                 "IBM i Access ODBC Driver",
                 "IBM i Access ODBC Driver 64-bit",
@@ -180,18 +209,26 @@ class AS400Connector(BaseConnector):
             # Try exact matches first
             for pattern in driver_patterns:
                 if pattern in available_drivers:
-                    logger.info(f"Found AS400 driver: {pattern}")
+                    logger.info(f"Found AS400 driver (exact match): {pattern}")
                     return pattern
             
-            # Try partial matches
+            # Try partial matches - be very specific to avoid SQL Server
             for driver in available_drivers:
                 driver_upper = driver.upper()
-                if any(keyword in driver_upper for keyword in ["IBM", "AS400", "ISERIES", "DB2"]):
+                # Explicitly exclude SQL Server drivers
+                if "SQL SERVER" in driver_upper or "SQLSERVER" in driver_upper:
+                    continue
+                # Look for IBM/AS400/iSeries keywords
+                if any(keyword in driver_upper for keyword in ["IBM", "AS400", "ISERIES"]):
+                    # Must have ODBC or DRIVER in name
                     if "ODBC" in driver_upper or "DRIVER" in driver_upper:
+                        # Additional check: should not be generic DB2 (could be SQL Server DB2)
+                        if "DB2" in driver_upper and "IBM" not in driver_upper:
+                            continue
                         logger.info(f"Found potential AS400 driver: {driver}")
                         return driver
             
-            logger.warning("No AS400/IBM i ODBC driver detected")
+            logger.warning(f"No AS400/IBM i ODBC driver detected. Available drivers: {available_drivers}")
             return None
             
         except Exception as e:

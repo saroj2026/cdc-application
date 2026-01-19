@@ -26,7 +26,7 @@ engine = create_engine(
     pool_recycle=3600,
     echo=False,
     connect_args={
-        "connect_timeout": 3,  # 3 second timeout
+        "connect_timeout": 10,  # 10 second timeout for initial connection
     }
 )
 

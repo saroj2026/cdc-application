@@ -374,7 +374,6 @@ class SinkConfigGenerator:
             raise ValueError("Cannot create S3 sink connector: S3 bucket name is missing")
         
         # Generate connector configuration
-        # Note: "name" should NOT be in config - it's provided separately in the API request
         config = {
             "connector.class": "io.confluent.connect.s3.S3SinkConnector",
             "tasks.max": "1",
@@ -484,7 +483,6 @@ class SinkConfigGenerator:
             raise ValueError("Cannot create Snowflake sink connector: Schema name is missing")
         
         # Generate connector configuration
-        # Note: "name" should NOT be in config - it's provided separately in the API request
         config = {
             "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
             "tasks.max": "1",

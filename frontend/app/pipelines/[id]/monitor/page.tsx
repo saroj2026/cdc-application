@@ -54,6 +54,7 @@ export default function PipelineMonitorPage() {
     const numericId = isNaN(Number(pipelineId)) ? pipelineId : Number(pipelineId)
 
     const fetchData = async () => {
+      // Always fetch pipelines to get latest status (including on refresh)
       await dispatch(fetchPipelines()).unwrap()
 
       // After pipelines are loaded, fetch events and metrics
@@ -62,6 +63,7 @@ export default function PipelineMonitorPage() {
       dispatch(fetchMonitoringMetrics({ pipelineId: numericId }))
 
       // Connect WebSocket and subscribe to this pipeline
+      // Note: WebSocket is only for real-time updates, unsubscribing does NOT stop the pipeline
       wsClient.connect()
       wsClient.subscribePipeline(numericId)
       
@@ -73,6 +75,11 @@ export default function PipelineMonitorPage() {
     fetchData().catch(err => {
       console.error("Failed to fetch pipeline data:", err)
     })
+
+    // Auto-refresh pipeline status every 10 seconds
+    const pipelineRefreshInterval = setInterval(() => {
+      dispatch(fetchPipelines())
+    }, 10000)
 
     // Auto-refresh events every 5 seconds to show all events (including past)
     const interval = setInterval(() => {
@@ -100,12 +107,15 @@ export default function PipelineMonitorPage() {
     // Update immediately
     updateWsStatus()
 
-    // Cleanup: Unsubscribe and optionally disconnect when leaving page
+    // Cleanup: Unsubscribe from WebSocket (this does NOT stop the pipeline, only stops real-time updates)
     return () => {
       clearInterval(interval)
+      clearInterval(pipelineRefreshInterval)
       clearInterval(wsStatusInterval)
       unsubscribeStatus() // Remove status listener
       if (pipelineId) {
+        // Unsubscribing from WebSocket does NOT stop the pipeline
+        // The pipeline continues running in the backend
         wsClient.unsubscribePipeline(numericId)
       }
     }
@@ -520,25 +530,129 @@ export default function PipelineMonitorPage() {
                           </td>
                       <td className="p-3 text-sm font-medium text-foreground">{event.table_name || 'N/A'}</td>
                       <td className="p-3 text-sm font-mono">
-                        {event.source_lsn ? (
-                          <span className="text-cyan-400" title="PostgreSQL LSN">
-                            LSN: {event.source_lsn}
-                          </span>
-                        ) : event.source_scn ? (
-                          <span className="text-blue-400" title="Oracle SCN">
-                            SCN: {event.source_scn}
-                          </span>
-                        ) : event.source_binlog_file ? (
-                          <span className="text-green-400" title="MySQL Binlog">
-                            {event.source_binlog_file}:{event.source_binlog_position}
-                          </span>
-                        ) : event.sql_server_lsn ? (
-                          <span className="text-purple-400" title="SQL Server LSN">
-                            LSN: {event.sql_server_lsn}
-                          </span>
-                        ) : (
-                          <span className="text-foreground-muted">N/A</span>
-                        )}
+                        {(() => {
+                          // Try to extract LSN/Offset from event fields first
+                          let lsnValue = event.source_lsn || event.sql_server_lsn
+                          let scnValue = event.source_scn
+                          let binlogFile = event.source_binlog_file
+                          let binlogPos = event.source_binlog_position
+                          
+                          // If not found, try to extract from run_metadata (fallback)
+                          if (!lsnValue && !scnValue && !binlogFile && event.run_metadata) {
+                            const metadata = event.run_metadata
+                            if (typeof metadata === 'object' && metadata !== null) {
+                              // Try common LSN keys
+                              lsnValue = metadata.source_lsn || metadata.lsn || metadata.offset || 
+                                        metadata.transaction_id || metadata.txId || 
+                                        metadata.last_lsn || metadata.current_lsn || metadata.commit_lsn
+                              
+                              // Try SCN keys
+                              scnValue = metadata.source_scn || metadata.scn || metadata.current_scn
+                              
+                              // Try binlog keys
+                              binlogFile = metadata.source_binlog_file || metadata.binlog_file || metadata.file
+                              binlogPos = metadata.source_binlog_position || metadata.binlog_position || 
+                                         metadata.pos || metadata.position
+                              
+                              // Try nested offset structure
+                              if (!lsnValue && metadata.offset) {
+                                if (typeof metadata.offset === 'object' && metadata.offset !== null) {
+                                  lsnValue = metadata.offset.lsn || metadata.offset.transaction_id || 
+                                            metadata.offset.txId || metadata.offset.last_lsn
+                                  scnValue = scnValue || metadata.offset.scn
+                                  binlogFile = binlogFile || metadata.offset.file || metadata.offset.binlog_file
+                                  binlogPos = binlogPos || metadata.offset.pos || metadata.offset.position
+                                } else if (typeof metadata.offset === 'string' || typeof metadata.offset === 'number') {
+                                  lsnValue = String(metadata.offset)
+                                }
+                              }
+                              
+                              // Deep search in nested structures
+                              if (!lsnValue && !scnValue && !binlogFile) {
+                                const deepSearch = (obj: any, depth = 0): any => {
+                                  if (depth > 3 || !obj || typeof obj !== 'object') return null
+                                  
+                                  for (const [key, value] of Object.entries(obj)) {
+                                    const keyLower = String(key).toLowerCase()
+                                    if (keyLower.includes('lsn') && value && typeof value !== 'object') {
+                                      return String(value)
+                                    }
+                                    if (keyLower.includes('scn') && value && typeof value !== 'object') {
+                                      scnValue = String(value)
+                                    }
+                                    if (keyLower.includes('binlog') && value && typeof value !== 'object') {
+                                      binlogFile = String(value)
+                                    }
+                                    if (typeof value === 'object' && value !== null) {
+                                      const found = deepSearch(value, depth + 1)
+                                      if (found) return found
+                                    }
+                                  }
+                                  return null
+                                }
+                                
+                                const foundLsn = deepSearch(metadata)
+                                if (foundLsn) lsnValue = foundLsn
+                              }
+                            }
+                          }
+                          
+                          // Display the found value - show ANY available value (LSN, SCN, or Offset)
+                          // Priority: LSN > SCN > Binlog > SQL Server LSN > Offset > N/A
+                          if (lsnValue) {
+                            return (
+                              <span className="text-cyan-400" title="LSN (Log Sequence Number)">
+                                LSN: {String(lsnValue)}
+                              </span>
+                            )
+                          } else if (scnValue) {
+                            return (
+                              <span className="text-blue-400" title="SCN (System Change Number)">
+                                SCN: {String(scnValue)}
+                              </span>
+                            )
+                          } else if (binlogFile) {
+                            return (
+                              <span className="text-green-400" title="MySQL Binlog Position">
+                                {String(binlogFile)}{binlogPos ? `:${binlogPos}` : ''}
+                              </span>
+                            )
+                          } else if (event.sql_server_lsn) {
+                            return (
+                              <span className="text-purple-400" title="SQL Server LSN">
+                                LSN: {String(event.sql_server_lsn)}
+                              </span>
+                            )
+                          } else {
+                            // Last resort: try to find any offset value in run_metadata
+                            let offsetValue = null
+                            if (event.run_metadata) {
+                              const metadata = event.run_metadata
+                              if (typeof metadata === 'object' && metadata !== null) {
+                                // Try to find any offset-like value
+                                offsetValue = metadata.offset || metadata.transaction_id || 
+                                            metadata.txId || metadata.checkpoint || 
+                                            metadata.last_offset || metadata.current_offset
+                                
+                                // If offset is nested, extract it
+                                if (!offsetValue && metadata.offset && typeof metadata.offset === 'object') {
+                                  offsetValue = JSON.stringify(metadata.offset).substring(0, 50)
+                                }
+                              }
+                            }
+                            
+                            if (offsetValue) {
+                              const offsetStr = typeof offsetValue === 'object' ? JSON.stringify(offsetValue).substring(0, 50) : String(offsetValue)
+                              return (
+                                <span className="text-yellow-400" title="Offset/Checkpoint Value">
+                                  Offset: {offsetStr.length > 50 ? offsetStr + '...' : offsetStr}
+                                </span>
+                              )
+                            }
+                            
+                            return <span className="text-foreground-muted">N/A</span>
+                          }
+                        })()}
                       </td>
                       <td className="p-3">
                             <Badge

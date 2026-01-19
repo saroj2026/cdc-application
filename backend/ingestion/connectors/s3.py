@@ -181,8 +181,12 @@ class S3Connector(BaseConnector):
             logger.warning(f"Could not get S3 version info: {e}")
             return f"AWS S3 - Bucket: {self.config.get('bucket', 'unknown')}"
 
-    def disconnect(self):
-        """Close S3 connection (no-op for S3, but required by interface)."""
+    def disconnect(self, connection=None):
+        """Close S3 connection (no-op for S3, but required by interface).
+        
+        Args:
+            connection: Optional connection object (ignored for S3).
+        """
         # S3 connections are stateless, nothing to close
         pass
 

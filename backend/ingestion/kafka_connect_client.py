@@ -76,6 +76,17 @@ class KafkaConnectClient:
         url = f"{self.base_url}{endpoint}"
         
         try:
+            # Log request details for debugging (sanitize sensitive data)
+            if data and method == "POST":
+                sanitized_log_data = {}
+                if isinstance(data, dict):
+                    if 'config' in data and isinstance(data['config'], dict):
+                        sanitized_log_data['name'] = data.get('name', 'N/A')
+                        sanitized_log_data['config'] = {k: v for k, v in data['config'].items() if 'password' not in k.lower()}
+                    else:
+                        sanitized_log_data = {k: v for k, v in data.items() if 'password' not in k.lower()}
+                logger.debug(f"Kafka Connect {method} {url} with data: {sanitized_log_data}")
+            
             response = self.session.request(
                 method=method,
                 url=url,
@@ -100,29 +111,101 @@ class KafkaConnectClient:
                 if status_code == 404:
                     logger.debug(f"Kafka Connect API {method} {url} returned 404 Not Found (connector may not exist)")
                     # Don't log as error - this is expected when checking for non-existent connectors
+                    raise
                 
                 # 409 Conflict - connector already exists (expected during creation)
                 elif status_code == 409:
                     logger.debug(f"Kafka Connect API {method} {url} returned 409 Conflict (will be handled by caller)")
+                    raise
                 
                 # Other errors - log as warning or error depending on severity
                 else:
                     # Provide better error messages for other errors
                     error_msg = f"Kafka Connect API {method} {url} failed with status {status_code}"
+                    error_detail = ""
                     if hasattr(e.response, 'text'):
                         try:
                             error_json = e.response.json()
-                            error_detail = error_json.get('message', error_json.get('error', str(error_json)))
+                            logger.debug(f"Kafka Connect error JSON: {error_json}")
+                            
+                            # Try multiple possible error message fields
+                            error_detail = (
+                                error_json.get('message') or 
+                                error_json.get('error') or 
+                                error_json.get('error_code') or
+                                error_json.get('error_message') or
+                                str(error_json) if error_json else ""
+                            )
+                            
+                            # If we have config validation errors, include them (these are the actual errors!)
+                            if 'configs' in error_json:
+                                config_errors = []
+                                for config_item in error_json.get('configs', []):
+                                    if isinstance(config_item, dict):
+                                        if 'value' in config_item and isinstance(config_item['value'], dict) and 'errors' in config_item['value']:
+                                            config_errors.extend(config_item['value']['errors'])
+                                        if 'errors' in config_item:
+                                            config_errors.extend(config_item['errors'])
+                                if config_errors:
+                                    # Config errors are the actual validation errors - use them as primary error
+                                    error_detail = '; '.join(config_errors[:5])
+                                    logger.error(f"Kafka Connect config validation errors: {config_errors}")
+                            
+                            # If still empty, use the full JSON or response text
+                            if not error_detail or error_detail.strip() == "":
+                                # Try to get the full response text
+                                full_response = e.response.text[:2000] if hasattr(e.response, 'text') else str(error_json)
+                                error_detail = full_response
+                                logger.error(f"Full Kafka Connect error response: {full_response}")
+                            
                             error_msg += f": {error_detail}"
-                        except:
-                            error_detail = e.response.text[:1000]  # Limit error message length
+                            # Log the extracted error detail for debugging
+                            logger.error(f"Extracted Kafka Connect error detail: {error_detail}")
+                        except Exception as parse_error:
+                            error_detail = e.response.text[:2000] if hasattr(e.response, 'text') else str(e)
                             error_msg += f": {error_detail}"
+                            logger.warning(f"Could not parse error JSON: {parse_error}")
+                            logger.error(f"Raw Kafka Connect error response: {e.response.text[:2000] if hasattr(e.response, 'text') else 'N/A'}")
+                    
+                    # Ensure we have some error detail
+                    if not error_detail or error_detail.strip() == "":
+                        error_detail = "Unknown error from Kafka Connect"
+                        error_msg += f": {error_detail}"
                     
                     # Log 4xx as warning, 5xx as error
                     if status_code >= 500:
                         logger.error(error_msg)
                     else:
                         logger.warning(error_msg)
+                    
+                    # Log the request data for debugging (sanitize passwords)
+                    if data:
+                        sanitized_data = {}
+                        if isinstance(data, dict):
+                            for k, v in data.items():
+                                if isinstance(v, dict):
+                                    sanitized_v = {k2: v2 for k2, v2 in v.items() if 'password' not in k2.lower()}
+                                    sanitized_data[k] = sanitized_v
+                                else:
+                                    sanitized_data[k] = v if 'password' not in k.lower() else "***"
+                        logger.debug(f"Request data (sanitized): {sanitized_data}")
+                    
+                    # Create a new exception with the detailed error message
+                    # The message will be accessible via str(e) or e.args[0]
+                    # Use a custom exception class that preserves the error message
+                    class DetailedHTTPError(requests.exceptions.HTTPError):
+                        def __init__(self, message, response=None, detail=None):
+                            super().__init__(message, response=response)
+                            self.detail_message = detail if detail else message
+                            self.error_detail = detail if detail else message
+                        
+                        def __str__(self):
+                            return self.detail_message
+                    
+                    # Use error_detail (the actual Kafka Connect error) as the primary message
+                    # This ensures str(e) returns the actual error, not the HTTP wrapper
+                    raise DetailedHTTPError(error_detail if error_detail else error_msg, response=e.response, detail=error_detail) from e
+            
             # Log the request data for debugging
             if data:
                 logger.debug(f"Request data: {data}")
@@ -237,6 +320,29 @@ class KafkaConnectClient:
         }
         
         logger.info(f"Creating connector: {connector_name}")
+        # Log sanitized config for debugging
+        sanitized_config = {k: v for k, v in config.items() if 'password' not in k.lower()}
+        logger.debug(f"Connector config (sanitized): {sanitized_config}")
+        logger.debug(f"Request body structure: name={connector_name}, config keys={list(config.keys())}")
+        
+        # Validate config before creating (optional but helpful for debugging)
+        connector_class = config.get("connector.class")
+        if connector_class:
+            try:
+                validation_result = self.validate_connector_config(connector_class, config)
+                logger.debug(f"Config validation result: {validation_result}")
+                # Check for validation errors
+                if validation_result.get("error_count", 0) > 0:
+                    errors = validation_result.get("configs", [])
+                    error_messages = []
+                    for err in errors:
+                        if isinstance(err, dict) and err.get("value", {}).get("errors"):
+                            error_messages.extend(err["value"]["errors"])
+                    if error_messages:
+                        logger.warning(f"Config validation found {len(error_messages)} error(s): {error_messages[:3]}")
+            except Exception as validation_error:
+                logger.warning(f"Could not validate config (continuing anyway): {validation_error}")
+        
         try:
             response = self._request("POST", "/connectors", data=data)
             logger.info(f"Connector created: {connector_name}")

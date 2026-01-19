@@ -1308,14 +1308,23 @@ class SQLServerConnector(BaseConnector):
             logger.error(f"Failed to get version: {e}")
             raise
 
-    def disconnect(self):
+    def disconnect(self, connection=None):
         """Close database connection if open.
+        
+        Args:
+            connection: Optional connection object to close. If provided, closes it.
         
         Note: SQL Server connections are typically closed after each operation.
         This method is provided for consistency with other connectors.
         """
+        # Close provided connection if given
+        if connection is not None:
+            try:
+                connection.close()
+            except Exception:
+                pass  # Ignore errors when closing
         # SQL Server connections are closed after each operation
-        # This is a no-op for consistency
+        # This is a no-op for consistency when no connection provided
         pass
 
     def _extract_table_properties(

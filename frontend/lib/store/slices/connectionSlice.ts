@@ -197,9 +197,66 @@ const connectionSlice = createSlice({
         state.isLoading = false;
         state.error = ensureStringError(action.payload || 'Failed to delete connection');
       })
+      .addCase(testConnection.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(testConnection.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Update the connection's test status in the list
+        const connectionId = action.meta.arg;
+        // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+        const connectionIdStr = String(connectionId);
+        const index = state.connections.findIndex((c) => String(c.id) === connectionIdStr);
+        if (index !== -1) {
+          const result = action.payload;
+          // Determine status: check result.success first, then result.status
+          let testStatus = 'failed';
+          if (result.success === true || result.success === 'true') {
+            testStatus = 'success';
+          } else if (result.status === 'SUCCESS' || result.status === 'success') {
+            testStatus = 'success';
+          } else if (result.success === false || result.status === 'FAILED' || result.status === 'failed') {
+            testStatus = 'failed';
+          }
+          
+          console.log('[testConnection.fulfilled] Updating connection status:', {
+            connectionId,
+            connectionIdStr,
+            index,
+            result,
+            testStatus,
+            currentStatus: state.connections[index].last_test_status
+          });
+          
+          state.connections[index] = {
+            ...state.connections[index],
+            last_test_status: testStatus,
+            last_tested_at: result.tested_at || new Date().toISOString(),
+          };
+        } else {
+          console.warn('[testConnection.fulfilled] Connection not found in state:', {
+            connectionId,
+            connectionIdStr,
+            availableIds: state.connections.map(c => ({ id: c.id, idType: typeof c.id }))
+          });
+        }
+      })
       .addCase(testConnection.rejected, (state, action) => {
         state.isLoading = false;
         state.error = ensureStringError(action.payload || 'Connection test failed');
+        // Update the connection's test status even on failure
+        const connectionId = action.meta.arg;
+        // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+        const connectionIdStr = String(connectionId);
+        const index = state.connections.findIndex((c) => String(c.id) === connectionIdStr);
+        if (index !== -1) {
+          state.connections[index] = {
+            ...state.connections[index],
+            last_test_status: 'failed',
+            last_tested_at: new Date().toISOString(),
+          };
+        }
       })
       .addCase(fetchConnection.fulfilled, (state, action) => {
         state.selectedConnection = action.payload;

@@ -65,7 +65,7 @@ class WebSocketClient {
       reconnectionDelay: 2000, // Start with 2 second delay
       reconnectionDelayMax: 10000, // Max 10 second delay
       reconnectionAttempts: 2, // Reduced to 2 attempts to fail faster if backend doesn't support it
-      timeout: 3000, // 3 second timeout (reduced to fail faster)
+      timeout: 10000, // 10 second timeout (increased from 3s to handle slow connections)
       forceNew: false, // Reuse existing connection if available
       autoConnect: true,
       // Suppress default error logging

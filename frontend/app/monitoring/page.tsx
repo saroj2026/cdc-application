@@ -791,12 +791,13 @@ export default function MonitoringPage() {
                       <td className="px-4 py-3 text-foreground text-xs font-medium">{event.table_name}</td>
                       <td className="px-4 py-3 text-foreground text-xs font-mono">
                         {(() => {
-                          // Extract LSN/SCN from various possible locations
-                          const sourceLsn = event.source_lsn || (event as any).lsn
-                          const sourceScn = event.source_scn || (event as any).scn
-                          const binlogFile = event.source_binlog_file || (event as any).binlog_file || (event as any).file
-                          const binlogPos = event.source_binlog_position || (event as any).binlog_position || (event as any).pos || (event as any).position
-                          const sqlServerLsn = event.sql_server_lsn || (event as any).sql_server_lsn
+                          // Extract LSN/SCN/Offset from various possible locations
+                          let sourceLsn = event.source_lsn || (event as any).lsn
+                          let sourceScn = event.source_scn || (event as any).scn
+                          let binlogFile = event.source_binlog_file || (event as any).binlog_file || (event as any).file
+                          let binlogPos = event.source_binlog_position || (event as any).binlog_position || (event as any).pos || (event as any).position
+                          let sqlServerLsn = event.sql_server_lsn || (event as any).sql_server_lsn
+                          let offsetValue: any = null
                           
                           // Also check run_metadata if available
                           const runMetadata = (event as any).run_metadata
@@ -813,6 +814,19 @@ export default function MonitoringPage() {
                           const finalBinlogPos = binlogPos || metadataBinlogPos
                           const finalSqlServerLsn = sqlServerLsn || metadataSqlServerLsn
                           
+                          // Try to extract offset value from metadata if nothing else is available
+                          if (!finalLsn && !finalScn && !finalBinlogFile && !finalSqlServerLsn && runMetadata) {
+                            offsetValue = runMetadata.offset || runMetadata.transaction_id || 
+                                        runMetadata.txId || runMetadata.checkpoint || 
+                                        runMetadata.last_offset || runMetadata.current_offset
+                            
+                            // If offset is nested, try to extract it
+                            if (!offsetValue && runMetadata.offset && typeof runMetadata.offset === 'object') {
+                              offsetValue = JSON.stringify(runMetadata.offset).substring(0, 50)
+                            }
+                          }
+                          
+                          // Display priority: LSN > SCN > Binlog > SQL Server LSN > Offset > N/A
                           if (finalLsn) {
                             return (
                               <span className="text-cyan-400" title="PostgreSQL LSN">
@@ -835,6 +849,13 @@ export default function MonitoringPage() {
                             return (
                               <span className="text-purple-400" title="SQL Server LSN">
                                 LSN: {String(finalSqlServerLsn)}
+                              </span>
+                            )
+                          } else if (offsetValue) {
+                            const offsetStr = typeof offsetValue === 'object' ? JSON.stringify(offsetValue).substring(0, 50) : String(offsetValue)
+                            return (
+                              <span className="text-yellow-400" title="Offset/Checkpoint Value">
+                                Offset: {offsetStr.length > 50 ? offsetStr + '...' : offsetStr}
                               </span>
                             )
                           } else {

@@ -167,6 +167,8 @@ function CardFooter({ className, ...props }) {
     ()=>PostgreSQLLogo,
     "RedshiftLogo",
     ()=>RedshiftLogo,
+    "S3Logo",
+    ()=>S3Logo,
     "SQLServerLogo",
     ()=>SQLServerLogo,
     "SnowflakeLogo",
@@ -939,6 +941,99 @@ const CockroachLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBO
         lineNumber: 169,
         columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
+const S3Logo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        viewBox: "0 0 24 24",
+        className: className,
+        width: size,
+        height: size,
+        fill: "none",
+        xmlns: "http://www.w3.org/2000/svg",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "6",
+                width: "16",
+                height: "12",
+                rx: "1",
+                fill: "#FF9900"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 180,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "6",
+                width: "16",
+                height: "3",
+                rx: "1",
+                fill: "#FFB347"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 181,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "15",
+                width: "16",
+                height: "3",
+                rx: "1",
+                fill: "#E68900"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 182,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                d: "M6 9h12M6 12h12M6 15h12",
+                stroke: "#FFFFFF",
+                strokeWidth: "0.8",
+                opacity: "0.3"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 183,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "8",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 184,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "10.5",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 185,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "13",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 186,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0))
+        ]
+    }, void 0, true, {
+        fileName: "[project]/lib/database-logos.tsx",
+        lineNumber: 178,
+        columnNumber: 3
+    }, ("TURBOPACK compile-time value", void 0));
 const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
         viewBox: "0 0 24 24",
         className: className,
@@ -955,7 +1050,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 178,
+                lineNumber: 192,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
@@ -966,7 +1061,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 179,
+                lineNumber: 193,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("ellipse", {
@@ -977,7 +1072,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 180,
+                lineNumber: 194,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
@@ -987,13 +1082,13 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "none"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 181,
+                lineNumber: 195,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/lib/database-logos.tsx",
-        lineNumber: 177,
+        lineNumber: 191,
         columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 }),

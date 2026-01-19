@@ -913,12 +913,25 @@ class ApiClient {
                 // Don't log for endpoints with retry logic - they handle their own errors silently
                 const url = error.config?.url || '';
                 const hasRetryLogic = url.includes('/api/v1/connections/') || url.includes('/api/v1/pipelines/') || url.includes('/api/v1/monitoring/') || url.includes('/api/v1/audit-logs') || url.includes('/api/v1/logs/');
-                // Suppress all timeout logging for endpoints with retry logic
+                // Table discovery endpoints can be slow, don't log timeout errors
+                const isTableDiscovery = url.includes('/tables') && !url.includes('/data');
+                // Suppress all timeout logging for endpoints with retry logic or table discovery
                 // Only log in development for endpoints without retry logic
-                if (!hasRetryLogic && ("TURBOPACK compile-time value", "development") === 'development') {
+                if (!hasRetryLogic && !isTableDiscovery && ("TURBOPACK compile-time value", "development") === 'development') {
                     console.error('Request timeout:', url);
                 }
-                const timeoutError = new Error('Request timeout: The server took too long to respond. Please try again.');
+                // Create a more helpful error message based on the endpoint
+                let errorMessage = 'Request timeout: The server took too long to respond.';
+                if (url.includes('/tables') && !url.includes('/data')) {
+                    errorMessage = 'Request timeout: Table discovery is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and accessible.';
+                } else if (url.includes('/test')) {
+                    errorMessage = 'Request timeout: Connection test is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and the backend is accessible.';
+                } else if (url.includes('/trigger') || url.includes('/start')) {
+                    errorMessage = 'Request timeout: Pipeline start is taking longer than expected. Please check backend logs for details.';
+                } else {
+                    errorMessage = 'Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.';
+                }
+                const timeoutError = new Error(errorMessage);
                 timeoutError.isTimeout = true;
                 timeoutError.code = 'ECONNABORTED';
                 return Promise.reject(timeoutError);
@@ -1173,7 +1186,10 @@ class ApiClient {
         return response.data;
     }
     async getConnectionTables(connectionId) {
-        const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`);
+        // Use longer timeout for table discovery (AS400 can be slow)
+        const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`, {
+            timeout: 60000
+        });
         return response.data;
     }
     async getTableData(connectionId, tableName, schema, limit = 100, retries = 2, isOracleConnection) {
@@ -1518,7 +1534,7 @@ class ApiClient {
     async getPipeline(pipelineId) {
         try {
             const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
-                timeout: 5000 // 5 seconds timeout
+                timeout: 15000 // 15 seconds timeout (increased from 5s to handle slow backend responses)
             });
             return response.data;
         } catch (error) {
@@ -1661,11 +1677,11 @@ class ApiClient {
     }
     async triggerPipeline(pipelineId, runType = 'full_load') {
         // Pipeline start can take time (schema creation, connector setup, etc.)
-        // Increase timeout to 60 seconds to allow for full initialization
+        // Increase timeout to 120 seconds to allow for full initialization and connector setup
         const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
             run_type: runType
         }, {
-            timeout: 60000 // 60 seconds timeout for pipeline start
+            timeout: 180000 // 180 seconds (3 minutes) timeout for pipeline start (increased from 120s)
         });
         return response.data;
     }
@@ -1678,7 +1694,7 @@ class ApiClient {
         // Using shorter timeout since endpoint should respond instantly
         try {
             const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-                timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
+                timeout: 10000 // 10 seconds timeout (increased from 3s to handle slow backend responses)
             });
             return response.data;
         } catch (error) {
@@ -3447,9 +3463,65 @@ const connectionSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
         }).addCase(deleteConnection.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = ensureStringError(action.payload || 'Failed to delete connection');
+        }).addCase(testConnection.pending, (state)=>{
+            state.isLoading = true;
+            state.error = null;
+        }).addCase(testConnection.fulfilled, (state, action)=>{
+            state.isLoading = false;
+            // Update the connection's test status in the list
+            const connectionId = action.meta.arg;
+            // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+            const connectionIdStr = String(connectionId);
+            const index = state.connections.findIndex((c)=>String(c.id) === connectionIdStr);
+            if (index !== -1) {
+                const result = action.payload;
+                // Determine status: check result.success first, then result.status
+                let testStatus = 'failed';
+                if (result.success === true || result.success === 'true') {
+                    testStatus = 'success';
+                } else if (result.status === 'SUCCESS' || result.status === 'success') {
+                    testStatus = 'success';
+                } else if (result.success === false || result.status === 'FAILED' || result.status === 'failed') {
+                    testStatus = 'failed';
+                }
+                console.log('[testConnection.fulfilled] Updating connection status:', {
+                    connectionId,
+                    connectionIdStr,
+                    index,
+                    result,
+                    testStatus,
+                    currentStatus: state.connections[index].last_test_status
+                });
+                state.connections[index] = {
+                    ...state.connections[index],
+                    last_test_status: testStatus,
+                    last_tested_at: result.tested_at || new Date().toISOString()
+                };
+            } else {
+                console.warn('[testConnection.fulfilled] Connection not found in state:', {
+                    connectionId,
+                    connectionIdStr,
+                    availableIds: state.connections.map((c)=>({
+                            id: c.id,
+                            idType: typeof c.id
+                        }))
+                });
+            }
         }).addCase(testConnection.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = ensureStringError(action.payload || 'Connection test failed');
+            // Update the connection's test status even on failure
+            const connectionId = action.meta.arg;
+            // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+            const connectionIdStr = String(connectionId);
+            const index = state.connections.findIndex((c)=>String(c.id) === connectionIdStr);
+            if (index !== -1) {
+                state.connections[index] = {
+                    ...state.connections[index],
+                    last_test_status: 'failed',
+                    last_tested_at: new Date().toISOString()
+                };
+            }
         }).addCase(fetchConnection.fulfilled, (state, action)=>{
             state.selectedConnection = action.payload;
         }).addCase(createConnection.fulfilled, (state, action)=>{
@@ -3634,6 +3706,20 @@ const triggerPipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
                 if (errorMessage.startsWith(":")) {
                     errorMessage = errorMessage.substring(1).trim();
                 }
+            }
+        }
+        // Remove HTTP error wrapper if present
+        if (errorMessage.includes("400 Client Error") || errorMessage.includes("Bad Request")) {
+            // Extract the actual error message
+            if (errorMessage.includes("for url:")) {
+                const parts = errorMessage.split("for url:");
+                if (parts.length > 0) {
+                    errorMessage = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").trim();
+                }
+            }
+            // Also check if there's a detail in the response
+            if (error?.response?.data?.detail) {
+                errorMessage = error.response.data.detail;
             }
         }
         return rejectWithValue(errorMessage);
@@ -4136,7 +4222,7 @@ class WebSocketClient {
             reconnectionDelay: 2000,
             reconnectionDelayMax: 10000,
             reconnectionAttempts: 2,
-            timeout: 3000,
+            timeout: 10000,
             forceNew: false,
             autoConnect: true,
             // Suppress default error logging

@@ -21,10 +21,10 @@ if sys.platform == 'win32':
         pass
 
 try:
-    from fastapi import FastAPI, HTTPException, status, Depends, Request, Query
+    from fastapi import FastAPI, HTTPException, status, Depends, Request, Query, BackgroundTasks
     from fastapi.responses import JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
-    from pydantic import BaseModel, Field
+    from pydantic import BaseModel, Field, field_validator, model_validator
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
@@ -278,19 +278,54 @@ except Exception as e:
 # Pydantic models for request/response
 class ConnectionCreate(BaseModel):
     """Connection creation request model."""
-    name: str
+    name: str = Field(default="", description="Connection name - required")
     connection_type: str = Field(default="source", description="'source' or 'target' - optional, defaults to 'source'. Role is determined when creating pipelines.")
-    database_type: str = Field(..., description="'postgresql', 'sqlserver', 'mysql', 's3', 'snowflake', etc.")
+    database_type: Optional[str] = Field(default=None, description="'postgresql', 'sqlserver', 'mysql', 's3', 'snowflake', etc.")
     host: Optional[str] = Field(default=None, description="Host or account identifier (required for most DBs, optional for Snowflake/S3)")
     port: Optional[int] = Field(default=None, description="Port number (required for most DBs, optional for Snowflake/S3)")
-    database: str
-    username: str
-    password: str
+    database: str = Field(default="", description="Database name")
+    username: str = Field(default="", description="Username")
+    password: str = Field(default="", description="Password")
     schema_name: Optional[str] = Field(default=None, alias="schema", description="Database schema name")
     additional_config: Optional[Dict[str, Any]] = None
     
-    class Config:
-        populate_by_name = True  # Allow both 'schema' and 'schema_name'
+    model_config = {"populate_by_name": True}  # Allow both 'schema' and 'schema_name'
+    
+    @model_validator(mode='before')
+    @classmethod
+    def set_defaults(cls, data: Any) -> Any:
+        """Set default values and handle field fallbacks."""
+        if isinstance(data, dict):
+            # Handle name: if missing or empty, set default
+            name = data.get('name', '')
+            if not name or (isinstance(name, str) and not name.strip()):
+                data['name'] = 'unnamed_connection'
+            
+            # Handle database_type: if missing, try to use connection_type as database_type
+            db_type = data.get('database_type')
+            if not db_type:
+                conn_type = data.get('connection_type', 'source')
+                db_types = ['postgresql', 'postgres', 'mysql', 'sqlserver', 'mssql', 'oracle', 'mongodb', 'snowflake', 's3', 'aws_s3', 'as400', 'db2', 'ibm_i']
+                if conn_type and str(conn_type).lower() in db_types:
+                    data['database_type'] = str(conn_type).lower()
+                    # Also set connection_type to 'source' since it was used as db_type
+                    data['connection_type'] = 'source'
+                    db_type = data['database_type']  # Update db_type after setting it
+            
+            # Set defaults for S3 and Snowflake (host/port not required but DB model needs them)
+            if db_type:
+                db_type_str = str(db_type).lower()
+                if db_type_str in ['s3', 'aws_s3']:
+                    # S3 doesn't need host/port, but DB model requires them - set defaults
+                    if not data.get('host'):
+                        data['host'] = 's3.amazonaws.com'
+                    if not data.get('port'):
+                        data['port'] = 443
+                elif db_type_str == 'snowflake':
+                    # Snowflake uses account in host, port defaults to 443
+                    if not data.get('port'):
+                        data['port'] = 443
+        return data
 
 
 class PipelineCreate(BaseModel):
@@ -298,9 +333,9 @@ class PipelineCreate(BaseModel):
     name: str
     source_connection_id: str
     target_connection_id: str
-    source_database: str
-    source_schema: str
-    source_tables: List[str]
+    source_database: Optional[str] = None  # Made optional - can be derived from connection
+    source_schema: Optional[str] = None  # Made optional - can be derived from connection or table_mappings
+    source_tables: Optional[List[str]] = None  # Made optional - can be derived from table_mappings
     target_database: Optional[str] = None
     target_schema: Optional[str] = None
     target_tables: Optional[List[str]] = None
@@ -309,6 +344,65 @@ class PipelineCreate(BaseModel):
     auto_create_target: bool = True
     target_table_mapping: Optional[Dict[str, str]] = None
     table_filter: Optional[str] = None
+    # Frontend format support
+    table_mappings: Optional[List[Dict[str, Any]]] = None  # Frontend sends table_mappings
+    description: Optional[str] = None
+    full_load_type: Optional[str] = None
+    cdc_enabled: Optional[bool] = None
+    cdc_filters: Optional[List[str]] = None
+    
+    @model_validator(mode='after')
+    def extract_from_table_mappings(self):
+        """Extract source_database, source_schema, source_tables from table_mappings if provided."""
+        if self.table_mappings and len(self.table_mappings) > 0:
+            # Extract source tables and schemas from table_mappings
+            source_tables_list = []
+            source_schemas_set = set()
+            target_tables_list = []
+            target_schemas_set = set()
+            
+            for tm in self.table_mappings:
+                # Handle source
+                source_table = tm.get('source_table') or tm.get('sourceTable') or tm.get('source')
+                if source_table:
+                    source_tables_list.append(source_table)
+                    # Extract schema if present in table name (e.g., "schema.table")
+                    if '.' in source_table:
+                        schema, table = source_table.split('.', 1)
+                        source_schemas_set.add(schema)
+                    elif tm.get('source_schema'):
+                        source_schemas_set.add(tm.get('source_schema'))
+                
+                # Handle target
+                target_table = tm.get('target_table') or tm.get('targetTable') or tm.get('target')
+                if target_table:
+                    target_tables_list.append(target_table)
+                    # Extract schema if present in table name
+                    if '.' in target_table:
+                        schema, table = target_table.split('.', 1)
+                        target_schemas_set.add(schema)
+                    elif tm.get('target_schema'):
+                        target_schemas_set.add(tm.get('target_schema'))
+            
+            # Set source_tables if not already set
+            if source_tables_list and not self.source_tables:
+                self.source_tables = source_tables_list
+            
+            # Set source_schema if not already set (use first schema found, or most common)
+            if source_schemas_set and not self.source_schema:
+                self.source_schema = list(source_schemas_set)[0]  # Use first schema found
+            
+            # Set target_tables if not already set
+            if target_tables_list and not self.target_tables:
+                self.target_tables = target_tables_list
+            
+            # Set target_schema if not already set
+            if target_schemas_set and not self.target_schema:
+                self.target_schema = list(target_schemas_set)[0]  # Use first schema found
+        
+        # Note: Final validation happens in the endpoint after extracting from connections
+        # This validator just extracts from table_mappings if provided
+        return self
 
 
 class PipelineUpdate(BaseModel):
@@ -430,13 +524,20 @@ async def create_connection(
     """
     
     try:
+        # Validate database_type is provided
+        if not connection_data.database_type:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="database_type is required. Supported types: postgresql, mysql, sqlserver, oracle, mongodb, snowflake, s3, as400, db2"
+            )
+        
         # connection_type is optional - default to "source" if not provided
         # The actual role (source/target) is determined when creating pipelines
         connection_type_value = connection_data.connection_type or "source"
         
         # For Snowflake, account can be in host field or additional_config
         # For S3, host is optional
-        db_type = connection_data.database_type.lower()
+        db_type = str(connection_data.database_type).lower()
         host_value = connection_data.host
         port_value = connection_data.port
         
@@ -458,13 +559,20 @@ async def create_connection(
             if not port_value:
                 port_value = 443
         
+        # For S3, ensure we have defaults even if not provided
+        if db_type in ["s3", "aws_s3"]:
+            if not host_value:
+                host_value = "s3.amazonaws.com"
+            if not port_value:
+                port_value = 443
+        
         connection_model = ConnectionModel(
             id=str(uuid.uuid4()),
             name=connection_data.name,
             connection_type=connection_type_value,
             database_type=connection_data.database_type,
-            host=host_value or "",
-            port=port_value or 3306,  # Default port if not provided
+            host=host_value or "s3.amazonaws.com",  # Default for S3, empty string for others
+            port=port_value or (443 if db_type in ["s3", "aws_s3", "snowflake"] else 3306),
             database=connection_data.database,
             username=connection_data.username,
             password=connection_data.password,
@@ -642,9 +750,16 @@ async def update_connection(
                 detail=f"Connection not found: {connection_id}"
             )
         
+        # Validate database_type is provided
+        if not connection_data.database_type:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="database_type is required. Supported types: postgresql, mysql, sqlserver, oracle, mongodb, snowflake, s3, as400, db2"
+            )
+        
         # For Snowflake, account can be in host field or additional_config
         # For S3, host is optional
-        db_type = connection_data.database_type.lower()
+        db_type = str(connection_data.database_type).lower()
         host_value = connection_data.host
         port_value = connection_data.port
         
@@ -794,19 +909,74 @@ async def test_connection_data(connection_data: ConnectionCreate) -> Dict[str, A
         Test result
     """
     try:
+        # Validate database_type is provided
+        if not connection_data.database_type:
+            return {
+                "success": False,
+                "status": "FAILED",
+                "error": "database_type is required. Supported types: postgresql, mysql, sqlserver, oracle, mongodb, snowflake, s3, as400",
+                "response_time_ms": 0,
+                "tested_at": datetime.utcnow().isoformat()
+            }
+        
+        db_type = str(connection_data.database_type).lower()
+        
+        # Validate S3-specific required fields
+        if db_type in ["s3", "aws_s3"]:
+            if not connection_data.database:
+                return {
+                    "success": False,
+                    "status": "FAILED",
+                    "error": "Bucket name is required for S3 connections",
+                    "response_time_ms": 0,
+                    "tested_at": datetime.utcnow().isoformat()
+                }
+            if not connection_data.username:
+                return {
+                    "success": False,
+                    "status": "FAILED",
+                    "error": "AWS Access Key ID is required for S3 connections",
+                    "response_time_ms": 0,
+                    "tested_at": datetime.utcnow().isoformat()
+                }
+            if not connection_data.password:
+                return {
+                    "success": False,
+                    "status": "FAILED",
+                    "error": "AWS Secret Access Key is required for S3 connections",
+                    "response_time_ms": 0,
+                    "tested_at": datetime.utcnow().isoformat()
+                }
+        
         # Create a temporary connection model for testing
         from ingestion.models import Connection
         from ingestion.database.models_db import ConnectionType, DatabaseType
         
-        # Convert ConnectionCreate to Connection model
-        # Connection class expects strings, not enums
+        # For S3, host and port are not required - provide defaults
+        host_value = connection_data.host
+        port_value = connection_data.port
+        
+        if db_type in ["s3", "aws_s3"]:
+            # S3 doesn't require host/port, but Connection model requires them
+            # Use placeholder values
+            if not host_value:
+                host_value = "s3.amazonaws.com"  # Default S3 endpoint
+            if not port_value:
+                port_value = 443  # HTTPS port
+        elif db_type == "snowflake":
+            # For Snowflake, account is in host field or additional_config
+            if not host_value and connection_data.additional_config:
+                host_value = connection_data.additional_config.get("account") or "snowflake.amazonaws.com"
+            if not port_value:
+                port_value = 443  # HTTPS port
+        
         temp_connection = Connection(
             id=str(uuid.uuid4()),
-            name="temp_test",
+            name=connection_data.name or "temp_test",
             connection_type=connection_data.connection_type or "source",  # String, not enum
-            database_type=connection_data.database_type,  # String, not enum
-            host=connection_data.host,
-            port=connection_data.port,
+            database_type=str(connection_data.database_type),  # String, not enum - ensure str
+            host=host_value or "localhost",  # Default if still None
+            port=port_value or 3306,  # Default if still None
             database=connection_data.database,
             username=connection_data.username,
             password=connection_data.password,
@@ -1204,6 +1374,124 @@ async def create_pipeline(
                 detail=f"Target connection not found: {pipeline_data.target_connection_id}"
             )
         
+        # Extract or derive source_database, source_schema, source_tables
+        # If not provided, get from connection or table_mappings
+        source_database = pipeline_data.source_database
+        source_schema = pipeline_data.source_schema
+        source_tables = pipeline_data.source_tables
+        
+        # If source_database not provided, use connection's database
+        if not source_database:
+            source_database = source_conn_model.database
+        
+        # If source_schema not provided, try to get from connection or table_mappings
+        if not source_schema:
+            if source_conn_model.schema:
+                source_schema = source_conn_model.schema
+            elif pipeline_data.table_mappings and len(pipeline_data.table_mappings) > 0:
+                # Get schema from first table mapping
+                first_tm = pipeline_data.table_mappings[0]
+                if first_tm.get('source_schema'):
+                    source_schema = first_tm.get('source_schema')
+                elif first_tm.get('source_table') and '.' in first_tm.get('source_table'):
+                    source_schema = first_tm.get('source_table').split('.')[0]
+            # Default based on database type
+            if not source_schema:
+                db_type = source_conn_model.database_type.value.lower() if hasattr(source_conn_model.database_type, 'value') else str(source_conn_model.database_type).lower()
+                if db_type in ["sqlserver", "mssql"]:
+                    source_schema = "dbo"
+                elif db_type == "snowflake":
+                    source_schema = "PUBLIC"
+                else:
+                    source_schema = "public"
+        
+        # If source_tables not provided, extract from table_mappings
+        if not source_tables and pipeline_data.table_mappings:
+            source_tables = []
+            for tm in pipeline_data.table_mappings:
+                source_table = tm.get('source_table') or tm.get('sourceTable') or tm.get('source')
+                if source_table:
+                    # Remove schema prefix if present
+                    if '.' in source_table:
+                        source_table = source_table.split('.', 1)[1]
+                    source_tables.append(source_table)
+        
+        # Validate required fields
+        if not source_database:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="source_database is required. Provide it directly or ensure connection has a database."
+            )
+        if not source_schema:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="source_schema is required. Provide it directly, in table_mappings, or ensure connection has a schema."
+            )
+        if not source_tables or len(source_tables) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="source_tables is required. Provide it directly or in table_mappings."
+            )
+        
+        # Extract target_database and target_schema if not provided
+        target_database = pipeline_data.target_database or target_conn_model.database
+        target_tables = pipeline_data.target_tables
+        
+        # Initialize target_schema to None (will be assigned below)
+        target_schema = None
+        
+        # If target_schema not provided, try to get from connection or table_mappings
+        if not pipeline_data.target_schema:
+            if target_conn_model.schema:
+                target_schema = target_conn_model.schema
+            elif pipeline_data.table_mappings and len(pipeline_data.table_mappings) > 0:
+                # Get schema from first table mapping
+                first_tm = pipeline_data.table_mappings[0]
+                if first_tm.get('target_schema'):
+                    target_schema = first_tm.get('target_schema')
+                elif first_tm.get('target_table') and '.' in first_tm.get('target_table'):
+                    target_schema = first_tm.get('target_table').split('.')[0]
+            # Default based on database type if still not set
+            if not target_schema:
+                db_type = target_conn_model.database_type.value.lower() if hasattr(target_conn_model.database_type, 'value') else str(target_conn_model.database_type).lower()
+                if db_type in ["sqlserver", "mssql"]:
+                    target_schema = "dbo"
+                elif db_type == "snowflake":
+                    target_schema = "PUBLIC"
+                else:
+                    target_schema = "public"
+        else:
+            target_schema = pipeline_data.target_schema
+        
+        # Extract target_tables from table_mappings if not provided
+        if not target_tables and pipeline_data.table_mappings:
+            target_tables = []
+            for tm in pipeline_data.table_mappings:
+                target_table = tm.get('target_table') or tm.get('targetTable') or tm.get('target')
+                if target_table:
+                    # Remove schema prefix if present
+                    if '.' in target_table:
+                        target_table = target_table.split('.', 1)[1]
+                    target_tables.append(target_table)
+        
+        # Map frontend mode format to backend mode
+        mode = pipeline_data.mode
+        if pipeline_data.cdc_enabled is not None:
+            # Frontend sends cdc_enabled and full_load_type
+            if pipeline_data.cdc_enabled:
+                if pipeline_data.full_load_type == "overwrite":
+                    mode = PipelineMode.FULL_LOAD_AND_CDC.value
+                else:
+                    mode = PipelineMode.CDC_ONLY.value
+            else:
+                mode = PipelineMode.FULL_LOAD_ONLY.value
+        elif pipeline_data.enable_full_load is not None:
+            # Backward compatibility: convert enable_full_load to mode
+            if pipeline_data.enable_full_load:
+                mode = PipelineMode.FULL_LOAD_AND_CDC.value if mode == PipelineMode.CDC_ONLY.value else mode
+            else:
+                mode = PipelineMode.CDC_ONLY.value
+        
         # Convert ConnectionModel to Connection object
         from ingestion.models import Connection
         
@@ -1243,27 +1531,18 @@ async def create_pipeline(
         cdc_manager.add_connection(source_connection)
         cdc_manager.add_connection(target_connection)
         
-        # Determine mode - handle backward compatibility
-        mode = pipeline_data.mode
-        if pipeline_data.enable_full_load is not None:
-            # Backward compatibility: convert enable_full_load to mode
-            if pipeline_data.enable_full_load:
-                mode = PipelineMode.FULL_LOAD_AND_CDC.value if mode == PipelineMode.CDC_ONLY.value else mode
-            else:
-                mode = PipelineMode.CDC_ONLY.value
-        
         pipeline = Pipeline(
             id=str(uuid.uuid4()),
             name=pipeline_data.name,
             source_connection_id=pipeline_data.source_connection_id,
             target_connection_id=pipeline_data.target_connection_id,
-            source_database=pipeline_data.source_database,
-            source_schema=pipeline_data.source_schema,
-            source_tables=pipeline_data.source_tables,
-            target_database=pipeline_data.target_database,
-            target_schema=pipeline_data.target_schema,
-            target_tables=pipeline_data.target_tables,
-            mode=mode,
+            source_database=source_database,  # Use extracted value
+            source_schema=source_schema,  # Use extracted value
+            source_tables=source_tables,  # Use extracted value
+            target_database=target_database,  # Use extracted value
+            target_schema=target_schema,  # Use extracted value
+            target_tables=target_tables,  # Use extracted value
+            mode=mode,  # Use mapped mode
             enable_full_load=pipeline_data.enable_full_load,
             auto_create_target=pipeline_data.auto_create_target,
             target_table_mapping=pipeline_data.target_table_mapping,
@@ -1582,6 +1861,201 @@ async def update_pipeline(
         )
 
 
+async def start_pipeline_background(pipeline_id: str) -> None:
+    """Background task to start pipeline without blocking HTTP request.
+    
+    Args:
+        pipeline_id: Pipeline ID
+    """
+    import asyncio
+    # Create a new database session for the background task
+    from ingestion.database.session import SessionLocal
+    background_db = SessionLocal()
+    try:
+        logger.info(f"Starting pipeline {pipeline_id} in background task")
+        # Run the synchronous start_pipeline in a thread pool to avoid blocking
+        # This allows the async event loop to continue processing other requests
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None,  # Use default thread pool executor
+            lambda: start_pipeline_sync(pipeline_id, background_db)
+        )
+        logger.info(f"Pipeline {pipeline_id} started successfully in background: {result}")
+    except Exception as e:
+        logger.error(f"Failed to start pipeline {pipeline_id} in background: {e}", exc_info=True)
+        # Update pipeline status to ERROR
+        try:
+            from ingestion.database.models_db import PipelineStatus as DBPipelineStatus
+            pipeline_model = background_db.query(PipelineModel).filter(
+                PipelineModel.id == pipeline_id
+            ).first()
+            if pipeline_model:
+                pipeline_model.status = DBPipelineStatus.ERROR
+                pipeline_model.updated_at = datetime.utcnow()
+                background_db.commit()
+        except Exception as db_error:
+            logger.error(f"Failed to update pipeline status to ERROR: {db_error}")
+    finally:
+        background_db.close()
+
+def start_pipeline_sync(pipeline_id: str, db: Session) -> Dict[str, Any]:
+    """Synchronous wrapper for start_pipeline to run in thread pool.
+    
+    This function duplicates the logic from start_pipeline but runs synchronously
+    in a thread pool to avoid blocking the async event loop.
+    
+    Args:
+        pipeline_id: Pipeline ID
+        db: Database session
+        
+    Returns:
+        Startup result
+    """
+    # Reuse the existing start_pipeline logic by calling it directly
+    # Since we're in a thread pool, we can call the synchronous parts
+    try:
+        # Load pipeline from database
+        pipeline_model = db.query(PipelineModel).filter(
+            PipelineModel.id == pipeline_id,
+            PipelineModel.deleted_at.is_(None)
+        ).first()
+        
+        if not pipeline_model:
+            raise ValueError(f"Pipeline not found: {pipeline_id}")
+        
+        # Convert PipelineModel to Pipeline object
+        from ingestion.models import Pipeline, Connection
+        
+        # Normalize database_type helper
+        def normalize_database_type(db_type):
+            if hasattr(db_type, 'value'):
+                db_type = db_type.value
+            db_type = str(db_type).lower()
+            if db_type in ['aws_s3', 's3']:
+                return 's3'
+            elif db_type in ['mssql', 'sql_server', 'sqlserver']:
+                return 'sqlserver'
+            elif db_type in ['postgres', 'postgresql']:
+                return 'postgresql'
+            return db_type
+        
+        pipeline = Pipeline(
+            id=pipeline_model.id,
+            name=pipeline_model.name,
+            source_connection_id=pipeline_model.source_connection_id,
+            target_connection_id=pipeline_model.target_connection_id,
+            source_database=pipeline_model.source_database,
+            source_schema=pipeline_model.source_schema,
+            source_tables=pipeline_model.source_tables or [],
+            target_database=pipeline_model.target_database,
+            target_schema=pipeline_model.target_schema,
+            target_tables=pipeline_model.target_tables or [],
+            mode=pipeline_model.mode.value if hasattr(pipeline_model.mode, 'value') else str(pipeline_model.mode) if pipeline_model.mode else "full_load_and_cdc",
+            enable_full_load=pipeline_model.enable_full_load if pipeline_model.enable_full_load is not None else True,
+            auto_create_target=pipeline_model.auto_create_target,
+            target_table_mapping=pipeline_model.target_table_mapping or {},
+            table_filter=pipeline_model.table_filter,
+            full_load_lsn=pipeline_model.full_load_lsn,
+            full_load_status=pipeline_model.full_load_status.value if hasattr(pipeline_model.full_load_status, 'value') else str(pipeline_model.full_load_status),
+            cdc_status=pipeline_model.cdc_status.value if hasattr(pipeline_model.cdc_status, 'value') else str(pipeline_model.cdc_status),
+            status=pipeline_model.status.value if hasattr(pipeline_model.status, 'value') else str(pipeline_model.status),
+            debezium_connector_name=pipeline_model.debezium_connector_name,
+            sink_connector_name=pipeline_model.sink_connector_name,
+            kafka_topics=pipeline_model.kafka_topics or [],
+            debezium_config=pipeline_model.debezium_config or {},
+            sink_config=pipeline_model.sink_config or {}
+        )
+        
+        # Load connections
+        source_conn_model = db.query(ConnectionModel).filter(
+            ConnectionModel.id == pipeline.source_connection_id,
+            ConnectionModel.deleted_at.is_(None)
+        ).first()
+        
+        target_conn_model = db.query(ConnectionModel).filter(
+            ConnectionModel.id == pipeline.target_connection_id,
+            ConnectionModel.deleted_at.is_(None)
+        ).first()
+        
+        if not source_conn_model or not target_conn_model:
+            raise ValueError("Source or target connection not found")
+        
+        source_db_type = normalize_database_type(source_conn_model.database_type)
+        target_db_type = normalize_database_type(target_conn_model.database_type)
+        
+        source_connection = Connection(
+            id=source_conn_model.id,
+            name=source_conn_model.name,
+            connection_type=source_conn_model.connection_type.value if hasattr(source_conn_model.connection_type, 'value') else str(source_conn_model.connection_type),
+            database_type=source_db_type,
+            host=source_conn_model.host,
+            port=source_conn_model.port,
+            database=source_conn_model.database,
+            username=source_conn_model.username,
+            password=source_conn_model.password,
+            schema=source_conn_model.schema,
+            additional_config=source_conn_model.additional_config or {}
+        )
+        
+        target_connection = Connection(
+            id=target_conn_model.id,
+            name=target_conn_model.name,
+            connection_type=target_conn_model.connection_type.value if hasattr(target_conn_model.connection_type, 'value') else str(target_conn_model.connection_type),
+            database_type=target_db_type,
+            host=target_conn_model.host,
+            port=target_conn_model.port,
+            database=target_conn_model.database,
+            username=target_conn_model.username,
+            password=target_conn_model.password,
+            schema=target_conn_model.schema,
+            additional_config=target_conn_model.additional_config or {}
+        )
+        
+        # Add pipeline and connections to CDC manager
+        cdc_manager.pipeline_store[pipeline.id] = pipeline
+        cdc_manager.add_connection(source_connection)
+        cdc_manager.add_connection(target_connection)
+        
+        # Start pipeline synchronously (this is the blocking operation)
+        result = pipeline_service.start_pipeline(pipeline.id)
+        
+        # Update pipeline status in database
+        from ingestion.database.models_db import PipelineStatus as DBPipelineStatus, FullLoadStatus as DBFullLoadStatus, CDCStatus as DBCDCStatus
+        
+        if pipeline.id in cdc_manager.pipeline_store:
+            updated_pipeline = cdc_manager.pipeline_store[pipeline.id]
+            
+            try:
+                pipeline_model.status = DBPipelineStatus(updated_pipeline.status) if updated_pipeline.status else DBPipelineStatus.RUNNING
+            except (ValueError, AttributeError):
+                pipeline_model.status = DBPipelineStatus.RUNNING
+            
+            try:
+                pipeline_model.full_load_status = DBFullLoadStatus(updated_pipeline.full_load_status) if updated_pipeline.full_load_status else DBFullLoadStatus.NOT_STARTED
+            except (ValueError, AttributeError):
+                pipeline_model.full_load_status = DBFullLoadStatus.NOT_STARTED
+            
+            try:
+                pipeline_model.cdc_status = DBCDCStatus(updated_pipeline.cdc_status) if updated_pipeline.cdc_status else DBCDCStatus.NOT_STARTED
+            except (ValueError, AttributeError):
+                pipeline_model.cdc_status = DBCDCStatus.NOT_STARTED
+            
+            pipeline_model.full_load_lsn = updated_pipeline.full_load_lsn
+            pipeline_model.debezium_connector_name = updated_pipeline.debezium_connector_name
+            pipeline_model.sink_connector_name = updated_pipeline.sink_connector_name
+            pipeline_model.kafka_topics = updated_pipeline.kafka_topics or []
+            pipeline_model.debezium_config = updated_pipeline.debezium_config or {}
+            pipeline_model.sink_config = updated_pipeline.sink_config or {}
+            pipeline_model.updated_at = datetime.utcnow()
+            
+            db.commit()
+            logger.info(f"Updated pipeline {pipeline.id} status in database: status={pipeline_model.status.value}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error in start_pipeline_sync: {e}", exc_info=True)
+        raise
+
 @app.post("/api/v1/pipelines/{pipeline_id}/start")
 async def start_pipeline(
     pipeline_id: str,
@@ -1624,7 +2098,7 @@ async def start_pipeline(
             target_schema=pipeline_model.target_schema,
             target_tables=pipeline_model.target_tables or [],
             mode=pipeline_model.mode.value if hasattr(pipeline_model.mode, 'value') else str(pipeline_model.mode) if pipeline_model.mode else "full_load_and_cdc",
-            enable_full_load=pipeline_model.enable_full_load,
+            enable_full_load=pipeline_model.enable_full_load if pipeline_model.enable_full_load is not None else True,  # Default to True if None
             auto_create_target=pipeline_model.auto_create_target,
             target_table_mapping=pipeline_model.target_table_mapping or {},
             table_filter=pipeline_model.table_filter,
@@ -1806,35 +2280,84 @@ async def start_pipeline(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to start pipeline: {e}", exc_info=True)
+        error_msg = str(e)
+        error_type = type(e).__name__
+        
+        # If error message is just "Exception", try to get more details
+        if error_msg == "Exception" or error_msg == "" or not error_msg:
+            # Try to get the actual error from the exception's args or cause
+            if hasattr(e, '__cause__') and e.__cause__:
+                error_msg = str(e.__cause__)
+            elif hasattr(e, 'args') and e.args:
+                error_msg = str(e.args[0]) if e.args[0] else str(e)
+            elif hasattr(e, 'message'):
+                error_msg = str(e.message)
+            else:
+                error_msg = f"{error_type}: {error_msg}"
+        
+        logger.error(f"Failed to start pipeline {pipeline_id}: {error_type}: {error_msg}", exc_info=True)
         
         # Update pipeline status to ERROR in database
         try:
             from ingestion.database.models_db import PipelineStatus as DBPipelineStatus, FullLoadStatus as DBFullLoadStatus, CDCStatus as DBCDCStatus
             from ingestion.exceptions import FullLoadError
             
-            pipeline_model.status = DBPipelineStatus.ERROR
-            
-            # Classify error type
-            if isinstance(e, FullLoadError) or "full load" in str(e).lower() or "transfer" in str(e).lower():
-                pipeline_model.full_load_status = DBFullLoadStatus.FAILED
-            if "cdc" in str(e).lower() or "connector" in str(e).lower():
-                pipeline_model.cdc_status = DBCDCStatus.ERROR
-            
-            pipeline_model.updated_at = datetime.utcnow()
-            db.commit()
-            logger.info(f"Updated pipeline {pipeline_id} status to ERROR in database")
+            # Only update if pipeline_model exists
+            if 'pipeline_model' in locals() and pipeline_model:
+                pipeline_model.status = DBPipelineStatus.ERROR
+                
+                # Classify error type
+                if isinstance(e, FullLoadError) or "full load" in str(e).lower() or "transfer" in str(e).lower():
+                    pipeline_model.full_load_status = DBFullLoadStatus.FAILED
+                if "cdc" in str(e).lower() or "connector" in str(e).lower():
+                    pipeline_model.cdc_status = DBCDCStatus.ERROR
+                
+                pipeline_model.updated_at = datetime.utcnow()
+                db.commit()
+                logger.info(f"Updated pipeline {pipeline_id} status to ERROR in database")
         except Exception as db_error:
             logger.error(f"Failed to update pipeline status in database: {db_error}")
         
-        # Provide better error message
-        error_detail = str(e)
+        # Provide better error message - use error_msg which may have been enhanced above
+        error_detail = error_msg if error_msg and error_msg != "Exception" else str(e)
+        
+        # If error message is still generic, try to get more details
+        if error_detail == "Exception" or error_detail == "" or not error_detail:
+            if hasattr(e, '__cause__') and e.__cause__:
+                error_detail = str(e.__cause__)
+            elif hasattr(e, 'args') and e.args:
+                error_detail = str(e.args[0]) if e.args[0] else str(e)
+            elif hasattr(e, 'details'):
+                error_detail = str(e.details)
+            elif hasattr(e, 'message'):
+                error_detail = str(e.message)
+            else:
+                error_detail = f"{error_type}: {error_msg}"
+        
         if hasattr(e, 'details'):
             error_detail += f" (Details: {e.details})"
         
+        # Extract the actual error message
+        detail = error_detail
+        if "400 Client Error" in error_detail or "Bad Request" in error_detail:
+            # Try to extract the actual error message
+            if "for url:" in error_detail:
+                parts = error_detail.split("for url:")
+                if len(parts) > 0:
+                    detail = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").strip()
+            # If error message still contains wrapper, try to get from exception attributes
+            if hasattr(e, 'error_detail') and e.error_detail:
+                detail = e.error_detail
+            elif hasattr(e, 'detail_message') and e.detail_message:
+                detail = e.detail_message
+        
+        # Ensure we have a meaningful error message
+        if not detail or detail == "Exception" or detail.strip() == "":
+            detail = f"Failed to start pipeline: {error_type}. Check backend logs for details."
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=error_detail
+            detail=detail
         )
 
 
@@ -1842,19 +2365,22 @@ async def start_pipeline(
 async def trigger_pipeline(
     pipeline_id: str,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """Trigger a pipeline with optional run type.
     
-    This endpoint is an alias for /start that accepts run_type in the request body.
+    This endpoint starts the pipeline asynchronously in the background to avoid timeouts.
+    It returns immediately after initiating the start.
     
     Args:
         pipeline_id: Pipeline ID
         request: FastAPI request object to read body
+        background_tasks: FastAPI background tasks
         db: Database session
         
     Returns:
-        Startup result
+        Startup initiation result
     """
     try:
         # Parse request body to get run_type (optional)
@@ -1869,22 +2395,72 @@ async def trigger_pipeline(
         
         logger.info(f"Triggering pipeline {pipeline_id} with run_type={run_type}")
         
-        # Call start_pipeline (run_type is currently not used but kept for future compatibility)
-        # The start_pipeline endpoint handles the actual pipeline start
-        try:
-            return await start_pipeline(pipeline_id=pipeline_id, db=db)
-        except HTTPException:
-            # Re-raise HTTP exceptions as-is (they already have proper error messages)
-            raise
-        except Exception as inner_e:
-            # If start_pipeline raises a non-HTTP exception, wrap it with context
-            error_msg = str(inner_e)
-            logger.error(f"start_pipeline raised exception: {error_msg}", exc_info=True)
-            # Re-raise as HTTPException with the actual error message
+        # Validate pipeline exists and is ready to start
+        pipeline_model = db.query(PipelineModel).filter(
+            PipelineModel.id == pipeline_id,
+            PipelineModel.deleted_at.is_(None)
+        ).first()
+        
+        if not pipeline_model:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=error_msg
-            ) from inner_e
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Pipeline not found: {pipeline_id}"
+            )
+        
+        # Check if pipeline is already running
+        if pipeline_model.status.value in ["active", "running", "starting"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Pipeline is already {pipeline_model.status.value}"
+            )
+        
+        # Set status to STARTING immediately
+        from ingestion.database.models_db import PipelineStatus as DBPipelineStatus
+        pipeline_model.status = DBPipelineStatus.STARTING
+        pipeline_model.updated_at = datetime.utcnow()
+        db.commit()
+        
+        # Start pipeline in background to avoid timeout
+        # This allows the HTTP request to return immediately
+        background_tasks.add_task(start_pipeline_background, pipeline_id)
+        
+        # Return immediately with success
+        return {
+            "success": True,
+            "message": "Pipeline start initiated. It will start in the background.",
+            "pipeline_id": pipeline_id,
+            "status": "STARTING"
+        }
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is (they already have proper error messages)
+        raise
+    except Exception as e:
+        # Handle any other exception
+        error_msg = str(e)
+        logger.error(f"Failed to trigger pipeline {pipeline_id}: {error_msg}", exc_info=True)
+        
+        # Extract the actual error message
+        detail = error_msg
+        if "400 Client Error" in error_msg or "Bad Request" in error_msg:
+            # Try to extract the actual error message
+            if "for url:" in error_msg:
+                parts = error_msg.split("for url:")
+                if len(parts) > 0:
+                    detail = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").strip()
+            # If error message still contains wrapper, try to get from exception attributes
+            if hasattr(e, 'error_detail') and e.error_detail:
+                detail = e.error_detail
+            elif hasattr(e, 'detail_message') and e.detail_message:
+                detail = e.detail_message
+        
+        # Ensure we have a meaningful error message
+        if not detail or detail == "Exception" or detail.strip() == "":
+            detail = f"Failed to trigger pipeline: {type(e).__name__}. Check backend logs for details."
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=detail
+        ) from e
     except HTTPException as he:
         # Re-raise HTTP exceptions with their original detail
         raise
@@ -1893,12 +2469,28 @@ async def trigger_pipeline(
         logger.error(f"Failed to trigger pipeline {pipeline_id}: {error_msg}", exc_info=True)
         
         # Extract the actual error message (avoid double-wrapping)
-        if "Failed to trigger pipeline" in error_msg or "Failed to start pipeline" in error_msg:
-            # Already wrapped, use as-is but clean it up
-            detail = error_msg
-        else:
-            # Provide the actual error detail
-            detail = error_msg
+        detail = error_msg
+        
+        # If the error contains HTTP wrapper, try to extract the actual error
+        if "400 Client Error" in error_msg or "Bad Request" in error_msg:
+            # Try to extract the actual error message
+            if "for url:" in error_msg:
+                parts = error_msg.split("for url:")
+                if len(parts) > 0:
+                    detail = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").strip()
+            # If error message still contains wrapper, try to get from exception attributes
+            if hasattr(e, 'error_detail') and e.error_detail:
+                detail = e.error_detail
+            elif hasattr(e, 'detail_message') and e.detail_message:
+                detail = e.detail_message
+        
+        # Remove wrapper messages
+        if "Failed to trigger pipeline" in detail or "Failed to start pipeline" in detail:
+            # Extract the actual error after the wrapper
+            if ":" in detail:
+                parts = detail.split(":", 1)
+                if len(parts) > 1:
+                    detail = parts[1].strip()
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -3596,18 +4188,23 @@ async def get_replication_events(
             
             # Try to get from run_metadata first (most reliable source)
             if run.run_metadata and isinstance(run.run_metadata, dict):
-                # Check all possible keys for LSN/Offset
+                # Check all possible keys for LSN/Offset - be more aggressive
                 source_lsn = (run.run_metadata.get("source_lsn") or 
                              run.run_metadata.get("lsn") or 
                              run.run_metadata.get("offset") or
                              run.run_metadata.get("transaction_id") or
-                             run.run_metadata.get("txId"))
+                             run.run_metadata.get("txId") or
+                             run.run_metadata.get("last_lsn") or
+                             run.run_metadata.get("current_lsn") or
+                             run.run_metadata.get("commit_lsn"))
                 source_scn = (run.run_metadata.get("source_scn") or 
                              run.run_metadata.get("scn") or
-                             run.run_metadata.get("transaction_id"))
+                             run.run_metadata.get("transaction_id") or
+                             run.run_metadata.get("current_scn"))
                 source_binlog_file = (run.run_metadata.get("source_binlog_file") or 
                                      run.run_metadata.get("binlog_file") or 
-                                     run.run_metadata.get("file"))
+                                     run.run_metadata.get("file") or
+                                     run.run_metadata.get("binlog"))
                 source_binlog_position = (run.run_metadata.get("source_binlog_position") or 
                                          run.run_metadata.get("binlog_position") or 
                                          run.run_metadata.get("pos") or 
@@ -3618,13 +4215,73 @@ async def get_replication_events(
                                  run.run_metadata.get("lsn"))
                 
                 # Also check if there's a nested offset structure
-                if not source_lsn and "offset" in run.run_metadata and isinstance(run.run_metadata["offset"], dict):
-                    offset_dict = run.run_metadata["offset"]
-                    source_lsn = (offset_dict.get("lsn") or 
-                                 offset_dict.get("transaction_id") or
-                                 offset_dict.get("txId"))
-                    if isinstance(source_lsn, (int, float)):
-                        source_lsn = str(source_lsn)
+                if not source_lsn and "offset" in run.run_metadata:
+                    offset_value = run.run_metadata["offset"]
+                    if isinstance(offset_value, dict):
+                        offset_dict = offset_value
+                        source_lsn = (offset_dict.get("lsn") or 
+                                     offset_dict.get("transaction_id") or
+                                     offset_dict.get("txId") or
+                                     offset_dict.get("last_lsn") or
+                                     offset_dict.get("current_lsn"))
+                        source_scn = source_scn or offset_dict.get("scn") or offset_dict.get("transaction_id")
+                        source_binlog_file = source_binlog_file or offset_dict.get("file") or offset_dict.get("binlog_file")
+                        source_binlog_position = source_binlog_position or offset_dict.get("pos") or offset_dict.get("position") or offset_dict.get("binlog_position")
+                        sql_server_lsn = sql_server_lsn or offset_dict.get("lsn") or offset_dict.get("change_lsn") or offset_dict.get("commit_lsn")
+                    elif isinstance(offset_value, (str, int, float)):
+                        # If offset is a simple value, use it as LSN
+                        source_lsn = str(offset_value)
+                
+                # Deep search in nested structures - check all values recursively
+                if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]):
+                    def deep_search_for_lsn(obj, depth=0, max_depth=3):
+                        """Recursively search for LSN/SCN/offset values in nested dicts."""
+                        if depth > max_depth:
+                            return None, None, None, None, None
+                        
+                        if isinstance(obj, dict):
+                            # Check all keys for LSN-related values
+                            for key, value in obj.items():
+                                key_lower = str(key).lower()
+                                if key_lower in ['lsn', 'source_lsn', 'last_lsn', 'current_lsn', 'commit_lsn', 'change_lsn']:
+                                    if value and not isinstance(value, dict):
+                                        return str(value), None, None, None, None
+                                elif key_lower in ['scn', 'source_scn', 'current_scn']:
+                                    if value and not isinstance(value, dict):
+                                        return None, str(value), None, None, None
+                                elif key_lower in ['file', 'binlog_file', 'source_binlog_file']:
+                                    if value and not isinstance(value, dict):
+                                        return None, None, str(value), None, None
+                                elif key_lower in ['pos', 'position', 'binlog_position', 'source_binlog_position']:
+                                    if value and not isinstance(value, dict):
+                                        return None, None, None, int(value) if value else None, None
+                                
+                                # Recursively search nested dicts
+                                if isinstance(value, dict):
+                                    lsn, scn, binlog_file, binlog_pos, sql_lsn = deep_search_for_lsn(value, depth + 1, max_depth)
+                                    if lsn or scn or binlog_file or sql_lsn:
+                                        return lsn or source_lsn, scn or source_scn, binlog_file or source_binlog_file, binlog_pos or source_binlog_position, sql_lsn or sql_server_lsn
+                        return None, None, None, None, None
+                    
+                    found_lsn, found_scn, found_binlog_file, found_binlog_pos, found_sql_lsn = deep_search_for_lsn(run.run_metadata)
+                    if found_lsn:
+                        source_lsn = found_lsn
+                    if found_scn:
+                        source_scn = found_scn
+                    if found_binlog_file:
+                        source_binlog_file = found_binlog_file
+                    if found_binlog_pos:
+                        source_binlog_position = found_binlog_pos
+                    if found_sql_lsn:
+                        sql_server_lsn = found_sql_lsn
+                
+                # Convert numeric values to strings for consistency
+                if source_lsn and isinstance(source_lsn, (int, float)):
+                    source_lsn = str(source_lsn)
+                if source_scn and isinstance(source_scn, (int, float)):
+                    source_scn = str(source_scn)
+                if sql_server_lsn and isinstance(sql_server_lsn, (int, float)):
+                    sql_server_lsn = str(sql_server_lsn)
             
             # Try to get from recent metrics (source_offset field)
             if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]) and db is not None:
@@ -3654,7 +4311,8 @@ async def get_replication_events(
                 except Exception:
                     pass
             
-            # If not in metadata, try to get from pipeline
+            # If not in metadata, try to get from pipeline (same source as checkpoints)
+            # This is important because checkpoints show LSN/SCN from pipeline_model
             if not any([source_lsn, source_scn, source_binlog_file, sql_server_lsn]) and db is not None:
                 try:
                     pipeline_model = db.query(PipelineModel).filter(PipelineModel.id == run.pipeline_id).first()
@@ -3667,9 +4325,12 @@ async def get_replication_events(
                         if source_conn:
                             db_type = str(source_conn.database_type).lower()
                             
-                            # Get from pipeline's full_load_lsn or other fields
+                            # Get from pipeline's full_load_lsn or other fields (same as checkpoints)
                             if db_type in ['postgresql', 'postgres']:
                                 source_lsn = pipeline_model.full_load_lsn
+                                # Also check if full_load_lsn contains SCN format (for Oracle stored in LSN field)
+                                if not source_lsn and hasattr(pipeline_model, 'current_scn'):
+                                    source_lsn = pipeline_model.current_scn
                                 # Also try to get from connector offset if available
                                 if not source_lsn and pipeline_model.debezium_connector_name:
                                     try:
@@ -3689,9 +4350,12 @@ async def get_replication_events(
                                     except Exception:
                                         pass  # Silently fail if connector not available
                             elif db_type == 'oracle':
-                                # Try to get SCN from pipeline or connector
-                                if hasattr(pipeline_model, 'current_scn'):
-                                    source_scn = pipeline_model.current_scn
+                                # Try to get SCN from pipeline (same as checkpoints - full_load_lsn may contain SCN)
+                                if pipeline_model.full_load_lsn:
+                                    # For Oracle, full_load_lsn may contain SCN value (like checkpoints show)
+                                    source_scn = str(pipeline_model.full_load_lsn)
+                                elif hasattr(pipeline_model, 'current_scn') and pipeline_model.current_scn:
+                                    source_scn = str(pipeline_model.current_scn)
                                 # Also try from connector
                                 if not source_scn and pipeline_model.debezium_connector_name:
                                     try:
@@ -3790,7 +4454,7 @@ async def get_replication_events(
             }
             
             # Add LSN/SCN/Offset fields if available
-            # First try extracted values, then fallback to run_metadata
+            # First try extracted values, then fallback to run_metadata, then pipeline (same as checkpoints)
             if source_lsn:
                 event["source_lsn"] = str(source_lsn)
             elif run.run_metadata and isinstance(run.run_metadata, dict):
@@ -3798,6 +4462,23 @@ async def get_replication_events(
                 metadata_lsn = run.run_metadata.get("source_lsn") or run.run_metadata.get("lsn") or run.run_metadata.get("offset")
                 if metadata_lsn:
                     event["source_lsn"] = str(metadata_lsn)
+            elif db is not None:
+                # Last resort: try to get from pipeline (same as checkpoints use)
+                try:
+                    pipeline_model = db.query(PipelineModel).filter(PipelineModel.id == run.pipeline_id).first()
+                    if pipeline_model and pipeline_model.full_load_lsn:
+                        # Get source connection to determine database type
+                        source_conn = db.query(ConnectionModel).filter(
+                            ConnectionModel.id == pipeline_model.source_connection_id
+                        ).first()
+                        if source_conn:
+                            db_type = str(source_conn.database_type).lower()
+                            # For PostgreSQL/SQL Server, use full_load_lsn as LSN
+                            if db_type in ['postgresql', 'postgres', 'sqlserver', 'mssql']:
+                                event["source_lsn"] = str(pipeline_model.full_load_lsn)
+                            # For Oracle, full_load_lsn may contain SCN value (will be set below)
+                except Exception:
+                    pass  # Silently fail if can't get from pipeline
             
             if source_scn:
                 event["source_scn"] = str(source_scn)
@@ -3805,6 +4486,23 @@ async def get_replication_events(
                 metadata_scn = run.run_metadata.get("source_scn") or run.run_metadata.get("scn")
                 if metadata_scn:
                     event["source_scn"] = str(metadata_scn)
+            elif db is not None and not event.get("source_scn"):
+                # Last resort: try to get from pipeline (same as checkpoints use)
+                try:
+                    pipeline_model = db.query(PipelineModel).filter(PipelineModel.id == run.pipeline_id).first()
+                    if pipeline_model:
+                        source_conn = db.query(ConnectionModel).filter(
+                            ConnectionModel.id == pipeline_model.source_connection_id
+                        ).first()
+                        if source_conn:
+                            db_type = str(source_conn.database_type).lower()
+                            # For Oracle, full_load_lsn may contain SCN value (like checkpoints show)
+                            if db_type == 'oracle' and pipeline_model.full_load_lsn:
+                                event["source_scn"] = str(pipeline_model.full_load_lsn)
+                            elif hasattr(pipeline_model, 'current_scn') and pipeline_model.current_scn:
+                                event["source_scn"] = str(pipeline_model.current_scn)
+                except Exception:
+                    pass  # Silently fail if can't get from pipeline
             
             if source_binlog_file:
                 event["source_binlog_file"] = str(source_binlog_file)

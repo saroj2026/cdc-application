@@ -17,6 +17,7 @@ import { triggerPipeline, pausePipeline, stopPipeline, fetchPipelines, updatePip
 import { wsClient } from "@/lib/websocket/client"
 import { CheckpointManager } from "./checkpoint-manager"
 import { useConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useErrorToast } from "@/components/ui/error-toast"
 
 interface Pipeline {
   id: string | number
@@ -80,6 +81,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
   const { isLoading: pipelineLoading } = useAppSelector((state) => state.pipelines)
   const { connections } = useAppSelector((state) => state.connections)
   const { showConfirm, ConfirmDialogComponent } = useConfirmDialog()
+  const { showError, ErrorToastComponent } = useErrorToast()
   const [selectedTable, setSelectedTable] = useState<{ source: string, target: string, sourceSchema?: string, targetSchema?: string } | null>(null)
   const [sourceData, setSourceData] = useState<any>(null)
   const [targetData, setTargetData] = useState<any>(null)
@@ -120,54 +122,55 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     }
   }, [connections.length, dispatch])
 
-  // Refresh pipeline to get UUID fields if not present, and fix orphaned connections
+  // Always refresh pipeline on mount to get latest status (including on page refresh/navigation)
   useEffect(() => {
     if (pipeline?.id) {
+      // Always fetch latest pipeline status from backend
+      dispatch(fetchPipelines())
+      
       import("@/lib/api/client").then(({ apiClient }) => {
-        // First, try to fix orphaned connections if pipeline has connection UUIDs that might be invalid
-        if (pipeline.source_connection_uuid || pipeline.target_connection_uuid) {
-          // Check if connections exist by trying to fetch pipeline (which will validate connections)
-          apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
-            if (updatedPipeline) {
-              console.log("[PipelineDetail] Refreshed pipeline with UUIDs:", {
-                source_uuid: updatedPipeline.source_connection_uuid,
-                target_uuid: updatedPipeline.target_connection_uuid,
-                source_numeric: updatedPipeline.source_connection_id,
-                target_numeric: updatedPipeline.target_connection_id
-              })
-              dispatch(setSelectedPipeline(updatedPipeline))
-              dispatch(fetchPipelines())
-            }
-          }).catch((err) => {
-            // If pipeline fetch fails due to connection issues, try to fix orphaned connections
-            console.warn("Pipeline fetch failed, attempting to fix orphaned connections:", err)
-            apiClient.fixOrphanedConnections().then((result) => {
-              console.log("[PipelineDetail] Fixed orphaned connections:", result)
-              // Refresh pipeline after fixing
-              apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
-                if (updatedPipeline) {
-                  dispatch(setSelectedPipeline(updatedPipeline))
-                  dispatch(fetchPipelines())
-                }
-              })
-            }).catch((fixErr) => {
-              console.error("Failed to fix orphaned connections:", fixErr)
+        // Fetch individual pipeline to get latest status and UUIDs
+        apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
+          if (updatedPipeline) {
+            console.log("[PipelineDetail] Refreshed pipeline:", {
+              id: updatedPipeline.id,
+              status: updatedPipeline.status,
+              source_uuid: updatedPipeline.source_connection_uuid,
+              target_uuid: updatedPipeline.target_connection_uuid,
             })
-          })
-        } else if (!pipeline.source_connection_uuid || !pipeline.target_connection_uuid) {
-          // If UUIDs are missing, just refresh
-          apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
-            if (updatedPipeline) {
-              dispatch(setSelectedPipeline(updatedPipeline))
-              dispatch(fetchPipelines())
-            }
-          }).catch((err) => {
-            console.warn("Failed to refresh pipeline for UUID fields:", err)
-          })
-        }
+            dispatch(setSelectedPipeline(updatedPipeline))
+            dispatch(fetchPipelines()) // Refresh all pipelines to keep list updated
+          }
+        }).catch((err) => {
+          console.warn("Failed to refresh pipeline:", err)
+          // Still refresh pipelines list even if individual fetch fails
+          dispatch(fetchPipelines())
+        })
       })
     }
-  }, [pipeline?.id, pipeline?.source_connection_uuid, pipeline?.target_connection_uuid, dispatch])
+  }, [pipeline?.id, dispatch])
+
+  // Auto-refresh pipeline status every 10 seconds to keep it updated
+  useEffect(() => {
+    if (!pipeline?.id) return
+    
+    const interval = setInterval(() => {
+      // Refresh pipeline status from backend
+      dispatch(fetchPipelines())
+      
+      import("@/lib/api/client").then(({ apiClient }) => {
+        apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
+          if (updatedPipeline) {
+            dispatch(setSelectedPipeline(updatedPipeline))
+          }
+        }).catch((err) => {
+          console.warn("Failed to refresh pipeline status:", err)
+        })
+      })
+    }, 10000) // Refresh every 10 seconds
+    
+    return () => clearInterval(interval)
+  }, [pipeline?.id, dispatch])
 
   // Extract stable pipeline ID and status to prevent unnecessary re-renders
   const stablePipelineId = useMemo(() => {
@@ -1045,7 +1048,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 const canChange = pipeline.status === "stopped" || pipeline.status === "paused" || pipeline.status === "draft" || pipeline.status === "deleted" || !pipeline.status || (pipeline.status !== "active" && pipeline.status !== "running")
 
                 if (!canChange) {
-                  alert("Please stop the pipeline before changing replication mode. Running pipelines cannot be modified.")
+                  showError("Please stop the pipeline before changing replication mode. Running pipelines cannot be modified.", "Cannot Change Mode")
                   return
                 }
 
@@ -1143,7 +1146,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     errorMessage = JSON.stringify(error)
                   }
                   
-                  alert(`Error: ${errorMessage}`)
+                  showError(errorMessage, "Error")
                 }
               }}
               disabled={pipeline.status === "active" || pipeline.status === "running" || pipelineLoading}
@@ -1172,7 +1175,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            {pipeline.status === "active" || pipeline.status === "running" ? (
+            {(pipeline.status === "active" || pipeline.status === "running") ? (
               <>
                 <Button
                   variant="outline"
@@ -1193,7 +1196,11 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         }
                       } catch (error: any) {
                         console.error("Failed to pause pipeline:", error)
-                        alert(error?.message || "Failed to pause pipeline")
+                        const errorMessage = error?.payload || 
+                                           error?.message || 
+                                           error?.response?.data?.detail ||
+                                           "Failed to pause pipeline"
+                        showError(errorMessage, "Failed to Pause Pipeline")
                       }
                     }
                   }}
@@ -1231,7 +1238,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                             const errorMessage = error?.message || 
                                                error?.payload || 
                                                (typeof error === 'string' ? error : 'Failed to stop pipeline')
-                            alert(`Failed to stop pipeline: ${errorMessage}`)
+                            showError(errorMessage, "Failed to Stop Pipeline")
                           }
                         },
                         "danger",
@@ -1301,7 +1308,38 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       } else if (typeof error === 'string') {
                         errorMessage = error
                       }
-                      alert(`Error: ${errorMessage}\n\nPlease check:\n1. Pipeline configuration is correct\n2. Database connections are valid\n3. Backend server is running\n4. Check backend logs for details`)
+                      // Extract actual error from Debezium connector error
+                      let displayError = errorMessage
+                      
+                      // Remove common wrapper messages
+                      if (displayError.includes("Failed to create Debezium connector")) {
+                        // Extract the actual Kafka Connect error after the colon
+                        const match = displayError.match(/Failed to create Debezium connector[^:]*:\s*(.+)/)
+                        if (match && match[1]) {
+                          displayError = match[1].trim()
+                        }
+                      }
+                      
+                      // Remove HTTP error wrapper if present
+                      if (displayError.includes("400 Client Error") || displayError.includes("Bad Request")) {
+                        // Try to extract the actual error message
+                        const parts = displayError.split("for url:")
+                        if (parts.length > 1) {
+                          // The actual error should be before "for url:" or in the response data
+                          displayError = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").trim()
+                        }
+                        // Also check response data
+                        if (error?.response?.data?.detail) {
+                          displayError = error.response.data.detail
+                        }
+                      }
+                      
+                      // If still generic, try to get from response
+                      if (displayError.includes("400") && error?.response?.data?.detail) {
+                        displayError = error.response.data.detail
+                      }
+                      
+                      showError(displayError, "Failed to Start Pipeline")
                     }
                   }
                 }}
@@ -1336,7 +1374,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   document.body.removeChild(a)
                 } catch (error: any) {
                   console.error("Failed to export DAG:", error)
-                  alert(error?.message || "Failed to export DAG file")
+                  showError(error?.message || "Failed to export DAG file", "Export Failed")
                 }
               }}
               disabled={pipelineLoading || !pipeline?.id}
@@ -1956,7 +1994,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                       }))
                                     }
                                   } catch (error: any) {
-                                    alert(`Failed to retry event: ${error.message || 'Unknown error'}`)
+                                    showError(error.message || 'Unknown error', "Failed to Retry Event")
                                   } finally {
                                     setRetryingEventId(null)
                                   }
@@ -2569,7 +2607,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     onClick={async () => {
                       try {
                         const result = await apiClient.fixOrphanedConnections()
-                        alert(`Successfully fixed ${result.count} pipeline(s). The pipeline has been updated with valid connections.`)
+                        // Success - could show success toast if needed, but for now just log
+                        console.log(`Successfully fixed ${result.count} pipeline(s).`)
                         // Refresh the pipeline
                         if (pipeline?.id) {
                           const updatedPipeline = await apiClient.getPipeline(pipeline.id)
@@ -2582,7 +2621,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           handleCompareTable(selectedTable).catch(console.error)
                         }
                       } catch (err: any) {
-                        alert(`Failed to fix connections: ${err?.message || 'Unknown error'}`)
+                        showError(err?.message || 'Unknown error', "Failed to Fix Connections")
                       }
                     }}
                     className="ml-4 shrink-0"
@@ -3227,6 +3266,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         </Card>
       )}
       <ConfirmDialogComponent />
+      <ErrorToastComponent />
     </div>
   )
 }

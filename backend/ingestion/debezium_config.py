@@ -152,6 +152,13 @@ class DebeziumConfigGenerator:
         # Otherwise use the connection host (for local connections)
         db_hostname = connection.additional_config.get("docker_hostname", connection.host)
         
+        # Generate connector name for the config
+        connector_name = DebeziumConfigGenerator.generate_connector_name(
+            pipeline_name=pipeline_name,
+            database_type="postgresql",
+            schema=schema
+        )
+        
         config = {
             "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
             "tasks.max": "1",
@@ -240,6 +247,13 @@ class DebeziumConfigGenerator:
         # Get SSL settings from connection config
         encrypt = connection.additional_config.get("encrypt", False)
         trust_server_cert = connection.additional_config.get("trust_server_certificate", True)
+        
+        # Generate connector name for the config
+        connector_name = DebeziumConfigGenerator.generate_connector_name(
+            pipeline_name=pipeline_name,
+            database_type="sqlserver",
+            schema=schema
+        )
         
         config = {
             "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
@@ -365,6 +379,13 @@ class DebeziumConfigGenerator:
             # No full load or no offset - must take initial snapshot
             snapshot_mode = "initial"
         
+        # Generate connector name for the config
+        connector_name = DebeziumConfigGenerator.generate_connector_name(
+            pipeline_name=pipeline_name,
+            database_type="as400",
+            schema=schema
+        )
+        
         config = {
             "connector.class": "io.debezium.connector.db2as400.As400RpcConnector",
             "tasks.max": "1",
@@ -484,6 +505,13 @@ class DebeziumConfigGenerator:
         # Determine if using SID or service name
         service_name = connection.additional_config.get("service_name")
         database_name = database or connection.database
+        
+        # Generate connector name for the config
+        connector_name = DebeziumConfigGenerator.generate_connector_name(
+            pipeline_name=pipeline_name,
+            database_type="oracle",
+            schema=schema
+        )
         
         config = {
             "connector.class": "io.debezium.connector.oracle.OracleConnector",

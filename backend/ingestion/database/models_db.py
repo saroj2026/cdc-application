@@ -22,6 +22,7 @@ class DatabaseType(str, enum.Enum):
     AWS_S3 = "aws_s3"  # Alternative name for S3
     AS400 = "as400"
     IBM_I = "ibm_i"  # Alternative name for AS400
+    DB2 = "db2"  # IBM DB2 (maps to AS400 connector)
     SNOWFLAKE = "snowflake"
     ORACLE = "oracle"
 

@@ -576,6 +576,8 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     ()=>PostgreSQLLogo,
     "RedshiftLogo",
     ()=>RedshiftLogo,
+    "S3Logo",
+    ()=>S3Logo,
     "SQLServerLogo",
     ()=>SQLServerLogo,
     "SnowflakeLogo",
@@ -1366,6 +1368,100 @@ const CockroachLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBO
         columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 _c17 = CockroachLogo;
+const S3Logo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        viewBox: "0 0 24 24",
+        className: className,
+        width: size,
+        height: size,
+        fill: "none",
+        xmlns: "http://www.w3.org/2000/svg",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "6",
+                width: "16",
+                height: "12",
+                rx: "1",
+                fill: "#FF9900"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 180,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "6",
+                width: "16",
+                height: "3",
+                rx: "1",
+                fill: "#FFB347"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 181,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "15",
+                width: "16",
+                height: "3",
+                rx: "1",
+                fill: "#E68900"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 182,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                d: "M6 9h12M6 12h12M6 15h12",
+                stroke: "#FFFFFF",
+                strokeWidth: "0.8",
+                opacity: "0.3"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 183,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "8",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 184,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "10.5",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 185,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: "13",
+                cy: "10.5",
+                r: "1",
+                fill: "#FFFFFF",
+                opacity: "0.6"
+            }, void 0, false, {
+                fileName: "[project]/lib/database-logos.tsx",
+                lineNumber: 186,
+                columnNumber: 5
+            }, ("TURBOPACK compile-time value", void 0))
+        ]
+    }, void 0, true, {
+        fileName: "[project]/lib/database-logos.tsx",
+        lineNumber: 178,
+        columnNumber: 3
+    }, ("TURBOPACK compile-time value", void 0));
+_c18 = S3Logo;
 const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
         viewBox: "0 0 24 24",
         className: className,
@@ -1382,7 +1478,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 178,
+                lineNumber: 192,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
@@ -1393,7 +1489,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 179,
+                lineNumber: 193,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ellipse", {
@@ -1404,7 +1500,7 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "#6B7280"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 180,
+                lineNumber: 194,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
@@ -1414,17 +1510,17 @@ const DefaultDatabaseLogo = ({ className = "", size = 24 })=>/*#__PURE__*/ (0, _
                 fill: "none"
             }, void 0, false, {
                 fileName: "[project]/lib/database-logos.tsx",
-                lineNumber: 181,
+                lineNumber: 195,
                 columnNumber: 5
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/lib/database-logos.tsx",
-        lineNumber: 177,
+        lineNumber: 191,
         columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
-_c18 = DefaultDatabaseLogo;
-var _c, _c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c10, _c11, _c12, _c13, _c14, _c15, _c16, _c17, _c18;
+_c19 = DefaultDatabaseLogo;
+var _c, _c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c10, _c11, _c12, _c13, _c14, _c15, _c16, _c17, _c18, _c19;
 __turbopack_context__.k.register(_c, "MySQLLogo");
 __turbopack_context__.k.register(_c1, "PostgreSQLLogo");
 __turbopack_context__.k.register(_c2, "SQLServerLogo");
@@ -1443,7 +1539,8 @@ __turbopack_context__.k.register(_c14, "AthenaLogo");
 __turbopack_context__.k.register(_c15, "AzureSQLLogo");
 __turbopack_context__.k.register(_c16, "BigTableLogo");
 __turbopack_context__.k.register(_c17, "CockroachLogo");
-__turbopack_context__.k.register(_c18, "DefaultDatabaseLogo");
+__turbopack_context__.k.register(_c18, "S3Logo");
+__turbopack_context__.k.register(_c19, "DefaultDatabaseLogo");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
@@ -1834,6 +1931,24 @@ const DATABASE_SERVICES = [
         category: 'warehouse'
     },
     // Cloud Services
+    {
+        id: 's3',
+        name: 'Amazon S3',
+        displayName: 'Amazon S3',
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$logos$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["S3Logo"],
+        defaultPort: 443,
+        connectionType: 's3',
+        category: 'cloud'
+    },
+    {
+        id: 'aws_s3',
+        name: 'AWS S3',
+        displayName: 'AWS S3',
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$logos$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["S3Logo"],
+        defaultPort: 443,
+        connectionType: 'aws_s3',
+        category: 'cloud'
+    },
     {
         id: 'azuresql',
         name: 'Azure SQL',
@@ -2834,7 +2949,18 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
         database: "",
         username: "",
         password: "",
-        ssl_enabled: false
+        ssl_enabled: false,
+        // Snowflake-specific fields
+        account: "",
+        warehouse: "",
+        role: "",
+        schema_name: "",
+        private_key: "",
+        private_key_passphrase: "",
+        auth_method: "password",
+        // S3-specific fields
+        region: "",
+        endpoint_url: ""
     });
     const [testStatus, setTestStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("idle");
     const [testMessage, setTestMessage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
@@ -2845,16 +2971,28 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                 const dbInfo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$icons$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getDatabaseByConnectionType"])(editingConnection.connection_type);
                 setSelectedDatabase(dbInfo || null);
                 setStep("configure");
+                const additionalConfig = editingConnection.additional_config || {};
                 setFormData({
                     name: editingConnection.name || "",
                     description: editingConnection.description || "",
-                    engine: editingConnection.connection_type || "",
+                    engine: editingConnection.database_type || editingConnection.connection_type || "",
                     host: editingConnection.host || "",
                     port: String(editingConnection.port || ""),
                     database: editingConnection.database || "",
                     username: editingConnection.username || "",
                     password: "",
-                    ssl_enabled: editingConnection.ssl_enabled || false
+                    ssl_enabled: editingConnection.ssl_enabled || false,
+                    // Snowflake-specific fields
+                    account: editingConnection.host || additionalConfig.account || "",
+                    warehouse: additionalConfig.warehouse || "",
+                    role: additionalConfig.role || "",
+                    schema_name: editingConnection.schema_name || editingConnection.schema || "",
+                    private_key: "",
+                    private_key_passphrase: "",
+                    auth_method: additionalConfig.private_key ? "private_key" : "password",
+                    // S3-specific fields
+                    region: additionalConfig.region_name || "",
+                    endpoint_url: additionalConfig.endpoint_url || ""
                 });
             } else {
                 // Reset form when creating new
@@ -2869,7 +3007,15 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                     database: "",
                     username: "",
                     password: "",
-                    ssl_enabled: false
+                    ssl_enabled: false,
+                    // Snowflake-specific fields
+                    account: "",
+                    warehouse: "",
+                    role: "",
+                    schema_name: "",
+                    private_key: "",
+                    private_key_passphrase: "",
+                    auth_method: "password"
                 });
             }
             setTestStatus("idle");
@@ -2902,7 +3048,18 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
             database: "",
             username: "",
             password: "",
-            ssl_enabled: false
+            ssl_enabled: false,
+            // Snowflake-specific fields
+            account: "",
+            warehouse: "",
+            role: "",
+            schema_name: "",
+            private_key: "",
+            private_key_passphrase: "",
+            auth_method: "password",
+            // S3-specific fields
+            region: "",
+            endpoint_url: ""
         });
         setTestStatus("idle");
         setTestMessage("");
@@ -2915,13 +3072,27 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
         setTestStatus("idle");
     };
     const handleTestConnection = async ()=>{
+        const isSnowflake = formData.engine === "snowflake";
+        const isS3 = formData.engine === "s3" || formData.engine === "aws_s3";
         // Validate required fields
         const missingFields = [];
-        if (!formData.host || !formData.host.trim()) missingFields.push("Host");
-        if (!formData.port || !formData.port.trim() || isNaN(parseInt(formData.port))) missingFields.push("Port");
-        if (!formData.database || !formData.database.trim()) missingFields.push("Database");
-        if (!formData.username || !formData.username.trim()) missingFields.push("Username");
-        if (!formData.password || formData.password.trim() === "") missingFields.push("Password");
+        if (isSnowflake) {
+            if (!formData.account || !formData.account.trim()) missingFields.push("Account");
+            if (!formData.database || !formData.database.trim()) missingFields.push("Database");
+            if (!formData.username || !formData.username.trim()) missingFields.push("Username");
+            if (!formData.password) missingFields.push("Password");
+            if (!formData.private_key || !formData.private_key.trim()) missingFields.push("Private Key");
+        } else if (isS3) {
+            if (!formData.database || !formData.database.trim()) missingFields.push("Bucket Name");
+            if (!formData.username || !formData.username.trim()) missingFields.push("AWS Access Key ID");
+            if (!formData.password || formData.password.trim() === "") missingFields.push("AWS Secret Access Key");
+        } else {
+            if (!formData.host || !formData.host.trim()) missingFields.push("Host");
+            if (!formData.port || !formData.port.trim() || isNaN(parseInt(formData.port))) missingFields.push("Port");
+            if (!formData.database || !formData.database.trim()) missingFields.push("Database");
+            if (!formData.username || !formData.username.trim()) missingFields.push("Username");
+            if (!formData.password || formData.password.trim() === "") missingFields.push("Password");
+        }
         if (missingFields.length > 0) {
             setTestStatus("error");
             setTestMessage(`Please fill in: ${missingFields.join(", ")}`);
@@ -2931,14 +3102,52 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
         setTestMessage("");
         try {
             const testData = {
-                connection_type: formData.engine,
-                host: formData.host.trim(),
-                port: parseInt(formData.port) || selectedDatabase?.defaultPort || 3306,
+                name: formData.name?.trim() || "test_connection",
+                database_type: formData.engine,
+                connection_type: "source",
                 database: formData.database.trim(),
                 username: formData.username.trim(),
                 password: formData.password,
                 ssl_enabled: formData.ssl_enabled || false
             };
+            if (isSnowflake) {
+                testData.host = formData.account.trim();
+                testData.additional_config = {
+                    account: formData.account.trim(),
+                    warehouse: formData.warehouse && formData.warehouse.trim() || undefined,
+                    role: formData.role && formData.role.trim() || undefined,
+                    schema: formData.schema_name && formData.schema_name.trim() || undefined,
+                    private_key: formData.private_key,
+                    private_key_passphrase: formData.private_key_passphrase || undefined
+                };
+                // Remove undefined values
+                Object.keys(testData.additional_config).forEach((key)=>{
+                    if (testData.additional_config[key] === undefined) {
+                        delete testData.additional_config[key];
+                    }
+                });
+            } else if (isS3) {
+                // S3-specific fields
+                if (formData.schema_name) {
+                    testData.schema_name = formData.schema_name.trim();
+                }
+                testData.additional_config = {
+                    region_name: formData.region && formData.region.trim() || undefined,
+                    endpoint_url: formData.endpoint_url && formData.endpoint_url.trim() || undefined
+                };
+                // Remove undefined values
+                Object.keys(testData.additional_config).forEach((key)=>{
+                    if (testData.additional_config[key] === undefined) {
+                        delete testData.additional_config[key];
+                    }
+                });
+            } else {
+                testData.host = formData.host.trim();
+                testData.port = parseInt(formData.port) || selectedDatabase?.defaultPort || 3306;
+                if (formData.schema_name) {
+                    testData.schema_name = formData.schema_name.trim();
+                }
+            }
             // If editing, use the connection ID endpoint, otherwise use test endpoint
             const endpoint = editingConnection ? `/api/v1/connections/${editingConnection.id}/test` : `/api/v1/connections/test`;
             const response = await fetch(`${("TURBOPACK compile-time value", "http://localhost:8000") || 'http://localhost:8000'}${endpoint}`, {
@@ -2955,9 +3164,16 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                 setTestMessage(result.message || "Connection successful");
             } else {
                 setTestStatus("error");
-                // Extract error message safely
+                // Extract error message safely - check multiple possible locations
                 let errorMsg = "Connection failed";
-                if (result.detail) {
+                // Check result.error first (common in test connection responses)
+                if (result.error) {
+                    if (typeof result.error === 'string') {
+                        errorMsg = result.error;
+                    } else if (typeof result.error === 'object') {
+                        errorMsg = result.error.message || result.error.msg || JSON.stringify(result.error);
+                    }
+                } else if (result.detail) {
                     if (typeof result.detail === 'string') {
                         errorMsg = result.detail;
                     } else if (Array.isArray(result.detail)) {
@@ -2970,6 +3186,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                     }
                 } else if (result.message) {
                     errorMsg = result.message;
+                } else if (!response.ok) {
+                    errorMsg = `Connection failed: ${response.statusText || `HTTP ${response.status}`}`;
                 }
                 setTestMessage(errorMsg);
             }
@@ -2988,40 +3206,129 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
             alert("Database engine is required");
             return;
         }
-        if (!formData.host || !formData.host.trim()) {
-            alert("Host is required");
-            return;
+        // Database-specific validation
+        const isSnowflake = formData.engine === "snowflake";
+        const isS3 = formData.engine === "s3" || formData.engine === "aws_s3";
+        if (isSnowflake) {
+            if (!formData.account || !formData.account.trim()) {
+                alert("Snowflake Account is required (e.g., xy12345.us-east-1)");
+                return;
+            }
+            if (!formData.database || !formData.database.trim()) {
+                alert("Database name is required");
+                return;
+            }
+            if (!formData.username || !formData.username.trim()) {
+                alert("Username is required");
+                return;
+            }
+            // For Snowflake: both password AND private_key are required
+            if (!formData.password) {
+                alert("Password is required");
+                return;
+            }
+            if (!formData.private_key || !formData.private_key.trim()) {
+                alert("Private Key is required");
+                return;
+            }
+        } else if (isS3) {
+            // S3-specific validation
+            if (!formData.database || !formData.database.trim()) {
+                alert("Bucket name is required");
+                return;
+            }
+            if (!formData.username || !formData.username.trim()) {
+                alert("AWS Access Key ID is required");
+                return;
+            }
+            if (!formData.password) {
+                alert("AWS Secret Access Key is required");
+                return;
+            }
+        } else {
+            // Standard database validation
+            if (!formData.host || !formData.host.trim()) {
+                alert("Host is required");
+                return;
+            }
+            if (!formData.database || !formData.database.trim()) {
+                alert("Database name is required");
+                return;
+            }
+            if (!formData.username || !formData.username.trim()) {
+                alert("Username is required");
+                return;
+            }
+            if (!formData.password) {
+                alert("Password is required");
+                return;
+            }
         }
-        if (!formData.database || !formData.database.trim()) {
-            alert("Database name is required");
-            return;
-        }
-        if (!formData.username || !formData.username.trim()) {
-            alert("Username is required");
-            return;
-        }
-        if (!formData.password) {
-            alert("Password is required");
-            return;
-        }
-        // Ensure port is valid
-        const port = parseInt(formData.port) || selectedDatabase?.defaultPort || 3306;
-        if (port < 1 || port > 65535) {
-            alert("Port must be between 1 and 65535");
-            return;
-        }
-        // Build data to save (no type/role - will be selected at pipeline creation)
+        // Build data to save (isSnowflake and isS3 already defined above)
         const dataToSave = {
             name: formData.name.trim(),
             description: formData.description?.trim() || "",
             engine: formData.engine,
-            host: formData.host.trim(),
             database: formData.database.trim(),
             username: formData.username.trim(),
             password: formData.password,
-            port: String(port),
             ssl_enabled: formData.ssl_enabled || false
         };
+        if (isSnowflake) {
+            // Snowflake uses account instead of host
+            dataToSave.host = formData.account.trim();
+            // Add Snowflake-specific fields to additional_config
+            dataToSave.additional_config = {
+                account: formData.account.trim(),
+                warehouse: formData.warehouse && formData.warehouse.trim() || undefined,
+                role: formData.role && formData.role.trim() || undefined,
+                schema: formData.schema_name && formData.schema_name.trim() || undefined,
+                private_key: formData.private_key,
+                private_key_passphrase: formData.private_key_passphrase || undefined
+            };
+            // Remove undefined values
+            Object.keys(dataToSave.additional_config).forEach((key)=>{
+                if (dataToSave.additional_config[key] === undefined) {
+                    delete dataToSave.additional_config[key];
+                }
+            });
+        } else if (isS3) {
+            // S3-specific fields
+            // database = bucket name (already set)
+            // username = aws_access_key_id (already set)
+            // password = aws_secret_access_key (already set)
+            // schema_name = prefix
+            // host and port are required by database model, but not used by S3 - set defaults
+            dataToSave.host = "s3.amazonaws.com"; // Default S3 endpoint (required by DB model)
+            dataToSave.port = 443; // HTTPS port (required by DB model)
+            if (formData.schema_name) {
+                dataToSave.schema_name = formData.schema_name.trim();
+            }
+            // Add S3-specific fields to additional_config
+            dataToSave.additional_config = {
+                region_name: formData.region && formData.region.trim() || undefined,
+                endpoint_url: formData.endpoint_url && formData.endpoint_url.trim() || undefined
+            };
+            // Remove undefined values
+            Object.keys(dataToSave.additional_config).forEach((key)=>{
+                if (dataToSave.additional_config[key] === undefined) {
+                    delete dataToSave.additional_config[key];
+                }
+            });
+        } else {
+            // Standard database fields
+            // Ensure port is valid
+            const port = parseInt(formData.port) || selectedDatabase?.defaultPort || 3306;
+            if (port < 1 || port > 65535) {
+                alert("Port must be between 1 and 65535");
+                return;
+            }
+            dataToSave.host = formData.host.trim();
+            dataToSave.port = String(port);
+            if (formData.schema_name) {
+                dataToSave.schema_name = formData.schema_name.trim();
+            }
+        }
         console.log("Saving connection data:", {
             ...dataToSave,
             password: "***"
@@ -3043,7 +3350,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 children: "Add New Service"
                             }, void 0, false, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 241,
+                                lineNumber: 444,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -3051,13 +3358,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 children: "Select a database service to configure"
                             }, void 0, false, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 244,
+                                lineNumber: 447,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/connections/connection-modal.tsx",
-                        lineNumber: 240,
+                        lineNumber: 443,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3067,12 +3374,12 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                             onCancel: onClose
                         }, void 0, false, {
                             fileName: "[project]/components/connections/connection-modal.tsx",
-                            lineNumber: 249,
+                            lineNumber: 452,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/connections/connection-modal.tsx",
-                        lineNumber: 248,
+                        lineNumber: 451,
                         columnNumber: 13
                     }, this)
                 ]
@@ -3093,12 +3400,12 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/components/connections/connection-modal.tsx",
-                                            lineNumber: 266,
+                                            lineNumber: 469,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 260,
+                                        lineNumber: 463,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3109,7 +3416,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 children: editingConnection ? "Edit Connection" : "Configure Service"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 270,
+                                                lineNumber: 473,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -3117,19 +3424,19 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 children: editingConnection ? "Update database connection details" : selectedDatabase ? `Configure ${selectedDatabase.displayName} connection` : "Configure database connection"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 273,
+                                                lineNumber: 476,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 269,
+                                        lineNumber: 472,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 258,
+                                lineNumber: 461,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3141,12 +3448,12 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                             className: "h-full bg-primary w-2/4 transition-all duration-300"
                                         }, void 0, false, {
                                             fileName: "[project]/components/connections/connection-modal.tsx",
-                                            lineNumber: 286,
+                                            lineNumber: 489,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 285,
+                                        lineNumber: 488,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3154,19 +3461,19 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                         children: "Step 2 of 2"
                                     }, void 0, false, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 288,
+                                        lineNumber: 491,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 284,
+                                lineNumber: 487,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/connections/connection-modal.tsx",
-                        lineNumber: 257,
+                        lineNumber: 460,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3184,7 +3491,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 children: "Basic"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 295,
+                                                lineNumber: 498,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TabsTrigger"], {
@@ -3192,13 +3499,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 children: "Advanced"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 296,
+                                                lineNumber: 499,
                                                 columnNumber: 13
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 294,
+                                        lineNumber: 497,
                                         columnNumber: 11
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TabsContent"], {
@@ -3212,7 +3519,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         children: "Connection Name *"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 302,
+                                                        lineNumber: 505,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3223,13 +3530,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         required: true
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 303,
+                                                        lineNumber: 506,
                                                         columnNumber: 15
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 301,
+                                                lineNumber: 504,
                                                 columnNumber: 13
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3239,7 +3546,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         children: "Description"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 314,
+                                                        lineNumber: 517,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3249,13 +3556,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         className: "mt-1"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 315,
+                                                        lineNumber: 518,
                                                         columnNumber: 15
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 313,
+                                                lineNumber: 516,
                                                 columnNumber: 13
                                             }, this),
                                             selectedDatabase && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3273,12 +3580,12 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                 className: "w-8 h-8"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 328,
+                                                                lineNumber: 531,
                                                                 columnNumber: 21
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/connections/connection-modal.tsx",
-                                                            lineNumber: 327,
+                                                            lineNumber: 530,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3288,7 +3595,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                     children: selectedDatabase.displayName
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                    lineNumber: 337,
+                                                                    lineNumber: 540,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3299,35 +3606,69 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                    lineNumber: 338,
+                                                                    lineNumber: 541,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/connections/connection-modal.tsx",
-                                                            lineNumber: 336,
+                                                            lineNumber: 539,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/connections/connection-modal.tsx",
-                                                    lineNumber: 326,
+                                                    lineNumber: 529,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 325,
+                                                lineNumber: 528,
                                                 columnNumber: 15
                                             }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            formData.engine === "snowflake" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                        className: "text-foreground",
+                                                        children: "Account *"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 550,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                        placeholder: "xy12345.us-east-1",
+                                                        value: formData.account,
+                                                        onChange: (e)=>handleInputChange("account", e.target.value),
+                                                        className: "mt-1",
+                                                        required: true
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 551,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                        children: "Your Snowflake account identifier (e.g., xy12345.us-east-1)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 558,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                lineNumber: 549,
+                                                columnNumber: 15
+                                            }, this) : formData.engine !== "s3" && formData.engine !== "aws_s3" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                         className: "text-foreground",
                                                         children: "Host"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 346,
-                                                        columnNumber: 15
+                                                        lineNumber: 564,
+                                                        columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                         placeholder: "localhost or IP address",
@@ -3336,16 +3677,76 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         className: "mt-1"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 347,
-                                                        columnNumber: 15
+                                                        lineNumber: 565,
+                                                        columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 345,
-                                                columnNumber: 13
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                lineNumber: 563,
+                                                columnNumber: 15
+                                            }, this) : null,
+                                            formData.engine === "snowflake" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                        className: "text-foreground",
+                                                        children: "Database *"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 577,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                        placeholder: "SNOWFLAKE_SAMPLE_DATA",
+                                                        value: formData.database,
+                                                        onChange: (e)=>handleInputChange("database", e.target.value),
+                                                        className: "mt-1",
+                                                        required: true
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 578,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                lineNumber: 576,
+                                                columnNumber: 15
+                                            }, this) : formData.engine === "s3" || formData.engine === "aws_s3" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                        className: "text-foreground",
+                                                        children: "Bucket Name *"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 588,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                        placeholder: "my-bucket-name",
+                                                        value: formData.database,
+                                                        onChange: (e)=>handleInputChange("database", e.target.value),
+                                                        className: "mt-1",
+                                                        required: true
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 589,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                        children: "Your S3 bucket name (e.g., my-data-bucket)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 596,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                lineNumber: 587,
+                                                columnNumber: 15
+                                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "grid grid-cols-2 gap-4",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3355,8 +3756,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                 children: "Port"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 358,
-                                                                columnNumber: 17
+                                                                lineNumber: 603,
+                                                                columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                                 type: "number",
@@ -3366,14 +3767,14 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                 className: "mt-1"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 359,
-                                                                columnNumber: 17
+                                                                lineNumber: 604,
+                                                                columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 357,
-                                                        columnNumber: 15
+                                                        lineNumber: 602,
+                                                        columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         children: [
@@ -3382,8 +3783,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                 children: formData.engine === "oracle" ? "Database/Service Name" : "Database"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 368,
-                                                                columnNumber: 17
+                                                                lineNumber: 613,
+                                                                columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                                 placeholder: formData.engine === "oracle" ? "XE, ORCL, PDB1, etc." : "database name",
@@ -3392,8 +3793,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                 className: "mt-1"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 371,
-                                                                columnNumber: 17
+                                                                lineNumber: 616,
+                                                                columnNumber: 19
                                                             }, this),
                                                             formData.engine === "oracle" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                 className: "text-xs text-foreground-muted mt-1.5 px-1",
@@ -3403,8 +3804,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                         children: "⚠️ Important:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                        lineNumber: 379,
-                                                                        columnNumber: 21
+                                                                        lineNumber: 624,
+                                                                        columnNumber: 23
                                                                     }, this),
                                                                     " For Oracle, enter the ",
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3412,8 +3813,8 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                         children: "Service Name or SID"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                        lineNumber: 379,
-                                                                        columnNumber: 107
+                                                                        lineNumber: 624,
+                                                                        columnNumber: 109
                                                                     }, this),
                                                                     " (e.g., XE, ORCL, PDB1), ",
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3421,62 +3822,105 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                                         children: "NOT your username"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                        lineNumber: 379,
-                                                                        columnNumber: 188
+                                                                        lineNumber: 624,
+                                                                        columnNumber: 190
                                                                     }, this),
                                                                     ". Common service names: XE (Express), ORCL (Standard), PDB1/PDB2 (Pluggable DBs)."
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                                lineNumber: 378,
-                                                                columnNumber: 19
+                                                                lineNumber: 623,
+                                                                columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 367,
-                                                        columnNumber: 15
+                                                        lineNumber: 612,
+                                                        columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 356,
-                                                columnNumber: 13
+                                                lineNumber: 601,
+                                                columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                         className: "text-foreground",
-                                                        children: "Username"
+                                                        children: formData.engine === "s3" || formData.engine === "aws_s3" ? "AWS Access Key ID *" : "Username"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 387,
+                                                        lineNumber: 633,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                        placeholder: "database user",
+                                                        placeholder: formData.engine === "s3" || formData.engine === "aws_s3" ? "AKIAIOSFODNN7EXAMPLE" : "database user",
                                                         value: formData.username,
                                                         onChange: (e)=>handleInputChange("username", e.target.value),
-                                                        className: "mt-1"
+                                                        className: "mt-1",
+                                                        required: formData.engine === "s3" || formData.engine === "aws_s3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 388,
+                                                        lineNumber: 636,
                                                         columnNumber: 15
+                                                    }, this),
+                                                    (formData.engine === "s3" || formData.engine === "aws_s3") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                        children: "Your AWS Access Key ID"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 644,
+                                                        columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 386,
+                                                lineNumber: 632,
                                                 columnNumber: 13
+                                            }, this),
+                                            formData.engine === "snowflake" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                        className: "text-foreground",
+                                                        children: "Schema"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 653,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                        placeholder: "PUBLIC (default)",
+                                                        value: formData.schema_name,
+                                                        onChange: (e)=>handleInputChange("schema_name", e.target.value),
+                                                        className: "mt-1"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 654,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                        children: "Schema name (defaults to PUBLIC if not specified)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 660,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                lineNumber: 652,
+                                                columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
                                                         className: "text-foreground",
-                                                        children: "Password"
+                                                        children: formData.engine === "s3" || formData.engine === "aws_s3" ? "AWS Secret Access Key *" : "Password *"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 398,
+                                                        lineNumber: 668,
                                                         columnNumber: 15
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3484,62 +3928,325 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         placeholder: "••••••••",
                                                         value: formData.password,
                                                         onChange: (e)=>handleInputChange("password", e.target.value),
-                                                        className: "mt-1"
+                                                        className: "mt-1",
+                                                        required: true
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 399,
+                                                        lineNumber: 671,
                                                         columnNumber: 15
+                                                    }, this),
+                                                    (formData.engine === "s3" || formData.engine === "aws_s3") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                        children: "Your AWS Secret Access Key"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 680,
+                                                        columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 397,
+                                                lineNumber: 667,
                                                 columnNumber: 13
-                                            }, this)
+                                            }, this),
+                                            formData.engine === "snowflake" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Private Key *"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 690,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
+                                                                placeholder: "-----BEGIN PRIVATE KEY----- ... -----END PRIVATE KEY-----",
+                                                                value: formData.private_key,
+                                                                onChange: (e)=>handleInputChange("private_key", e.target.value),
+                                                                className: "mt-1 w-full min-h-[120px] px-3 py-2 bg-surface border border-border rounded-md text-foreground text-sm font-mono resize-y",
+                                                                required: true
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 691,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "Paste your PEM-formatted private key for key pair authentication (required)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 698,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 689,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Private Key Passphrase (optional)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 703,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                type: "password",
+                                                                placeholder: "••••••••",
+                                                                value: formData.private_key_passphrase,
+                                                                onChange: (e)=>handleInputChange("private_key_passphrase", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 704,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "Passphrase if your private key is encrypted"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 711,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 702,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 299,
+                                        lineNumber: 502,
                                         columnNumber: 11
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TabsContent"], {
                                         value: "advanced",
                                         className: "space-y-4 mt-4",
-                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
-                                                className: "text-foreground flex items-center gap-2",
+                                        children: [
+                                            formData.engine === "snowflake" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                                        type: "checkbox",
-                                                        checked: formData.ssl_enabled,
-                                                        onChange: (e)=>handleInputChange("ssl_enabled", e.target.checked),
-                                                        className: "w-4 h-4"
-                                                    }, void 0, false, {
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Warehouse"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 724,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                placeholder: "COMPUTE_WH (optional but recommended)",
+                                                                value: formData.warehouse,
+                                                                onChange: (e)=>handleInputChange("warehouse", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 725,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "Snowflake warehouse name (optional but recommended for better performance)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 731,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 412,
+                                                        lineNumber: 723,
                                                         columnNumber: 17
                                                     }, this),
-                                                    "Enable SSL/TLS"
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Role"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 736,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                placeholder: "ACCOUNTADMIN (optional)",
+                                                                value: formData.role,
+                                                                onChange: (e)=>handleInputChange("role", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 737,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "Snowflake role to use (optional)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 743,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 735,
+                                                        columnNumber: 17
+                                                    }, this)
                                                 ]
-                                            }, void 0, true, {
+                                            }, void 0, true),
+                                            (formData.engine === "s3" || formData.engine === "aws_s3") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "AWS Region"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 754,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                placeholder: "us-east-1 (optional, defaults to us-east-1)",
+                                                                value: formData.region,
+                                                                onChange: (e)=>handleInputChange("region", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 755,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "AWS region where your bucket is located (e.g., us-east-1, eu-west-1)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 761,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 753,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Prefix/Folder Path"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 766,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                placeholder: "folder/subfolder/ (optional)",
+                                                                value: formData.schema_name,
+                                                                onChange: (e)=>handleInputChange("schema_name", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 767,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "S3 object key prefix/folder path (optional, e.g., data/raw/)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 773,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 765,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                                className: "text-foreground",
+                                                                children: "Custom Endpoint URL"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 778,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                                placeholder: "https://s3.amazonaws.com (optional)",
+                                                                value: formData.endpoint_url,
+                                                                onChange: (e)=>handleInputChange("endpoint_url", e.target.value),
+                                                                className: "mt-1"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 779,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-xs text-foreground-muted mt-1.5 px-1",
+                                                                children: "Custom S3 endpoint URL for S3-compatible services (optional)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/connections/connection-modal.tsx",
+                                                                lineNumber: 785,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/connections/connection-modal.tsx",
+                                                        lineNumber: 777,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true),
+                                            formData.engine !== "snowflake" && formData.engine !== "s3" && formData.engine !== "aws_s3" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                    className: "text-foreground flex items-center gap-2",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                            type: "checkbox",
+                                                            checked: formData.ssl_enabled,
+                                                            onChange: (e)=>handleInputChange("ssl_enabled", e.target.checked),
+                                                            className: "w-4 h-4"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/connections/connection-modal.tsx",
+                                                            lineNumber: 796,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        "Enable SSL/TLS"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/components/connections/connection-modal.tsx",
+                                                    lineNumber: 795,
+                                                    columnNumber: 17
+                                                }, this)
+                                            }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 411,
+                                                lineNumber: 794,
                                                 columnNumber: 15
                                             }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/components/connections/connection-modal.tsx",
-                                            lineNumber: 410,
-                                            columnNumber: 13
-                                        }, this)
-                                    }, void 0, false, {
+                                        ]
+                                    }, void 0, true, {
                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                        lineNumber: 409,
+                                        lineNumber: 719,
                                         columnNumber: 11
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 293,
+                                lineNumber: 496,
                                 columnNumber: 11
                             }, this),
                             testStatus !== "idle" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3551,7 +4258,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 className: "w-4 h-4 text-success flex-shrink-0 mt-0.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 437,
+                                                lineNumber: 822,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3561,7 +4268,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         children: "Connection successful!"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 439,
+                                                        lineNumber: 824,
                                                         columnNumber: 21
                                                     }, this),
                                                     testMessage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3569,13 +4276,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                         children: testMessage
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 440,
+                                                        lineNumber: 825,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 438,
+                                                lineNumber: 823,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -3586,31 +4293,39 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 className: "w-4 h-4 text-error flex-shrink-0 mt-0.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 446,
+                                                lineNumber: 831,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex-1 min-w-0",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-sm text-error font-medium",
                                                         children: "Connection failed"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 448,
+                                                        lineNumber: 833,
                                                         columnNumber: 21
                                                     }, this),
-                                                    testMessage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-error/80 mt-1",
-                                                        children: testMessage
+                                                    testMessage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "mt-1 max-h-32 overflow-y-auto",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                            className: "text-xs text-error/80 whitespace-pre-wrap break-words",
+                                                            children: testMessage
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/connections/connection-modal.tsx",
+                                                            lineNumber: 836,
+                                                            columnNumber: 25
+                                                        }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/connections/connection-modal.tsx",
-                                                        lineNumber: 449,
-                                                        columnNumber: 37
+                                                        lineNumber: 835,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 447,
+                                                lineNumber: 832,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -3621,7 +4336,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 className: "w-4 h-4 rounded-full border-2 border-info border-t-transparent animate-spin flex-shrink-0"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 455,
+                                                lineNumber: 844,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3629,7 +4344,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                                 children: "Testing connection..."
                                             }, void 0, false, {
                                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                                lineNumber: 456,
+                                                lineNumber: 845,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -3637,13 +4352,13 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 426,
+                                lineNumber: 811,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/connections/connection-modal.tsx",
-                        lineNumber: 292,
+                        lineNumber: 495,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3657,7 +4372,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 children: testStatus === "testing" ? "Testing..." : "Test Connection"
                             }, void 0, false, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 465,
+                                lineNumber: 854,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3667,7 +4382,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 473,
+                                lineNumber: 862,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3677,29 +4392,29 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
                                 children: "Save Connection"
                             }, void 0, false, {
                                 fileName: "[project]/components/connections/connection-modal.tsx",
-                                lineNumber: 476,
+                                lineNumber: 865,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/connections/connection-modal.tsx",
-                        lineNumber: 464,
+                        lineNumber: 853,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true)
         }, void 0, false, {
             fileName: "[project]/components/connections/connection-modal.tsx",
-            lineNumber: 237,
+            lineNumber: 440,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/components/connections/connection-modal.tsx",
-        lineNumber: 236,
+        lineNumber: 439,
         columnNumber: 5
     }, this);
 }
-_s(ConnectionModal, "2b8SgCg4FZG4WyYrvCCXAGjvGWw=");
+_s(ConnectionModal, "YD1K6FTbtHHbttwuvabhdxZcljs=");
 _c = ConnectionModal;
 var _c;
 __turbopack_context__.k.register(_c, "ConnectionModal");
@@ -4074,6 +4789,7 @@ function ConnectionsPage() {
     }["ConnectionsPage.useAppSelector"]);
     const [isModalOpen, setIsModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [editingConnection, setEditingConnection] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [testingConnectionId, setTestingConnectionId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [searchQuery, setSearchQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [deleteConfirmOpen, setDeleteConfirmOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [connectionToDelete, setConnectionToDelete] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
@@ -4161,8 +4877,8 @@ function ConnectionsPage() {
                 alert("Password is required");
                 return;
             }
-            // Map engine to connection_type (support all database types)
-            const connectionTypeMap = {
+            // Map engine to database_type (support all database types)
+            const databaseTypeMap = {
                 "mysql": "mysql",
                 "mariadb": "mysql",
                 "postgresql": "postgresql",
@@ -4173,51 +4889,165 @@ function ConnectionsPage() {
                 "azuresql": "sqlserver",
                 "oracle": "oracle",
                 "as400": "as400",
-                "aws_s3": "aws_s3"
+                "aws_s3": "aws_s3",
+                "snowflake": "snowflake",
+                "s3": "s3"
             };
-            const engineValue = String(connectionData.engine || "").toLowerCase().trim();
-            const mappedConnectionType = connectionTypeMap[engineValue] || engineValue;
-            // Accept any connection type (backend will validate)
-            if (!mappedConnectionType) {
-                alert(`Database engine is required`);
+            const engineValue = String(connectionData?.engine || "").toLowerCase().trim();
+            if (!engineValue) {
+                alert("Database engine is required");
+                return;
+            }
+            const mappedDatabaseType = databaseTypeMap[engineValue] || engineValue;
+            // Accept any database type (backend will validate)
+            if (!mappedDatabaseType || !mappedDatabaseType.trim()) {
+                alert(`Invalid database engine: ${engineValue}`);
                 return;
             }
             // Default to 'source' role (can be changed at pipeline creation)
             const mappedRole = "source";
-            // Build payload with all required fields - ensure name and role are always present
-            const payload = {
-                name: String(connectionData.name || "").trim(),
-                connection_type: mappedConnectionType,
-                role: mappedRole,
-                host: String(connectionData.host || "").trim(),
-                port: parseInt(String(connectionData.port || "3306")) || 3306,
-                database: String(connectionData.database || "").trim(),
-                username: String(connectionData.username || "").trim(),
-                password: String(connectionData.password || ""),
-                ssl_enabled: Boolean(connectionData.ssl_enabled || false)
-            };
-            // Add optional fields
-            if (connectionData.description) {
-                payload.description = String(connectionData.description).trim();
-            }
-            // Final validation before sending
-            if (!payload.name || !payload.name.trim()) {
-                alert("Connection name is required");
+            // Build payload with all required fields - ensure name and database_type are always present
+            // Extract and validate all fields before building payload
+            const nameValue = String(connectionData?.name || "").trim();
+            // CRITICAL: If name is missing or empty, show error immediately
+            if (!nameValue || nameValue.length === 0) {
+                console.error("[handleAddConnection] Name is missing or empty!", {
+                    connectionData,
+                    nameValue,
+                    hasName: !!connectionData?.name,
+                    nameType: typeof connectionData?.name
+                });
+                alert("Connection name is required and cannot be empty");
                 return;
             }
+            const databaseTypeValue = String(mappedDatabaseType || "").trim();
+            // CRITICAL: If database_type is missing or empty, show error immediately
+            if (!databaseTypeValue || databaseTypeValue.length === 0) {
+                console.error("[handleAddConnection] Database type is missing or empty!", {
+                    connectionData,
+                    engineValue,
+                    mappedDatabaseType,
+                    databaseTypeValue
+                });
+                alert("Database type is required and cannot be empty");
+                return;
+            }
+            const hostValue = String(connectionData?.host || "").trim();
+            const databaseValue = String(connectionData?.database || "").trim();
+            const usernameValue = String(connectionData?.username || "").trim();
+            const passwordValue = String(connectionData?.password || "");
+            const portValue = parseInt(String(connectionData?.port || "3306")) || 3306;
+            // Final validation before building payload (name and database_type already validated above)
+            if (!hostValue) {
+                alert("Host is required");
+                return;
+            }
+            if (!databaseValue) {
+                alert("Database name is required");
+                return;
+            }
+            if (!usernameValue) {
+                alert("Username is required");
+                return;
+            }
+            if (!passwordValue) {
+                alert("Password is required");
+                return;
+            }
+            // Build payload with validated values - ensure all required fields are present
+            // DO NOT use any conditional logic that might exclude required fields
+            const payload = {
+                name: nameValue,
+                database_type: databaseTypeValue,
+                connection_type: mappedRole,
+                host: hostValue,
+                port: portValue,
+                database: databaseValue,
+                username: usernameValue,
+                password: passwordValue,
+                ssl_enabled: Boolean(connectionData?.ssl_enabled || false)
+            };
+            // CRITICAL: Double-check that required fields are present (defensive programming)
+            if (!payload.name || typeof payload.name !== 'string' || payload.name.trim().length === 0) {
+                console.error("[handleAddConnection] CRITICAL ERROR: name is missing after payload construction!", payload);
+                alert("Internal error: Connection name is missing. Please check console.");
+                return;
+            }
+            if (!payload.database_type || typeof payload.database_type !== 'string' || payload.database_type.trim().length === 0) {
+                console.error("[handleAddConnection] CRITICAL ERROR: database_type is missing after payload construction!", payload);
+                alert("Internal error: Database type is missing. Please check console.");
+                return;
+            }
+            // Add optional fields
+            if (connectionData?.description) {
+                payload.description = String(connectionData.description).trim();
+            }
+            if (connectionData?.schema_name) {
+                payload.schema_name = String(connectionData.schema_name).trim();
+            }
             // Role defaults to 'source' (can be changed at pipeline creation)
+            // Final safety check - ensure payload has required fields
+            if (!payload.name || !payload.database_type) {
+                console.error("[handleAddConnection] CRITICAL: Payload missing required fields!", {
+                    payload,
+                    hasName: !!payload.name,
+                    hasDatabaseType: !!payload.database_type,
+                    connectionData
+                });
+                alert("Internal error: Missing required fields. Please check console for details.");
+                return;
+            }
+            // Final verification: Serialize and check the payload one more time
+            const payloadString = JSON.stringify(payload);
+            const payloadParsed = JSON.parse(payloadString);
+            if (!payloadParsed.name || !payloadParsed.database_type) {
+                console.error("[handleAddConnection] CRITICAL: Payload missing fields after serialization!", {
+                    originalPayload: payload,
+                    serializedPayload: payloadParsed,
+                    payloadString: payloadString.substring(0, 200)
+                });
+                alert("Internal error: Payload validation failed. Please check console.");
+                return;
+            }
             console.log("[handleAddConnection] Payload being sent:", {
                 ...payload,
                 password: "***"
             });
             console.log("[handleAddConnection] Payload keys:", Object.keys(payload));
+            console.log("[handleAddConnection] Payload JSON:", payloadString.substring(0, 300));
             console.log("[handleAddConnection] Required fields check:", {
                 hasName: !!payload.name && payload.name.trim().length > 0,
+                hasDatabaseType: !!payload.database_type && payload.database_type.trim().length > 0,
                 hasConnectionType: !!payload.connection_type,
-                hasRole: !!payload.role && (payload.role === "source" || payload.role === "target"),
-                hasPassword: !!payload.password
+                hasPassword: !!payload.password,
+                payloadName: payload.name,
+                payloadDatabaseType: payload.database_type,
+                nameType: typeof payload.name,
+                databaseTypeType: typeof payload.database_type
             });
-            await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createConnection"])(payload)).unwrap();
+            // Ensure we're sending the correct payload structure
+            const finalPayload = {
+                name: String(payload.name).trim(),
+                database_type: String(payload.database_type).trim(),
+                connection_type: String(payload.connection_type || "source").trim(),
+                host: String(payload.host).trim(),
+                port: Number(payload.port),
+                database: String(payload.database).trim(),
+                username: String(payload.username).trim(),
+                password: String(payload.password),
+                ssl_enabled: Boolean(payload.ssl_enabled),
+                ...payload.description && {
+                    description: String(payload.description).trim()
+                },
+                ...payload.schema_name && {
+                    schema_name: String(payload.schema_name).trim()
+                }
+            };
+            console.log("[handleAddConnection] Final payload being sent:", {
+                ...finalPayload,
+                password: "***"
+            });
+            await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createConnection"])(finalPayload)).unwrap();
             setIsModalOpen(false);
             setEditingConnection(null);
         } catch (err) {
@@ -4228,13 +5058,33 @@ function ConnectionsPage() {
     const handleUpdateConnection = async (connectionData)=>{
         if (!editingConnection) return;
         try {
+            // Map engine to database_type (same as handleAddConnection)
+            const databaseTypeMap = {
+                "mysql": "mysql",
+                "mariadb": "mysql",
+                "postgresql": "postgresql",
+                "postgres": "postgresql",
+                "mongodb": "mongodb",
+                "mssql": "sqlserver",
+                "sqlserver": "sqlserver",
+                "azuresql": "sqlserver",
+                "oracle": "oracle",
+                "as400": "as400",
+                "aws_s3": "aws_s3",
+                "snowflake": "snowflake",
+                "s3": "s3"
+            };
+            const engineValue = String(connectionData?.engine || "").toLowerCase().trim();
+            const mappedDatabaseType = databaseTypeMap[engineValue] || engineValue;
             await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateConnection"])({
                 id: editingConnection,
                 data: {
                     name: connectionData.name,
+                    database_type: mappedDatabaseType,
+                    connection_type: "source",
                     description: connectionData.description || "",
                     host: connectionData.host,
-                    port: parseInt(connectionData.port),
+                    port: parseInt(connectionData.port) || 3306,
                     database: connectionData.database,
                     username: connectionData.username,
                     password: connectionData.password,
@@ -4266,17 +5116,32 @@ function ConnectionsPage() {
         }
     };
     const handleTestConnection = async (id)=>{
+        setTestingConnectionId(id);
         try {
+            console.log('[handleTestConnection] Testing connection:', id, typeof id);
             const result = await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["testConnection"])(id)).unwrap();
+            console.log('[handleTestConnection] Test result:', result);
+            // Small delay to ensure backend has committed the status update
+            await new Promise((resolve)=>setTimeout(resolve, 1000));
+            // Refresh connections to update test status from backend
+            await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchConnections"])());
             // Show success message if available
             if (result?.message) {
                 alert(`Connection test successful: ${result.message}`);
+            } else {
+                alert('Connection test successful!');
             }
         } catch (err) {
             console.error("Connection test failed:", err);
+            // Small delay to ensure backend has committed the status update
+            await new Promise((resolve)=>setTimeout(resolve, 1000));
+            // Refresh connections to update test status (even on failure)
+            await dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchConnections"])());
             // Show user-friendly error message
             const errorMessage = typeof err === 'string' ? err : err?.message || 'Connection test failed. Please check your connection settings and try again.';
             alert(`Connection test failed:\n\n${errorMessage}`);
+        } finally{
+            setTestingConnectionId(null);
         }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$auth$2f$ProtectedPage$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ProtectedPage"], {
@@ -4300,19 +5165,19 @@ function ConnectionsPage() {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/app/connections/page.tsx",
-                                lineNumber: 261,
+                                lineNumber: 410,
                                 columnNumber: 13
                             }, void 0),
                             "New Connection"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/connections/page.tsx",
-                        lineNumber: 254,
+                        lineNumber: 403,
                         columnNumber: 11
                     }, void 0)
                 }, void 0, false, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 249,
+                    lineNumber: 398,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4322,7 +5187,7 @@ function ConnectionsPage() {
                             className: "absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground-muted"
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 269,
+                            lineNumber: 418,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -4333,13 +5198,13 @@ function ConnectionsPage() {
                             className: "pl-10 bg-surface border-border focus:border-primary"
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 270,
+                            lineNumber: 419,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 268,
+                    lineNumber: 417,
                     columnNumber: 7
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4349,12 +5214,12 @@ function ConnectionsPage() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/app/connections/page.tsx",
-                        lineNumber: 282,
+                        lineNumber: 431,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 281,
+                    lineNumber: 430,
                     columnNumber: 9
                 }, this),
                 isLoading && connections.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4364,7 +5229,7 @@ function ConnectionsPage() {
                             className: "w-6 h-6 animate-spin text-foreground-muted"
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 291,
+                            lineNumber: 440,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4372,13 +5237,13 @@ function ConnectionsPage() {
                             children: "Loading connections..."
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 292,
+                            lineNumber: 441,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 290,
+                    lineNumber: 439,
                     columnNumber: 9
                 }, this),
                 !isLoading && filteredConnections.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4389,7 +5254,7 @@ function ConnectionsPage() {
                             children: searchQuery.trim() ? `No connections found matching "${searchQuery}"` : connections.length === 0 ? 'No connections found' : 'No connections match your search'
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 299,
+                            lineNumber: 448,
                             columnNumber: 11
                         }, this),
                         connections.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4403,14 +5268,14 @@ function ConnectionsPage() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/app/connections/page.tsx",
-                                    lineNumber: 314,
+                                    lineNumber: 463,
                                     columnNumber: 15
                                 }, this),
                                 "Create First Connection"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 307,
+                            lineNumber: 456,
                             columnNumber: 13
                         }, this),
                         searchQuery.trim() && connections.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4420,13 +5285,13 @@ function ConnectionsPage() {
                             children: "Clear Search"
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 319,
+                            lineNumber: 468,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 298,
+                    lineNumber: 447,
                     columnNumber: 9
                 }, this),
                 paginatedConnections.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -4435,7 +5300,7 @@ function ConnectionsPage() {
                             className: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4",
                             children: paginatedConnections.map((connection)=>{
                                 const isConnected = connection.last_test_status === "success";
-                                const isTesting = isLoading && editingConnection === connection.id;
+                                const isTesting = testingConnectionId === connection.id;
                                 // Use database_type if available, otherwise fall back to connection_type
                                 const dbType = connection.database_type || connection.connection_type;
                                 const dbInfo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$icons$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getDatabaseByConnectionType"])(dbType);
@@ -4463,25 +5328,25 @@ function ConnectionsPage() {
                                                         className: "w-2.5 h-2.5 bg-success rounded-full animate-pulse shadow-lg shadow-success/50"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/connections/page.tsx",
-                                                        lineNumber: 362,
+                                                        lineNumber: 511,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "absolute inset-0 w-2.5 h-2.5 bg-success rounded-full animate-ping opacity-60"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/connections/page.tsx",
-                                                        lineNumber: 363,
+                                                        lineNumber: 512,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/connections/page.tsx",
-                                                lineNumber: 361,
+                                                lineNumber: 510,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 360,
+                                            lineNumber: 509,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4491,7 +5356,7 @@ function ConnectionsPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 369,
+                                            lineNumber: 518,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4514,12 +5379,12 @@ function ConnectionsPage() {
                                                                 className: "w-10 h-10"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/connections/page.tsx",
-                                                                lineNumber: 386,
+                                                                lineNumber: 535,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 380,
+                                                            lineNumber: 529,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4530,7 +5395,7 @@ function ConnectionsPage() {
                                                                     children: connection.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 396,
+                                                                    lineNumber: 545,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4538,19 +5403,19 @@ function ConnectionsPage() {
                                                                     children: dbInfo?.displayName || connection.connection_type.toUpperCase()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 399,
+                                                                    lineNumber: 548,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 395,
+                                                            lineNumber: 544,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 378,
+                                                    lineNumber: 527,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4563,7 +5428,7 @@ function ConnectionsPage() {
                                                                     className: "w-2 h-2 bg-success rounded-full animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 409,
+                                                                    lineNumber: 558,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4571,13 +5436,13 @@ function ConnectionsPage() {
                                                                     children: "Connected"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 410,
+                                                                    lineNumber: 559,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 408,
+                                                            lineNumber: 557,
                                                             columnNumber: 23
                                                         }, this) : connection.last_test_status === "failed" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "inline-flex items-center gap-1.5 px-2 py-1 bg-error/10 border border-error/30 rounded-md text-xs",
@@ -4586,7 +5451,7 @@ function ConnectionsPage() {
                                                                     className: "w-3 h-3 text-error"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 414,
+                                                                    lineNumber: 563,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4594,13 +5459,13 @@ function ConnectionsPage() {
                                                                     children: "Failed"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 415,
+                                                                    lineNumber: 564,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 413,
+                                                            lineNumber: 562,
                                                             columnNumber: 23
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "inline-flex items-center gap-1.5 px-2 py-1 bg-warning/10 border border-warning/30 rounded-md text-xs",
@@ -4609,7 +5474,7 @@ function ConnectionsPage() {
                                                                     className: "w-3 h-3 text-warning"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 419,
+                                                                    lineNumber: 568,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4617,13 +5482,13 @@ function ConnectionsPage() {
                                                                     children: "Not Tested"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 420,
+                                                                    lineNumber: 569,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 418,
+                                                            lineNumber: 567,
                                                             columnNumber: 23
                                                         }, this),
                                                         isTesting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4633,7 +5498,7 @@ function ConnectionsPage() {
                                                                     className: "w-3 h-3 text-primary animate-spin"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 425,
+                                                                    lineNumber: 574,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4641,19 +5506,19 @@ function ConnectionsPage() {
                                                                     children: "Testing"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 426,
+                                                                    lineNumber: 575,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 424,
+                                                            lineNumber: 573,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 406,
+                                                    lineNumber: 555,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4667,7 +5532,7 @@ function ConnectionsPage() {
                                                                     children: "Host:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 434,
+                                                                    lineNumber: 583,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4676,13 +5541,13 @@ function ConnectionsPage() {
                                                                     children: connection.host
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 435,
+                                                                    lineNumber: 584,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 433,
+                                                            lineNumber: 582,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4693,7 +5558,7 @@ function ConnectionsPage() {
                                                                     children: "Database:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 440,
+                                                                    lineNumber: 589,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4702,13 +5567,13 @@ function ConnectionsPage() {
                                                                     children: connection.database
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 441,
+                                                                    lineNumber: 590,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 439,
+                                                            lineNumber: 588,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4719,7 +5584,7 @@ function ConnectionsPage() {
                                                                     children: "User:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 446,
+                                                                    lineNumber: 595,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4728,19 +5593,19 @@ function ConnectionsPage() {
                                                                     children: connection.username
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 447,
+                                                                    lineNumber: 596,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 445,
+                                                            lineNumber: 594,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 432,
+                                                    lineNumber: 581,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4762,20 +5627,20 @@ function ConnectionsPage() {
                                                                 e.currentTarget.style.backgroundColor = 'transparent';
                                                             },
                                                             onClick: ()=>handleTestConnection(connection.id),
-                                                            disabled: isLoading,
+                                                            disabled: isLoading || testingConnectionId !== null,
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$test$2d$tube$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__TestTube$3e$__["TestTube"], {
                                                                     className: "w-3 h-3 mr-1"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/connections/page.tsx",
-                                                                    lineNumber: 473,
+                                                                    lineNumber: 622,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 "Test"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 455,
+                                                            lineNumber: 604,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4802,12 +5667,12 @@ function ConnectionsPage() {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/connections/page.tsx",
-                                                                lineNumber: 497,
+                                                                lineNumber: 646,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 476,
+                                                            lineNumber: 625,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4821,36 +5686,36 @@ function ConnectionsPage() {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/connections/page.tsx",
-                                                                lineNumber: 507,
+                                                                lineNumber: 656,
                                                                 columnNumber: 23
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 499,
+                                                            lineNumber: 648,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 454,
+                                                    lineNumber: 603,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 377,
+                                            lineNumber: 526,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, connection.id, true, {
                                     fileName: "[project]/app/connections/page.tsx",
-                                    lineNumber: 343,
+                                    lineNumber: 492,
                                     columnNumber: 15
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 333,
+                            lineNumber: 482,
                             columnNumber: 11
                         }, this),
                         totalPages > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4865,7 +5730,7 @@ function ConnectionsPage() {
                                             children: startIndex + 1
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 520,
+                                            lineNumber: 669,
                                             columnNumber: 25
                                         }, this),
                                         " to",
@@ -4875,7 +5740,7 @@ function ConnectionsPage() {
                                             children: Math.min(endIndex, filteredConnections.length)
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 521,
+                                            lineNumber: 670,
                                             columnNumber: 17
                                         }, this),
                                         " ",
@@ -4885,14 +5750,14 @@ function ConnectionsPage() {
                                             children: filteredConnections.length
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 524,
+                                            lineNumber: 673,
                                             columnNumber: 20
                                         }, this),
                                         " connections"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/connections/page.tsx",
-                                    lineNumber: 519,
+                                    lineNumber: 668,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4909,14 +5774,14 @@ function ConnectionsPage() {
                                                     className: "w-4 h-4 mr-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 535,
+                                                    lineNumber: 684,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Previous"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 528,
+                                            lineNumber: 677,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4934,7 +5799,7 @@ function ConnectionsPage() {
                                                         children: page
                                                     }, page, false, {
                                                         fileName: "[project]/app/connections/page.tsx",
-                                                        lineNumber: 548,
+                                                        lineNumber: 697,
                                                         columnNumber: 25
                                                     }, this);
                                                 } else if (page === currentPage - 2 || page === currentPage + 2) {
@@ -4943,7 +5808,7 @@ function ConnectionsPage() {
                                                         children: "..."
                                                     }, page, false, {
                                                         fileName: "[project]/app/connections/page.tsx",
-                                                        lineNumber: 567,
+                                                        lineNumber: 716,
                                                         columnNumber: 25
                                                     }, this);
                                                 }
@@ -4951,7 +5816,7 @@ function ConnectionsPage() {
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 539,
+                                            lineNumber: 688,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4966,25 +5831,25 @@ function ConnectionsPage() {
                                                     className: "w-4 h-4 ml-1"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 584,
+                                                    lineNumber: 733,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 576,
+                                            lineNumber: 725,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/connections/page.tsx",
-                                    lineNumber: 527,
+                                    lineNumber: 676,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/connections/page.tsx",
-                            lineNumber: 518,
+                            lineNumber: 667,
                             columnNumber: 13
                         }, this)
                     ]
@@ -4999,7 +5864,7 @@ function ConnectionsPage() {
                     editingConnection: editingConnection ? connections.find((c)=>c.id === editingConnection) || null : null
                 }, void 0, false, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 593,
+                    lineNumber: 742,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -5019,12 +5884,12 @@ function ConnectionsPage() {
                                                     className: "w-6 h-6 text-error"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 609,
+                                                    lineNumber: 758,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/connections/page.tsx",
-                                                lineNumber: 608,
+                                                lineNumber: 757,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogTitle"], {
@@ -5032,13 +5897,13 @@ function ConnectionsPage() {
                                                 children: "Delete Connection"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/connections/page.tsx",
-                                                lineNumber: 611,
+                                                lineNumber: 760,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 607,
+                                        lineNumber: 756,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
@@ -5046,13 +5911,13 @@ function ConnectionsPage() {
                                         children: "Are you sure you want to delete this connection? This action cannot be undone."
                                     }, void 0, false, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 613,
+                                        lineNumber: 762,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/connections/page.tsx",
-                                lineNumber: 606,
+                                lineNumber: 755,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5066,7 +5931,7 @@ function ConnectionsPage() {
                                                 children: "Connection Name:"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/connections/page.tsx",
-                                                lineNumber: 620,
+                                                lineNumber: 769,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5074,13 +5939,13 @@ function ConnectionsPage() {
                                                 children: connectionToDelete?.name || "Unknown"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/connections/page.tsx",
-                                                lineNumber: 621,
+                                                lineNumber: 770,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 619,
+                                        lineNumber: 768,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5092,7 +5957,7 @@ function ConnectionsPage() {
                                                     className: "w-4 h-4 mt-0.5 flex-shrink-0"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 627,
+                                                    lineNumber: 776,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5101,31 +5966,31 @@ function ConnectionsPage() {
                                                             children: "Warning:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/connections/page.tsx",
-                                                            lineNumber: 629,
+                                                            lineNumber: 778,
                                                             columnNumber: 19
                                                         }, this),
                                                         " Deleting this connection will also remove any pipelines that use it. Make sure no active pipelines depend on this connection."
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 628,
+                                                    lineNumber: 777,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/connections/page.tsx",
-                                            lineNumber: 626,
+                                            lineNumber: 775,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 625,
+                                        lineNumber: 774,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/connections/page.tsx",
-                                lineNumber: 618,
+                                lineNumber: 767,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -5141,7 +6006,7 @@ function ConnectionsPage() {
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 637,
+                                        lineNumber: 786,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -5154,7 +6019,7 @@ function ConnectionsPage() {
                                                     className: "w-4 h-4 mr-2 animate-spin"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 654,
+                                                    lineNumber: 803,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Deleting..."
@@ -5165,7 +6030,7 @@ function ConnectionsPage() {
                                                     className: "w-4 h-4 mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/connections/page.tsx",
-                                                    lineNumber: 659,
+                                                    lineNumber: 808,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Delete Connection"
@@ -5173,39 +6038,39 @@ function ConnectionsPage() {
                                         }, void 0, true)
                                     }, void 0, false, {
                                         fileName: "[project]/app/connections/page.tsx",
-                                        lineNumber: 647,
+                                        lineNumber: 796,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/connections/page.tsx",
-                                lineNumber: 636,
+                                lineNumber: 785,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/connections/page.tsx",
-                        lineNumber: 605,
+                        lineNumber: 754,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/connections/page.tsx",
-                    lineNumber: 604,
+                    lineNumber: 753,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/connections/page.tsx",
-            lineNumber: 248,
+            lineNumber: 397,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/connections/page.tsx",
-        lineNumber: 247,
+        lineNumber: 396,
         columnNumber: 5
     }, this);
 }
-_s(ConnectionsPage, "sYnjAVCc+WdWG1t5zyHCPJQV1wA=", false, function() {
+_s(ConnectionsPage, "9NomXgBQacfKVZJx75cRZL2RnQI=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppDispatch"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"]

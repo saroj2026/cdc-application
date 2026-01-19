@@ -60,6 +60,15 @@ export function DashboardOverview() {
     })
   }, [dispatch])
 
+  // Auto-refresh pipelines every 10 seconds to keep active pipeline count accurate
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(fetchPipelines())
+    }, 10000) // Refresh every 10 seconds
+    
+    return () => clearInterval(interval)
+  }, [dispatch])
+
   // Auto-refresh events every 30 seconds to show 7 days of events
   useEffect(() => {
     const interval = setInterval(() => {
@@ -140,37 +149,17 @@ export function DashboardOverview() {
   }, [pipelines]) // Keep pipelines dependency but use ref to prevent loops
 
   // Calculate dashboard metrics - memoized to prevent infinite loops
-  // Use backend stats if available, otherwise calculate from frontend data
+  // Always use pipelines array for active pipeline count (more reliable and real-time)
   const dashboardMetricsMemo = useMemo(() => {
-    // If we have backend stats, use them (more accurate)
-    if (backendStats) {
-      const totalEvents = backendStats.total_events || 0
-      const failedEvents = backendStats.failed_events || 0
-      const successEvents = backendStats.success_events || 0
-      const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0
-      const dataQuality = totalEvents > 0 ? (successEvents / totalEvents) * 100 : 100
-      
-      // Calculate total tables from pipelines
-      const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
-      const totalTables = pipelinesArray.reduce((sum, p) => {
-        const sourceTables = Array.isArray(p.source_tables) ? p.source_tables.length : 0
-        return sum + sourceTables
-      }, 0)
-      
-      return {
-        activePipelines: backendStats.active_pipelines || 0,
-        totalTables: totalTables,
-        errorRate: errorRate,
-        dataQuality: dataQuality,
-      }
-    }
-    
-    // Fallback to frontend calculation if backend stats not available
     const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
     const eventsArray = Array.isArray(events) ? events : []
     
-    // Calculate active pipelines
-    const activePipelines = pipelinesArray.filter(p => p.status === 'active' || p.status === 'running').length
+    // Always calculate active pipelines from pipelines array (more reliable)
+    // Check for both 'active' and 'running' status, and also 'starting' status
+    const activePipelines = pipelinesArray.filter(p => {
+      const status = p.status?.toLowerCase() || ''
+      return status === 'active' || status === 'running' || status === 'starting'
+    }).length
 
     // Calculate total tables
     const totalTables = pipelinesArray.reduce((sum, p) => {
@@ -178,13 +167,22 @@ export function DashboardOverview() {
       return sum + sourceTables
     }, 0)
 
+    // Use backend stats for events if available, otherwise use frontend events
+    let totalEvents = eventsArray.length
+    let failedEvents = eventsArray.filter(e => e.status === 'failed' || e.status === 'error').length
+    let successEvents = eventsArray.filter(e => e.status === 'applied' || e.status === 'success').length
+    
+    if (backendStats) {
+      // Use backend stats for more accurate event counts
+      totalEvents = backendStats.total_events || totalEvents
+      failedEvents = backendStats.failed_events || failedEvents
+      successEvents = backendStats.success_events || successEvents
+    }
+
     // Calculate error rate
-    const totalEvents = eventsArray.length
-    const errorEvents = eventsArray.filter(e => e.status === 'failed' || e.status === 'error').length
-    const errorRate = totalEvents > 0 ? (errorEvents / totalEvents) * 100 : 0
+    const errorRate = totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0
 
     // Calculate data quality (success rate)
-    const successEvents = eventsArray.filter(e => e.status === 'applied' || e.status === 'success').length
     const dataQuality = totalEvents > 0 ? (successEvents / totalEvents) * 100 : 100
 
     return {
@@ -397,7 +395,10 @@ export function DashboardOverview() {
     {
       label: "Active Pipelines",
       value: dashboardMetrics.activePipelines.toString(),
-      change: `${pipelinesArrayForMetrics.filter(p => p.status === 'active').length} active`,
+      change: `${pipelinesArrayForMetrics.filter(p => {
+        const status = p.status?.toLowerCase() || ''
+        return status === 'active' || status === 'running' || status === 'starting'
+      }).length} active`,
       icon: Activity,
       gradient: "from-cyan-500/10 to-blue-600/5",
       borderColor: "border-cyan-500/20",

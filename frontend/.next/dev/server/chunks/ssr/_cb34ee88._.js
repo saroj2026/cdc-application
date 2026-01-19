@@ -1133,6 +1133,16 @@ function DashboardOverview() {
     }, [
         dispatch
     ]);
+    // Auto-refresh pipelines every 10 seconds to keep active pipeline count accurate
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const interval = setInterval(()=>{
+            dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fetchPipelines"])());
+        }, 10000) // Refresh every 10 seconds
+        ;
+        return ()=>clearInterval(interval);
+    }, [
+        dispatch
+    ]);
     // Auto-refresh events every 30 seconds to show 7 days of events
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const interval = setInterval(()=>{
@@ -1202,44 +1212,34 @@ function DashboardOverview() {
         pipelines
     ]); // Keep pipelines dependency but use ref to prevent loops
     // Calculate dashboard metrics - memoized to prevent infinite loops
-    // Use backend stats if available, otherwise calculate from frontend data
+    // Always use pipelines array for active pipeline count (more reliable and real-time)
     const dashboardMetricsMemo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
-        // If we have backend stats, use them (more accurate)
-        if (backendStats) {
-            const totalEvents = backendStats.total_events || 0;
-            const failedEvents = backendStats.failed_events || 0;
-            const successEvents = backendStats.success_events || 0;
-            const errorRate = totalEvents > 0 ? failedEvents / totalEvents * 100 : 0;
-            const dataQuality = totalEvents > 0 ? successEvents / totalEvents * 100 : 100;
-            // Calculate total tables from pipelines
-            const pipelinesArray = Array.isArray(pipelines) ? pipelines : [];
-            const totalTables = pipelinesArray.reduce((sum, p)=>{
-                const sourceTables = Array.isArray(p.source_tables) ? p.source_tables.length : 0;
-                return sum + sourceTables;
-            }, 0);
-            return {
-                activePipelines: backendStats.active_pipelines || 0,
-                totalTables: totalTables,
-                errorRate: errorRate,
-                dataQuality: dataQuality
-            };
-        }
-        // Fallback to frontend calculation if backend stats not available
         const pipelinesArray = Array.isArray(pipelines) ? pipelines : [];
         const eventsArray = Array.isArray(events) ? events : [];
-        // Calculate active pipelines
-        const activePipelines = pipelinesArray.filter((p)=>p.status === 'active' || p.status === 'running').length;
+        // Always calculate active pipelines from pipelines array (more reliable)
+        // Check for both 'active' and 'running' status, and also 'starting' status
+        const activePipelines = pipelinesArray.filter((p)=>{
+            const status = p.status?.toLowerCase() || '';
+            return status === 'active' || status === 'running' || status === 'starting';
+        }).length;
         // Calculate total tables
         const totalTables = pipelinesArray.reduce((sum, p)=>{
             const sourceTables = Array.isArray(p.source_tables) ? p.source_tables.length : 0;
             return sum + sourceTables;
         }, 0);
+        // Use backend stats for events if available, otherwise use frontend events
+        let totalEvents = eventsArray.length;
+        let failedEvents = eventsArray.filter((e)=>e.status === 'failed' || e.status === 'error').length;
+        let successEvents = eventsArray.filter((e)=>e.status === 'applied' || e.status === 'success').length;
+        if (backendStats) {
+            // Use backend stats for more accurate event counts
+            totalEvents = backendStats.total_events || totalEvents;
+            failedEvents = backendStats.failed_events || failedEvents;
+            successEvents = backendStats.success_events || successEvents;
+        }
         // Calculate error rate
-        const totalEvents = eventsArray.length;
-        const errorEvents = eventsArray.filter((e)=>e.status === 'failed' || e.status === 'error').length;
-        const errorRate = totalEvents > 0 ? errorEvents / totalEvents * 100 : 0;
+        const errorRate = totalEvents > 0 ? failedEvents / totalEvents * 100 : 0;
         // Calculate data quality (success rate)
-        const successEvents = eventsArray.filter((e)=>e.status === 'applied' || e.status === 'success').length;
         const dataQuality = totalEvents > 0 ? successEvents / totalEvents * 100 : 100;
         return {
             activePipelines,
@@ -1446,7 +1446,10 @@ function DashboardOverview() {
         {
             label: "Active Pipelines",
             value: dashboardMetrics.activePipelines.toString(),
-            change: `${pipelinesArrayForMetrics.filter((p)=>p.status === 'active').length} active`,
+            change: `${pipelinesArrayForMetrics.filter((p)=>{
+                const status = p.status?.toLowerCase() || '';
+                return status === 'active' || status === 'running' || status === 'starting';
+            }).length} active`,
             icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"],
             gradient: "from-cyan-500/10 to-blue-600/5",
             borderColor: "border-cyan-500/20",
@@ -1508,7 +1511,7 @@ function DashboardOverview() {
                                             children: metric.label
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 458,
+                                            lineNumber: 459,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1516,7 +1519,7 @@ function DashboardOverview() {
                                             children: metric.value
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 459,
+                                            lineNumber: 460,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1524,13 +1527,13 @@ function DashboardOverview() {
                                             children: metric.change
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 462,
+                                            lineNumber: 463,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/dashboard/overview.tsx",
-                                    lineNumber: 457,
+                                    lineNumber: 458,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1539,29 +1542,29 @@ function DashboardOverview() {
                                         className: `w-8 h-8 ${metric.iconColor}`
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 465,
+                                        lineNumber: 466,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/components/dashboard/overview.tsx",
-                                    lineNumber: 464,
+                                    lineNumber: 465,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/dashboard/overview.tsx",
-                            lineNumber: 456,
+                            lineNumber: 457,
                             columnNumber: 15
                         }, this)
                     }, metric.label, false, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 452,
+                        lineNumber: 453,
                         columnNumber: 13
                     }, this);
                 })
             }, void 0, false, {
                 fileName: "[project]/components/dashboard/overview.tsx",
-                lineNumber: 448,
+                lineNumber: 449,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1577,14 +1580,14 @@ function DashboardOverview() {
                                         className: "w-6 h-6 text-cyan-400"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 477,
+                                        lineNumber: 478,
                                         columnNumber: 13
                                     }, this),
                                     "Replication Events (7d)"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 476,
+                                lineNumber: 477,
                                 columnNumber: 11
                             }, this),
                             chartData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1604,7 +1607,7 @@ function DashboardOverview() {
                                             stroke: "rgba(100, 116, 139, 0.15)"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 486,
+                                            lineNumber: 487,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1625,7 +1628,7 @@ function DashboardOverview() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 487,
+                                            lineNumber: 488,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -1645,7 +1648,7 @@ function DashboardOverview() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 493,
+                                            lineNumber: 494,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1673,7 +1676,7 @@ function DashboardOverview() {
                                                 ]
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 498,
+                                            lineNumber: 499,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Legend"], {
@@ -1683,7 +1686,7 @@ function DashboardOverview() {
                                             iconType: "line"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 510,
+                                            lineNumber: 511,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Line"], {
@@ -1704,7 +1707,7 @@ function DashboardOverview() {
                                             name: "Replicated"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 514,
+                                            lineNumber: 515,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Line"], {
@@ -1725,18 +1728,18 @@ function DashboardOverview() {
                                             name: "Synced"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 523,
+                                            lineNumber: 524,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/dashboard/overview.tsx",
-                                    lineNumber: 482,
+                                    lineNumber: 483,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 481,
+                                lineNumber: 482,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "h-[320px] flex flex-col items-center justify-center text-foreground-muted",
@@ -1745,7 +1748,7 @@ function DashboardOverview() {
                                         className: "w-16 h-16 mb-4 opacity-20"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 536,
+                                        lineNumber: 537,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1753,7 +1756,7 @@ function DashboardOverview() {
                                         children: "No data available"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 537,
+                                        lineNumber: 538,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1761,19 +1764,19 @@ function DashboardOverview() {
                                         children: "Events will appear here as they are captured"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 538,
+                                        lineNumber: 539,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 535,
+                                lineNumber: 536,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 475,
+                        lineNumber: 476,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -1786,14 +1789,14 @@ function DashboardOverview() {
                                         className: "w-6 h-6 text-red-400"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 545,
+                                        lineNumber: 546,
                                         columnNumber: 13
                                     }, this),
                                     "Error Distribution"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 544,
+                                lineNumber: 545,
                                 columnNumber: 11
                             }, this),
                             chartData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1822,7 +1825,7 @@ function DashboardOverview() {
                                                         stopOpacity: 0.9
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                                        lineNumber: 556,
+                                                        lineNumber: 557,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
@@ -1831,18 +1834,18 @@ function DashboardOverview() {
                                                         stopOpacity: 0.7
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                                        lineNumber: 557,
+                                                        lineNumber: 558,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                                lineNumber: 555,
+                                                lineNumber: 556,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 554,
+                                            lineNumber: 555,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CartesianGrid"], {
@@ -1850,7 +1853,7 @@ function DashboardOverview() {
                                             stroke: "rgba(100, 116, 139, 0.15)"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 560,
+                                            lineNumber: 561,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1871,7 +1874,7 @@ function DashboardOverview() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 561,
+                                            lineNumber: 562,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -1891,7 +1894,7 @@ function DashboardOverview() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 567,
+                                            lineNumber: 568,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1919,7 +1922,7 @@ function DashboardOverview() {
                                                 ]
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 572,
+                                            lineNumber: 573,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
@@ -1934,18 +1937,18 @@ function DashboardOverview() {
                                             name: "Errors"
                                         }, void 0, false, {
                                             fileName: "[project]/components/dashboard/overview.tsx",
-                                            lineNumber: 584,
+                                            lineNumber: 585,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/dashboard/overview.tsx",
-                                    lineNumber: 550,
+                                    lineNumber: 551,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 549,
+                                lineNumber: 550,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "h-[320px] flex flex-col items-center justify-center text-foreground-muted",
@@ -1954,7 +1957,7 @@ function DashboardOverview() {
                                         className: "w-16 h-16 mb-4 opacity-20"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 594,
+                                        lineNumber: 595,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1962,7 +1965,7 @@ function DashboardOverview() {
                                         children: "No error data available"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 595,
+                                        lineNumber: 596,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1970,25 +1973,25 @@ function DashboardOverview() {
                                         children: "Errors will appear here when they occur"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 596,
+                                        lineNumber: 597,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 593,
+                                lineNumber: 594,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 543,
+                        lineNumber: 544,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dashboard/overview.tsx",
-                lineNumber: 474,
+                lineNumber: 475,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -2001,14 +2004,14 @@ function DashboardOverview() {
                                 className: "w-6 h-6 text-emerald-400"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 605,
+                                lineNumber: 606,
                                 columnNumber: 11
                             }, this),
                             "Recent Pipeline Activity"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 604,
+                        lineNumber: 605,
                         columnNumber: 9
                     }, this),
                     isLoading && events.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2018,7 +2021,7 @@ function DashboardOverview() {
                                 className: "w-8 h-8 animate-spin text-cyan-400"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 610,
+                                lineNumber: 611,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2026,13 +2029,13 @@ function DashboardOverview() {
                                 children: "Loading activity..."
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 611,
+                                lineNumber: 612,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 609,
+                        lineNumber: 610,
                         columnNumber: 11
                     }, this) : recentActivity.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "space-y-3",
@@ -2046,7 +2049,7 @@ function DashboardOverview() {
                                                 className: `w-3 h-3 rounded-full shadow-lg ${activity.status === "success" ? "bg-green-400 shadow-green-400/50" : activity.status === "error" ? "bg-red-400 shadow-red-400/50" : "bg-amber-400 shadow-amber-400/50"} group-hover:scale-125 transition-transform duration-200`
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                                lineNumber: 621,
+                                                lineNumber: 622,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2054,13 +2057,13 @@ function DashboardOverview() {
                                                 children: activity.pipeline
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                                lineNumber: 627,
+                                                lineNumber: 628,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 620,
+                                        lineNumber: 621,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2068,18 +2071,18 @@ function DashboardOverview() {
                                         children: activity.time
                                     }, void 0, false, {
                                         fileName: "[project]/components/dashboard/overview.tsx",
-                                        lineNumber: 629,
+                                        lineNumber: 630,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, idx, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 616,
+                                lineNumber: 617,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 614,
+                        lineNumber: 615,
                         columnNumber: 11
                     }, this) : events.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "text-center py-12 text-foreground-muted",
@@ -2088,7 +2091,7 @@ function DashboardOverview() {
                                 className: "w-16 h-16 mx-auto mb-4 opacity-20"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 635,
+                                lineNumber: 636,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2096,7 +2099,7 @@ function DashboardOverview() {
                                 children: "No pipeline activity found"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 636,
+                                lineNumber: 637,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2110,7 +2113,7 @@ function DashboardOverview() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 637,
+                                lineNumber: 638,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2118,13 +2121,13 @@ function DashboardOverview() {
                                 children: "Make sure events have valid pipeline_id and created_at fields."
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 640,
+                                lineNumber: 641,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 634,
+                        lineNumber: 635,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "text-center py-12 text-foreground-muted",
@@ -2133,7 +2136,7 @@ function DashboardOverview() {
                                 className: "w-16 h-16 mx-auto mb-4 opacity-20"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 646,
+                                lineNumber: 647,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2141,7 +2144,7 @@ function DashboardOverview() {
                                 children: "No recent activity"
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 647,
+                                lineNumber: 648,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2149,7 +2152,7 @@ function DashboardOverview() {
                                 children: "Events will appear here as pipelines process data."
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 648,
+                                lineNumber: 649,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2157,30 +2160,30 @@ function DashboardOverview() {
                                 children: "Make sure pipelines are running and generating events."
                             }, void 0, false, {
                                 fileName: "[project]/components/dashboard/overview.tsx",
-                                lineNumber: 649,
+                                lineNumber: 650,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dashboard/overview.tsx",
-                        lineNumber: 645,
+                        lineNumber: 646,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dashboard/overview.tsx",
-                lineNumber: 603,
+                lineNumber: 604,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$application$2d$logs$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ApplicationLogs"], {}, void 0, false, {
                 fileName: "[project]/components/dashboard/overview.tsx",
-                lineNumber: 657,
+                lineNumber: 658,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/dashboard/overview.tsx",
-        lineNumber: 446,
+        lineNumber: 447,
         columnNumber: 5
     }, this);
 }

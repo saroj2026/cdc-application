@@ -149,6 +149,20 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
     }
   }
 
+  // Helper function to get default schema based on database type
+  const getDefaultSchemaForDbType = (dbType: string | undefined): string => {
+    if (!dbType) return "public"
+    const normalizedType = dbType.toLowerCase()
+    if (normalizedType === "sqlserver" || normalizedType === "mssql" || normalizedType === "sql_server") {
+      return "dbo"
+    } else if (normalizedType === "snowflake") {
+      return "PUBLIC"
+    } else if (normalizedType === "oracle") {
+      return "" // Oracle uses username as schema
+    }
+    return "public" // PostgreSQL, MySQL, etc.
+  }
+
   // Helper function to automatically copy schema when mapping a table
   const copySchemaToTarget = (sourceTable: string, targetTable: string) => {
     const sourceSchema = tableSchemas[sourceTable]
@@ -156,14 +170,34 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
       const sourceParsed = parseTableName(sourceTable)
       const targetParsed = parseTableName(targetTable)
       
-      // Determine target schema name - use source schema if available and valid
+      // Get target connection to determine default schema
+      const targetConn = connections.find(c => c.name === formData.targetConnection)
+      const targetDbType = targetConn?.connection_type || targetConn?.database_type
+      const defaultTargetSchema = getDefaultSchemaForDbType(targetDbType)
+      
+      // Determine target schema name - use target DB default if source doesn't have one
       let targetSchemaName: string | undefined
-      if (sourceParsed.schema && sourceParsed.schema !== "undefined" && sourceParsed.schema.trim() !== "") {
-        targetSchemaName = sourceParsed.schema
-      } else if (targetParsed.schema && targetParsed.schema !== "undefined" && targetParsed.schema.trim() !== "") {
+      if (targetParsed.schema && targetParsed.schema !== "undefined" && targetParsed.schema.trim() !== "") {
+        // Target already has a schema specified
         targetSchemaName = targetParsed.schema
+      } else if (sourceParsed.schema && sourceParsed.schema !== "undefined" && sourceParsed.schema.trim() !== "") {
+        // Use source schema, but only if it makes sense for target (same DB type or both PostgreSQL-like)
+        const sourceConn = connections.find(c => c.name === formData.sourceConnection)
+        const sourceDbType = sourceConn?.connection_type || sourceConn?.database_type
+        
+        // If source and target are same DB type, use source schema
+        // Otherwise, use target's default schema
+        if (sourceDbType?.toLowerCase() === targetDbType?.toLowerCase()) {
+          targetSchemaName = sourceParsed.schema
+        } else {
+          // Different DB types: use target's default schema
+          targetSchemaName = defaultTargetSchema
+        }
       } else if (sourceSchema.schema && sourceSchema.schema !== "undefined" && sourceSchema.schema.trim() !== "") {
         targetSchemaName = sourceSchema.schema
+      } else {
+        // No schema from source, use target's default
+        targetSchemaName = defaultTargetSchema
       }
       
       // Construct full target name with schema if needed
@@ -1199,16 +1233,23 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
                                 onChange={(e) => {
                                   const newTableName = e.target.value.trim()
                                   const oldTarget = tableMapping[sourceTable] || sourceTable
-                                  const sourceParsed = parseTableName(sourceTable)
+                                  
+                                  // Determine target schema based on target connection type
+                                  const targetConn = connections.find(c => c.name === formData.targetConnection)
+                                  const targetDbType = targetConn?.connection_type || targetConn?.database_type
+                                  const defaultTargetSchema = getDefaultSchemaForDbType(targetDbType)
+                                  
+                                  // Check if user typed a schema (contains '.')
                                   let newTarget = newTableName
-                                  if (sourceParsed.schema) {
-                                    const targetParsed = parseTableName(newTableName)
-                                    if (targetParsed.schema) {
-                                      newTarget = newTableName
-                                    } else {
-                                      newTarget = `${sourceParsed.schema}.${newTableName}`
-                                    }
+                                  const targetParsed = parseTableName(newTableName)
+                                  if (targetParsed.schema && targetParsed.schema !== "undefined") {
+                                    // User specified a schema - use it as-is
+                                    newTarget = newTableName
+                                  } else if (newTableName && !newTableName.includes('.')) {
+                                    // No schema specified - use target's default schema
+                                    newTarget = `${defaultTargetSchema}.${newTableName}`
                                   }
+                                  
                                   handleTableRename(sourceTable, newTarget)
                                   if (targetTableSchemas[oldTarget]) {
                                     setTargetTableSchemas((prev) => {

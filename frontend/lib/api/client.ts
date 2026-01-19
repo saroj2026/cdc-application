@@ -39,12 +39,26 @@ class ApiClient {
                                 url.includes('/api/v1/monitoring/') ||
                                 url.includes('/api/v1/audit-logs') ||
                                 url.includes('/api/v1/logs/');
-          // Suppress all timeout logging for endpoints with retry logic
+          // Table discovery endpoints can be slow, don't log timeout errors
+          const isTableDiscovery = url.includes('/tables') && !url.includes('/data');
+          // Suppress all timeout logging for endpoints with retry logic or table discovery
           // Only log in development for endpoints without retry logic
-          if (!hasRetryLogic && process.env.NODE_ENV === 'development') {
+          if (!hasRetryLogic && !isTableDiscovery && process.env.NODE_ENV === 'development') {
             console.error('Request timeout:', url);
           }
-          const timeoutError = new Error('Request timeout: The server took too long to respond. Please try again.');
+          // Create a more helpful error message based on the endpoint
+          let errorMessage = 'Request timeout: The server took too long to respond.';
+          if (url.includes('/tables') && !url.includes('/data')) {
+            errorMessage = 'Request timeout: Table discovery is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and accessible.';
+          } else if (url.includes('/test')) {
+            errorMessage = 'Request timeout: Connection test is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and the backend is accessible.';
+          } else if (url.includes('/trigger') || url.includes('/start')) {
+            errorMessage = 'Request timeout: Pipeline start is taking longer than expected. Please check backend logs for details.';
+          } else {
+            errorMessage = 'Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.';
+          }
+          
+          const timeoutError = new Error(errorMessage);
           (timeoutError as any).isTimeout = true;
           (timeoutError as any).code = 'ECONNABORTED';
           return Promise.reject(timeoutError);
@@ -351,7 +365,10 @@ class ApiClient {
   }
 
   async getConnectionTables(connectionId: number | string) {
-    const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`);
+    // Use longer timeout for table discovery (AS400 can be slow)
+    const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`, {
+      timeout: 60000, // 60 seconds for table discovery
+    });
     return response.data;
   }
 
@@ -848,7 +865,7 @@ class ApiClient {
   async getPipeline(pipelineId: number) {
     try {
       const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
-        timeout: 5000 // 5 seconds timeout
+        timeout: 15000 // 15 seconds timeout (increased from 5s to handle slow backend responses)
       });
       return response.data;
     } catch (error: any) {
@@ -1023,11 +1040,11 @@ class ApiClient {
 
   async triggerPipeline(pipelineId: string | number, runType = 'full_load') {
     // Pipeline start can take time (schema creation, connector setup, etc.)
-    // Increase timeout to 60 seconds to allow for full initialization
+    // Increase timeout to 120 seconds to allow for full initialization and connector setup
     const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
       run_type: runType,
     }, {
-      timeout: 60000 // 60 seconds timeout for pipeline start
+      timeout: 180000 // 180 seconds (3 minutes) timeout for pipeline start (increased from 120s)
     });
     return response.data;
   }
@@ -1042,7 +1059,7 @@ class ApiClient {
     // Using shorter timeout since endpoint should respond instantly
     try {
       const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-        timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
+        timeout: 10000 // 10 seconds timeout (increased from 3s to handle slow backend responses)
       });
       return response.data;
     } catch (error: any) {

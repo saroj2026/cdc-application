@@ -3,6 +3,7 @@
 import uuid
 import logging
 import time
+import re
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 
@@ -156,6 +157,82 @@ class ConnectionService:
             
             start_time = time.time()
             
+            # Check if this is AS400/DB2 - use Kafka Connect fallback if ODBC fails
+            db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+            is_as400 = db_type in ["as400", "ibm_i", "db2"]
+            
+            if is_as400:
+                # For AS400/DB2, try direct connection first, then fall back to Kafka Connect
+                try:
+                    connector = self._get_connector(connection)
+                    connection_obj = connector.connect()
+                    
+                    if hasattr(connector, 'get_version'):
+                        version = connector.get_version()
+                    else:
+                        test_result = connector.test_connection()
+                        version = "Connection verified" if test_result else "Connection failed"
+                    
+                    if hasattr(connector, 'disconnect') and connection_obj:
+                        connector.disconnect(connection_obj)
+                    
+                    response_time_ms = int((time.time() - start_time) * 1000)
+                    
+                    result = {
+                        "success": True,
+                        "status": "SUCCESS",
+                        "response_time_ms": response_time_ms,
+                        "version": version,
+                        "tested_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    if save_history:
+                        self._save_test_history(
+                            connection_id=connection_id,
+                            status="SUCCESS",
+                            response_time_ms=response_time_ms
+                        )
+                        connection.last_tested_at = datetime.utcnow()
+                        connection.last_test_status = "success"
+                        self.session.commit()
+                    
+                    return result
+                    
+                except Exception as e:
+                    # Direct connection failed, try Kafka Connect validation
+                    error_msg = str(e)
+                    logger.info(f"Direct AS400 connection failed ({error_msg}), trying Kafka Connect validation...")
+                    
+                    # Use Kafka Connect validation as fallback
+                    kafka_result = self._test_as400_via_kafka_connect(connection, start_time, save_history=False)
+                    
+                    # If Kafka Connect validation succeeded, update the connection status
+                    if kafka_result.get("success"):
+                        if save_history:
+                            self._save_test_history(
+                                connection_id=connection_id,
+                                status="SUCCESS",
+                                response_time_ms=kafka_result.get("response_time_ms", 0)
+                            )
+                            connection.last_tested_at = datetime.utcnow()
+                            connection.last_test_status = "success"
+                            self.session.commit()
+                        return kafka_result
+                    else:
+                        # Kafka Connect validation also failed
+                        if save_history:
+                            self._save_test_history(
+                                connection_id=connection_id,
+                                status="FAILED",
+                                response_time_ms=kafka_result.get("response_time_ms", 0),
+                                error_message=kafka_result.get("error", "Connection test failed")
+                            )
+                            connection.last_tested_at = datetime.utcnow()
+                            connection.last_test_status = "failed"
+                            self.session.commit()
+                        return kafka_result
+            
+            # For non-AS400 connections, use normal test flow
             connector = self._get_connector(connection)
             connection_obj = None
             
@@ -509,7 +586,17 @@ class ConnectionService:
                 }
             
             target_db = database or connection.database
-            target_schema = schema or connection.schema or "public"
+            # Default schema based on database type (especially for target connections in pipelines)
+            if not schema:
+                db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+                if db_type in ["sqlserver", "mssql"]:
+                    target_schema = connection.schema or "dbo"  # SQL Server default is dbo
+                elif db_type == "snowflake":
+                    target_schema = connection.schema or "PUBLIC"  # Snowflake default is PUBLIC
+                else:
+                    target_schema = connection.schema or "public"  # PostgreSQL and others default to public
+            else:
+                target_schema = schema
             
             # For Oracle, if database parameter is provided and connection.database is empty/None,
             # create connector with database from parameter to avoid validation error
@@ -741,11 +828,17 @@ class ConnectionService:
                 }
             
             target_db = database or connection.database
-            # For Snowflake, default schema is "PUBLIC" (uppercase), for others use "public" (lowercase)
-            if connection.database_type.value.lower() == "snowflake":
-                target_schema = schema or connection.schema or "PUBLIC"
+            # Default schema based on database type (especially for target connections in pipelines)
+            if not schema:
+                db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+                if db_type in ["sqlserver", "mssql"]:
+                    target_schema = connection.schema or "dbo"  # SQL Server default is dbo
+                elif db_type == "snowflake":
+                    target_schema = connection.schema or "PUBLIC"  # Snowflake default is PUBLIC
+                else:
+                    target_schema = connection.schema or "public"  # PostgreSQL and others default to public
             else:
-                target_schema = schema or connection.schema or "public"
+                target_schema = schema
             
             # Clean table name - remove schema prefix if present (e.g., "public.projects_simple" -> "projects_simple")
             # Define in outer scope so it's available in error handling
@@ -1385,6 +1478,68 @@ class ConnectionService:
         try:
             start_time = time.time()
             
+            # Check if this is AS400 and if we should use Kafka Connect fallback
+            db_type = None
+            if hasattr(connection, 'database_type'):
+                db_type = connection.database_type
+                if hasattr(db_type, 'value'):
+                    db_type = db_type.value
+                db_type = str(db_type).lower() if db_type else None
+            
+            # For AS400/DB2, try Kafka Connect validation if ODBC driver is not available
+            if db_type in ["as400", "ibm_i", "db2"]:
+                try:
+                    connector = self._get_connector_from_data(connection)
+                    connection_obj = connector.connect()
+                    
+                    # Get version if method exists
+                    if hasattr(connector, 'get_version'):
+                        version = connector.get_version()
+                    else:
+                        version = "Connection verified"
+                    
+                    # Disconnect if method exists
+                    if hasattr(connector, 'disconnect') and connection_obj:
+                        connector.disconnect(connection_obj)
+                    
+                    response_time_ms = int((time.time() - start_time) * 1000)
+                    result = {
+                        "success": True,
+                        "status": "SUCCESS",
+                        "response_time_ms": response_time_ms,
+                        "version": version,
+                        "tested_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    if save_history and hasattr(connection, 'id') and connection.id:
+                        self._save_test_history(
+                            connection_id=connection.id,
+                            status="SUCCESS",
+                            response_time_ms=response_time_ms
+                        )
+                        if isinstance(connection, ConnectionModel):
+                            connection.last_tested_at = datetime.utcnow()
+                            connection.last_test_status = "success"
+                            self.session.commit()
+                    
+                    return result
+                    
+                except ValueError as e:
+                    error_msg = str(e)
+                    # Check if error is about missing ODBC driver
+                    if "ODBC driver" in error_msg or "IBM i Access" in error_msg:
+                        # Try Kafka Connect validation as fallback
+                        logger.info("ODBC driver not available for AS400, trying Kafka Connect validation...")
+                        return self._test_as400_via_kafka_connect(connection, start_time, save_history)
+                    # Re-raise if it's a different ValueError
+                    raise
+                except Exception as e:
+                    # For other exceptions, try Kafka Connect fallback
+                    error_msg = str(e)
+                    logger.info(f"Direct AS400 connection failed ({error_msg}), trying Kafka Connect validation...")
+                    return self._test_as400_via_kafka_connect(connection, start_time, save_history)
+            
+            # For other database types, use direct connection
             connector = self._get_connector_from_data(connection)
             
             try:
@@ -1465,6 +1620,220 @@ class ConnectionService:
                 "status": "ERROR"
             }
     
+    def _test_as400_via_kafka_connect(
+        self,
+        connection: Any,
+        start_time: float,
+        save_history: bool
+    ) -> Dict[str, Any]:
+        """Test AS400 connection via Kafka Connect connector validation.
+        
+        Args:
+            connection: Connection object
+            start_time: Start time for response time calculation
+            save_history: Whether to save test result
+            
+        Returns:
+            Test result dictionary
+        """
+        try:
+            from ingestion.kafka_connect_client import KafkaConnectClient
+            import os
+            
+            # Get Kafka Connect URL from environment or use default (same as api.py)
+            kafka_connect_url = os.getenv("KAFKA_CONNECT_URL", "http://72.61.233.209:8083")
+            kafka_client = KafkaConnectClient(base_url=kafka_connect_url)
+            
+            # Check if AS400 connector plugin is available
+            plugins = kafka_client.get_connector_plugins()
+            as400_plugin = None
+            for plugin in plugins:
+                if plugin.get("class") == "io.debezium.connector.db2as400.As400RpcConnector":
+                    as400_plugin = plugin
+                    break
+            
+            if not as400_plugin:
+                response_time_ms = int((time.time() - start_time) * 1000)
+                return {
+                    "success": False,
+                    "status": "FAILED",
+                    "error": (
+                        "AS400 connection test requires either:\n"
+                        "1. IBM i Access ODBC Driver installed on backend server, OR\n"
+                        "2. Kafka Connect AS400 connector available (io.debezium.connector.db2as400.As400RpcConnector)\n\n"
+                        "Currently: ODBC driver not found, and Kafka Connect AS400 connector not found."
+                    ),
+                    "response_time_ms": response_time_ms,
+                    "tested_at": datetime.utcnow().isoformat()
+                }
+            
+            # Build AS400 connector config for validation
+            library = (
+                connection.additional_config.get("library") if hasattr(connection, 'additional_config') and connection.additional_config 
+                else connection.schema if hasattr(connection, 'schema') and connection.schema 
+                else connection.database if hasattr(connection, 'database') else ""
+            )
+            
+            # Generate a temporary connector name for validation
+            # Use connection name if available, otherwise generate one
+            connector_name = "test-as400-connector"
+            if hasattr(connection, 'name') and connection.name:
+                # Sanitize connection name for use as connector name (Kafka Connect has naming restrictions)
+                connector_name = re.sub(r'[^a-zA-Z0-9_-]', '-', str(connection.name).lower())[:50]
+                if not connector_name:
+                    connector_name = "test-as400-connector"
+            
+            config = {
+                "name": connector_name,  # Required by Kafka Connect for validation
+                "connector.class": "io.debezium.connector.db2as400.As400RpcConnector",
+                "database.hostname": connection.host,
+                "database.port": str(connection.port or 446),
+                "database.user": connection.username,
+                "database.password": connection.password,
+                "database.dbname": library or connection.database,
+            }
+            
+            # Add additional config if present
+            if hasattr(connection, 'additional_config') and connection.additional_config:
+                if "journal_library" in connection.additional_config:
+                    config["database.journal.library"] = connection.additional_config["journal_library"]
+                if "tablename" in connection.additional_config:
+                    config["table.include.list"] = connection.additional_config["tablename"]
+            
+            # Validate connector config
+            try:
+                validation_result = kafka_client.validate_connector_config(
+                    "io.debezium.connector.db2as400.As400RpcConnector",
+                    config
+                )
+            except Exception as e:
+                # If validation fails, it might be due to missing jt400.jar
+                error_msg = str(e)
+                if "jt400" in error_msg.lower() or "toolbox" in error_msg.lower() or "classnotfound" in error_msg.lower():
+                    response_time_ms = int((time.time() - start_time) * 1000)
+                    return {
+                        "success": False,
+                        "status": "FAILED",
+                        "error": (
+                            "AS400 connector validation failed. The Debezium AS400 connector requires jt400.jar (IBM Toolbox for Java).\n\n"
+                            "To fix this:\n"
+                            "1. Download jt400.jar from IBM (or use Maven: com.ibm.as400:jt400)\n"
+                            "2. Place it in Kafka Connect's plugin path or lib directory\n"
+                            "3. Restart Kafka Connect\n\n"
+                            f"Original error: {error_msg}"
+                        ),
+                        "response_time_ms": response_time_ms,
+                        "tested_at": datetime.utcnow().isoformat()
+                    }
+                # Re-raise if it's a different error
+                raise
+            
+            response_time_ms = int((time.time() - start_time) * 1000)
+            
+            # Check validation result
+            errors = validation_result.get("error_count", 0)
+            if errors == 0:
+                result = {
+                    "success": True,
+                    "status": "SUCCESS",
+                    "response_time_ms": response_time_ms,
+                    "version": f"Kafka Connect AS400 Connector {as400_plugin.get('version', 'unknown')}",
+                    "tested_at": datetime.utcnow().isoformat(),
+                    "note": "Connection validated via Kafka Connect (ODBC driver not required)"
+                }
+                
+                if save_history and hasattr(connection, 'id') and connection.id:
+                    self._save_test_history(
+                        connection_id=connection.id,
+                        status="SUCCESS",
+                        response_time_ms=response_time_ms
+                    )
+                    if isinstance(connection, ConnectionModel):
+                        connection.last_tested_at = datetime.utcnow()
+                        connection.last_test_status = "success"
+                        self.session.commit()
+                
+                return result
+            else:
+                # Extract error messages from validation - check multiple possible formats
+                error_messages = []
+                
+                # Format 1: errors in configs array
+                configs = validation_result.get("configs", [])
+                for cfg in configs:
+                    # Check for 'errors' array
+                    if cfg.get("value", {}).get("errors"):
+                        error_messages.extend(cfg.get("value", {}).get("errors", []))
+                    elif cfg.get("errors"):
+                        error_messages.extend(cfg.get("errors", []))
+                    # Check for 'value.errors' nested
+                    if isinstance(cfg.get("value"), dict) and cfg.get("value", {}).get("errors"):
+                        error_messages.extend(cfg.get("value", {}).get("errors", []))
+                
+                # Format 2: direct errors field
+                if validation_result.get("errors"):
+                    if isinstance(validation_result.get("errors"), list):
+                        error_messages.extend(validation_result.get("errors", []))
+                    else:
+                        error_messages.append(str(validation_result.get("errors")))
+                
+                # Format 3: error field
+                if validation_result.get("error"):
+                    error_messages.append(str(validation_result.get("error")))
+                
+                # Format 4: message field
+                if validation_result.get("message"):
+                    error_messages.append(str(validation_result.get("message")))
+                
+                # If no errors found, include the full validation result for debugging
+                if not error_messages:
+                    error_messages.append(f"Validation failed (error_count: {errors}). Full response: {str(validation_result)[:500]}")
+                
+                # Join all error messages (show up to 10, not just 3)
+                error_msg = "Kafka Connect validation failed: " + "; ".join(error_messages[:10])
+                
+                # Check for specific jt400.jar related errors
+                full_error_text = " ".join(error_messages).lower()
+                if any(keyword in full_error_text for keyword in ["classnotfound", "noclassdeffound", "jt400", "toolbox", "com.ibm.as400"]):
+                    error_msg += (
+                        "\n\nThis often indicates that 'jt400.jar' (IBM Toolbox for Java) is missing "
+                        "from the Kafka Connect classpath. Please ensure 'jt400.jar' is installed "
+                        "in your Kafka Connect plugin directory and restart Kafka Connect."
+                    )
+                
+                result = {
+                    "success": False,
+                    "status": "FAILED",
+                    "error": error_msg,
+                    "response_time_ms": response_time_ms,
+                    "tested_at": datetime.utcnow().isoformat()
+                }
+                
+                if save_history and hasattr(connection, 'id') and connection.id:
+                    self._save_test_history(
+                        connection_id=connection.id,
+                        status="FAILED",
+                        response_time_ms=response_time_ms,
+                        error_message=error_msg
+                    )
+                    if isinstance(connection, ConnectionModel):
+                        connection.last_tested_at = datetime.utcnow()
+                        connection.last_test_status = "failed"
+                        self.session.commit()
+                
+                return result
+                
+        except Exception as e:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            logger.error(f"Kafka Connect validation failed: {e}", exc_info=True)
+            return {
+                "success": False,
+                "status": "FAILED",
+                "error": f"Kafka Connect validation error: {str(e)}",
+                "response_time_ms": response_time_ms,
+                "tested_at": datetime.utcnow().isoformat()
+            }
+    
     def _get_connector_from_data(self, connection: Any):
         """Get connector instance from connection data (Connection or ConnectionModel)."""
         from ingestion.models import Connection as ConnectionModel
@@ -1478,6 +1847,9 @@ class ConnectionService:
             # Normalize aws_s3 to s3 for compatibility
             if db_type == "aws_s3":
                 db_type = "s3"
+            # Normalize db2 to as400 (IBM DB2 uses AS400 connector)
+            if db_type == "db2":
+                db_type = "as400"
         else:
             raise ValueError("Connection must have database_type")
         
@@ -1548,6 +1920,76 @@ class ConnectionService:
                 # Allow additional_config for service_name, mode, etc.
                 config.update(connection.additional_config)
             return OracleConnector(config)
+        elif db_type == "snowflake":
+            # Snowflake connector expects account, user, password, database, schema, warehouse, role
+            from .connectors.snowflake import SnowflakeConnector
+            account = connection.host or (connection.additional_config.get("account") if hasattr(connection, 'additional_config') and connection.additional_config else None)
+            if not account:
+                raise ValueError("Snowflake account is required. Provide it in 'host' field or 'additional_config.account'")
+            
+            schema = (connection.schema if hasattr(connection, 'schema') and connection.schema else None) or \
+                     (connection.additional_config.get("schema") if hasattr(connection, 'additional_config') and connection.additional_config else None) or \
+                     "PUBLIC"
+            
+            config = {
+                "account": account,
+                "user": connection.username,
+                "password": connection.password,
+                "database": connection.database,
+                "schema": schema,
+            }
+            
+            # Add optional parameters from additional_config
+            if hasattr(connection, 'additional_config') and connection.additional_config:
+                if "warehouse" in connection.additional_config:
+                    config["warehouse"] = connection.additional_config["warehouse"]
+                if "role" in connection.additional_config:
+                    config["role"] = connection.additional_config["role"]
+                if "private_key" in connection.additional_config:
+                    config["private_key"] = connection.additional_config["private_key"]
+                if "private_key_passphrase" in connection.additional_config:
+                    config["private_key_passphrase"] = connection.additional_config["private_key_passphrase"]
+            
+            return SnowflakeConnector(config)
+        elif db_type in ["as400", "ibm_i", "db2"]:
+            # AS400 connector expects 'server' instead of 'host'
+            from .connectors.as400 import AS400Connector
+            # Check if pyodbc is available
+            from .connectors.as400 import AS400_AVAILABLE
+            if not AS400_AVAILABLE:
+                raise ImportError(
+                    "pyodbc is not installed. AS400 connector requires pyodbc. "
+                    "Please install it with: pip install pyodbc>=5.0.0"
+                )
+            
+            # Use library from additional_config or schema or database
+            library = (
+                connection.additional_config.get("library") if hasattr(connection, 'additional_config') and connection.additional_config 
+                else connection.schema if hasattr(connection, 'schema') and connection.schema 
+                else connection.database if hasattr(connection, 'database') else ""
+            )
+            
+            config = {
+                "server": connection.host,  # Map 'host' to 'server'
+                "port": connection.port or 446,  # Default AS400 port
+                "database": library or connection.database,  # Library name
+                "username": connection.username,  # Will be normalized to 'user' by connector
+                "password": connection.password,
+                "additional_config": {
+                    "journal_library": connection.additional_config.get("journal_library", "") if hasattr(connection, 'additional_config') and connection.additional_config else "",
+                    "library": library or connection.database or "",
+                    "tablename": connection.additional_config.get("tablename", "") if hasattr(connection, 'additional_config') and connection.additional_config else "",
+                }
+            }
+            if hasattr(connection, 'schema') and connection.schema:
+                config["schema"] = connection.schema
+            if hasattr(connection, 'additional_config') and connection.additional_config:
+                # Merge additional_config (driver, etc.) but preserve nested structure
+                for key, value in connection.additional_config.items():
+                    if key not in ["library", "journal_library", "tablename"]:
+                        config[key] = value
+            
+            return AS400Connector(config)
         else:
             raise ValueError(f"Unsupported database type: {db_type}")
     
@@ -1569,6 +2011,9 @@ class ConnectionService:
         # Normalize aws_s3 to s3 for compatibility
         if db_type == "aws_s3":
             db_type = "s3"
+        # Normalize db2 to as400 (IBM DB2 uses AS400 connector)
+        if db_type == "db2":
+            db_type = "as400"
         
         if db_type == "postgresql":
             config = {
@@ -1621,7 +2066,7 @@ class ConnectionService:
                 # Allow additional_config for region_name, endpoint_url, etc.
                 config.update(connection.additional_config)
             return S3Connector(config)
-        elif db_type in ["as400", "ibm_i"]:
+        elif db_type in ["as400", "ibm_i", "db2"]:
             # AS400 connector expects 'server' instead of 'host'
             # Use library from additional_config or schema or database
             library = (
@@ -1658,12 +2103,15 @@ class ConnectionService:
             if not account:
                 raise ValueError("Snowflake account is required. Provide it in 'host' field or 'additional_config.account'")
             
+            # Schema can be from connection.schema or additional_config.schema
+            schema = connection.schema or (connection.additional_config.get("schema") if connection.additional_config else None) or "PUBLIC"
+            
             config = {
                 "account": account,
                 "user": connection.username,
                 "password": connection.password,
                 "database": connection.database,
-                "schema": connection.schema or "PUBLIC",
+                "schema": schema,
             }
             
             # Add optional parameters from additional_config

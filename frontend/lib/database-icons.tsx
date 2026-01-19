@@ -23,6 +23,7 @@ import {
   AzureSQLLogo,
   BigTableLogo,
   CockroachLogo,
+  S3Logo,
   DefaultDatabaseLogo,
 } from "./database-logos"
 import { DatabaseLogo } from "./database-logo-loader"
@@ -411,6 +412,24 @@ export const DATABASE_SERVICES: DatabaseInfo[] = [
   },
   
   // Cloud Services
+  {
+    id: 's3',
+    name: 'Amazon S3',
+    displayName: 'Amazon S3',
+    icon: S3Logo,
+    defaultPort: 443,
+    connectionType: 's3',
+    category: 'cloud'
+  },
+  {
+    id: 'aws_s3',
+    name: 'AWS S3',
+    displayName: 'AWS S3',
+    icon: S3Logo,
+    defaultPort: 443,
+    connectionType: 'aws_s3',
+    category: 'cloud'
+  },
   {
     id: 'azuresql',
     name: 'Azure SQL',

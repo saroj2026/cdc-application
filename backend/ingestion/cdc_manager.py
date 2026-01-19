@@ -493,10 +493,143 @@ class CDCManager:
             # Create Debezium connector only if it doesn't exist
             if not debezium_exists:
                 logger.info(f"Creating Debezium connector: {debezium_connector_name}")
-                self.kafka_client.create_connector(
-                    connector_name=debezium_connector_name,
-                    config=debezium_config
-                )
+                logger.info(f"Debezium config: {debezium_config}")
+                try:
+                    self.kafka_client.create_connector(
+                        connector_name=debezium_connector_name,
+                        config=debezium_config
+                    )
+                except requests.exceptions.HTTPError as e:
+                    error_detail = ""
+                    status_code = ""
+                    
+                    # Check if the exception has a detail_message or error_detail attribute (from DetailedHTTPError)
+                    if hasattr(e, 'error_detail') and e.error_detail:
+                        error_detail = e.error_detail
+                    elif hasattr(e, 'detail_message') and e.detail_message:
+                        error_detail = e.detail_message
+                    else:
+                        # Fallback: try to extract from response
+                        if e.response:
+                            status_code = f" (HTTP {e.response.status_code})"
+                            try:
+                                error_json = e.response.json()
+                                logger.error(f"Kafka Connect error response: {error_json}")
+                                
+                                # Try multiple possible error message fields
+                                extracted_detail = (
+                                    error_json.get('message') or 
+                                    error_json.get('error') or 
+                                    error_json.get('error_code') or
+                                    error_json.get('error_message') or
+                                    ""
+                                )
+                                
+                                # If we have config validation errors, include them
+                                if 'configs' in error_json:
+                                    config_errors = []
+                                    for config_item in error_json.get('configs', []):
+                                        if isinstance(config_item, dict):
+                                            if 'value' in config_item and isinstance(config_item['value'], dict) and 'errors' in config_item['value']:
+                                                config_errors.extend(config_item['value']['errors'])
+                                            if 'errors' in config_item:
+                                                config_errors.extend(config_item['errors'])
+                                    if config_errors:
+                                        extracted_detail = '; '.join(config_errors[:5]) if not extracted_detail else f"{extracted_detail}; {'; '.join(config_errors[:5])}"
+                                
+                                # Use extracted detail if available
+                                if extracted_detail and extracted_detail.strip():
+                                    error_detail = extracted_detail
+                                elif hasattr(e.response, 'text') and e.response.text:
+                                    error_detail = e.response.text[:1000]
+                                else:
+                                    error_detail = str(error_json)
+                            except Exception as parse_error:
+                                # Fallback to raw text
+                                if hasattr(e.response, 'text') and e.response.text:
+                                    error_detail = e.response.text[:1000]
+                                else:
+                                    error_detail = str(e)
+                                logger.warning(f"Could not parse error JSON: {parse_error}, using raw text")
+                        else:
+                            # No response - try to extract from exception message
+                            error_detail = str(e)
+                            # Try to extract meaningful error from exception message
+                            if hasattr(e, 'args') and e.args:
+                                error_detail = str(e.args[0]) if e.args[0] else str(e)
+                            logger.warning(f"HTTPError without response: {error_detail}")
+                    
+                    # Ensure we have some error detail
+                    if not error_detail or error_detail.strip() == "":
+                        error_detail = "Unknown error from Kafka Connect"
+                except requests.exceptions.RequestException as e:
+                    # Handle other request exceptions (ConnectionError, Timeout, etc.)
+                    error_detail = str(e)
+                    logger.error(f"Kafka Connect request exception: {error_detail}", exc_info=True)
+                    if hasattr(e, 'response') and e.response:
+                        try:
+                            error_json = e.response.json()
+                            if error_json.get('message'):
+                                error_detail = error_json.get('message')
+                        except:
+                            pass
+                    
+                    # Ensure we have a meaningful error message
+                    if not error_detail or error_detail.strip() == "":
+                        error_detail = f"Kafka Connect connection error: {type(e).__name__}"
+                    
+                    full_error = error_detail
+                    logger.error(f"Debezium connector creation failed: {full_error}")
+                    logger.error(f"Exception type: {type(e).__name__}, Exception args: {e.args}")
+                    raise Exception(full_error) from e
+                except Exception as e:
+                    # Handle any other exception
+                    error_detail = str(e)
+                    logger.error(f"Unexpected exception when creating Debezium connector: {error_detail}", exc_info=True)
+                    if hasattr(e, '__cause__') and e.__cause__:
+                        error_detail = f"{error_detail} (Caused by: {str(e.__cause__)})"
+                    
+                    # Use the error detail directly (it should contain the actual Kafka Connect error message)
+                    # Remove any HTTP wrapper text if present
+                    if "400 Client Error" in error_detail or "Bad Request" in error_detail:
+                        # Try to extract just the actual error message
+                        if "for url:" in error_detail:
+                            parts = error_detail.split("for url:")
+                            if len(parts) > 0:
+                                error_detail = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").strip()
+                        # If still contains HTTP wrapper, try to get from response
+                        if hasattr(e, 'response') and e.response:
+                            try:
+                                error_json = e.response.json()
+                                if error_json.get('message'):
+                                    error_detail = error_json.get('message')
+                                elif error_json.get('error'):
+                                    error_detail = error_json.get('error')
+                            except:
+                                pass
+                    
+                    # Ensure we have a meaningful error message
+                    if not error_detail or error_detail.strip() == "":
+                        # Try to get status code from exception if available
+                        status_code_str = "N/A"
+                        if hasattr(e, 'response') and e.response:
+                            status_code_str = str(e.response.status_code)
+                        elif isinstance(e, requests.exceptions.HTTPError) and hasattr(e, 'response') and e.response:
+                            status_code_str = str(e.response.status_code)
+                        error_detail = f"Unknown error from Kafka Connect (HTTP {status_code_str})"
+                    
+                    full_error = error_detail
+                    logger.error(f"Debezium connector creation failed: {full_error}")
+                    logger.error(f"Debezium connector name: {debezium_connector_name}")
+                    logger.error(f"Debezium config keys: {list(debezium_config.keys())}")
+                    if debezium_config:
+                        # Log a few key config values (without sensitive data)
+                        safe_config = {k: v for k, v in debezium_config.items() if 'password' not in k.lower()}
+                        logger.error(f"Debezium config (sanitized): {safe_config}")
+                    # Log the full exception for debugging
+                    logger.error(f"Full exception: {e}", exc_info=True)
+                    logger.error(f"Exception type: {type(e).__name__}, Exception args: {e.args}")
+                    raise Exception(full_error) from e
                 
                 # Wait for connector to start
                 if not self.kafka_client.wait_for_connector(
@@ -643,10 +776,55 @@ class CDCManager:
                 
                 # Create Sink connector
                 logger.info(f"Creating Sink connector: {sink_connector_name}")
-                self.kafka_client.create_connector(
-                    connector_name=sink_connector_name,
-                    config=sink_config
-                )
+                logger.info(f"Sink config: {sink_config}")
+                try:
+                    self.kafka_client.create_connector(
+                        connector_name=sink_connector_name,
+                        config=sink_config
+                    )
+                except requests.exceptions.HTTPError as e:
+                    error_detail = ""
+                    if e.response:
+                        try:
+                            error_json = e.response.json()
+                            # Try multiple possible error message fields
+                            error_detail = (
+                                error_json.get('message') or 
+                                error_json.get('error') or 
+                                error_json.get('error_code') or
+                                str(error_json)
+                            )
+                            # If we have config validation errors, include them
+                            if 'configs' in error_json:
+                                config_errors = []
+                                for config_item in error_json.get('configs', []):
+                                    if 'value' in config_item and 'errors' in config_item['value']:
+                                        config_errors.extend(config_item['value']['errors'])
+                                    if 'errors' in config_item:
+                                        config_errors.extend(config_item['errors'])
+                                if config_errors:
+                                    error_detail += f" Config errors: {'; '.join(config_errors[:5])}"
+                        except Exception as parse_error:
+                            error_detail = e.response.text[:1000] if hasattr(e.response, 'text') else str(e)
+                            logger.warning(f"Could not parse error JSON: {parse_error}")
+                    else:
+                        error_detail = str(e)
+                    
+                    # Include status code if available
+                    status_code = ""
+                    if e.response:
+                        status_code = f" (HTTP {e.response.status_code})"
+                    
+                    # Ensure we have a meaningful error message
+                    if not error_detail or error_detail.strip() == "":
+                        error_detail = f"Unknown error from Kafka Connect (HTTP {e.response.status_code if e.response else 'N/A'})"
+                    
+                    full_error = f"Failed to create Sink connector{status_code}: {error_detail}" if error_detail else f"Failed to create Sink connector{status_code}"
+                    logger.error(full_error)
+                    logger.error(f"Sink connector name: {sink_connector_name}")
+                    logger.error(f"Sink config keys: {list(sink_config.keys())}")
+                    logger.error(f"Exception type: {type(e).__name__}, Exception args: {e.args}")
+                    raise Exception(full_error) from e
             else:
                 logger.info(f"Reusing existing Sink connector: {sink_connector_name}")
             

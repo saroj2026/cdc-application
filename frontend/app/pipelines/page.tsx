@@ -10,6 +10,7 @@ import { PipelineModal } from "@/components/pipelines/pipeline-modal"
 import { PipelineWizard } from "@/components/pipelines/pipeline-wizard"
 import { PipelineDetail } from "@/components/pipelines/pipeline-detail"
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks"
+import { useErrorToast } from "@/components/ui/error-toast"
 import {
   fetchPipelines,
   createPipeline,
@@ -29,6 +30,7 @@ export default function PipelinesPage() {
   const { pipelines, isLoading, error } = useAppSelector((state) => state.pipelines)
   const { connections } = useAppSelector((state) => state.connections)
   const { events } = useAppSelector((state) => state.monitoring)
+  const { showError, ErrorToastComponent } = useErrorToast()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingPipeline, setEditingPipeline] = useState<any>(null)
@@ -36,15 +38,9 @@ export default function PipelinesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const pipelinesPerPage = 8
 
-  const hasFetchedRef = useRef(false)
-
+  // Fetch pipelines on mount and when navigating back to this page
   useEffect(() => {
-    // Prevent multiple simultaneous calls
-    if (hasFetchedRef.current || isLoading) return
-
-    hasFetchedRef.current = true
-
-    // Fetch pipelines
+    // Always fetch pipelines to get latest status (including on refresh)
     dispatch(fetchPipelines())
     
     // Fetch replication events to calculate real progress
@@ -56,7 +52,16 @@ export default function PipelinesPage() {
         dispatch(fetchConnections())
       })
     }
-  }, [dispatch, isLoading, connections.length])
+  }, [dispatch, connections.length])
+
+  // Auto-refresh pipelines every 10 seconds to keep status updated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch(fetchPipelines())
+    }, 10000) // Refresh every 10 seconds
+    
+    return () => clearInterval(interval)
+  }, [dispatch])
   
   // Auto-refresh events every 5 seconds to update progress bars in real-time
   useEffect(() => {
@@ -198,7 +203,7 @@ export default function PipelinesPage() {
       const invalidMappings = tableMappings.filter(tm => !tm.source_table || !tm.target_table)
       if (invalidMappings.length > 0) {
         console.error("[Pipeline] Invalid table mappings found:", invalidMappings)
-        alert(`Invalid table mappings detected. Please check:\n- All mappings must have source_table and target_table\n- Table names cannot be empty`)
+        showError("Invalid table mappings detected. Please check:\n- All mappings must have source_table and target_table\n- Table names cannot be empty", "Validation Error")
         return
       }
 
@@ -230,7 +235,7 @@ export default function PipelinesPage() {
 
       // Validate payload before sending
       if (!pipelinePayload.name || pipelinePayload.name.trim() === "") {
-        alert("Pipeline name is required")
+        showError("Pipeline name is required", "Validation Error")
         return
       }
 
@@ -305,7 +310,7 @@ export default function PipelinesPage() {
       }
 
       // Show user-friendly error with troubleshooting steps
-      alert(`Failed to create pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline name is unique\n2. Source and target connections are valid\n3. At least one table is selected\n4. All table mappings are valid\n5. Backend server is running\n6. PostgreSQL database is running and accessible`)
+      showError(errorMessage, "Failed to Create Pipeline")
     }
   }
 
@@ -430,16 +435,16 @@ export default function PipelinesPage() {
     } catch (err: any) {
       console.error("Failed to update pipeline:", err)
       const errorMessage = err.response?.data?.detail || err.message || "Failed to update pipeline"
-      alert(errorMessage)
+      showError(errorMessage, "Failed to Update Pipeline")
     }
   }
 
   const handleOpenEdit = (pipeline: any) => {
     // Allow editing if pipeline is stopped, paused, or draft
-    const canEdit = pipeline.status === "paused" || pipeline.status === "draft" || pipeline.status === "deleted" || !pipeline.status || pipeline.status !== "active"
+    const canEdit = pipeline.status === "paused" || pipeline.status === "draft" || pipeline.status === "deleted" || !pipeline.status || (pipeline.status !== "active" && pipeline.status !== "running")
 
     if (!canEdit) {
-      alert("Please stop the pipeline before editing. Running pipelines cannot be modified.")
+      showError("Please stop the pipeline before editing. Running pipelines cannot be modified.", "Cannot Edit Pipeline")
       return
     }
 
@@ -456,11 +461,15 @@ export default function PipelinesPage() {
   }
 
   const handleDeletePipeline = async (id: number) => {
-    if (confirm("Are you sure you want to delete this pipeline?")) {
+    if (confirm("Are you sure you want to delete this pipeline? This action cannot be undone.")) {
       try {
         await dispatch(deletePipeline(id)).unwrap()
-      } catch (err) {
+        // Refresh pipelines to remove deleted pipeline
+        dispatch(fetchPipelines())
+      } catch (err: any) {
         console.error("Failed to delete pipeline:", err)
+        const errorMessage = err?.payload || err?.message || err?.response?.data?.detail || "Failed to delete pipeline"
+        showError(errorMessage, "Failed to Delete Pipeline")
       }
     }
   }
@@ -503,29 +512,88 @@ export default function PipelinesPage() {
       }
       
       // Show user-friendly error with full details
-      if (errorMessage && !errorMessage.includes("timeout")) {
-        alert(`Failed to start pipeline:\n\n${errorMessage}\n\nPlease check:\n1. Pipeline configuration is valid\n2. Source and target connections are working\n3. Backend logs for detailed error information`)
+      let displayError = errorMessage
+      
+      // Handle timeout errors specially
+      if (errorMessage.includes("timeout") || errorMessage.includes("took too long")) {
+        displayError = "Pipeline start is taking longer than expected (over 2 minutes). This may indicate:\n\n" +
+          "1. Database connection issues\n" +
+          "2. Kafka Connect server is slow or unresponsive\n" +
+          "3. Large schema creation taking time\n" +
+          "4. Connector setup is hanging\n\n" +
+          "Please check:\n" +
+          "- Backend logs for detailed error information\n" +
+          "- Kafka Connect server status at http://72.61.233.209:8083\n" +
+          "- Database connectivity\n" +
+          "- Network connectivity between backend and Kafka Connect"
+        showError(displayError, "Pipeline Start Timeout")
+        return // Don't continue with other error processing for timeouts
       }
-      // Still refresh to get current status even on error (will revert optimistic update)
-      setTimeout(() => {
-        dispatch(fetchPipelines())
-      }, 1000)
+      
+      // Extract actual error from Debezium connector error
+      if (displayError.includes("Failed to create Debezium connector")) {
+        // Extract the actual Kafka Connect error after the colon
+        const match = displayError.match(/Failed to create Debezium connector[^:]*:\s*(.+)/)
+        if (match && match[1]) {
+          displayError = match[1].trim()
+        }
+      }
+      
+      // Remove HTTP error wrapper if present
+      if (displayError.includes("400 Client Error") || displayError.includes("Bad Request")) {
+        // Try to extract the actual error message
+        const parts = displayError.split("for url:")
+        if (parts.length > 1) {
+          // The actual error should be before "for url:" or in the response data
+          displayError = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").trim()
+        }
+        // Also check response data
+        if (err?.response?.data?.detail) {
+          displayError = err.response.data.detail
+        }
+      }
+      
+      // If still generic, try to get from response
+      if (displayError.includes("400") && err?.response?.data?.detail) {
+        displayError = err.response.data.detail
+      }
+      
+      showError(displayError, "Failed to Start Pipeline")
     }
+    // Still refresh to get current status even on error (will revert optimistic update)
+    setTimeout(() => {
+      dispatch(fetchPipelines())
+    }, 1000)
   }
 
   const handlePausePipeline = async (id: number) => {
     try {
       await dispatch(pausePipeline(id)).unwrap()
-    } catch (err) {
+      // Refresh pipelines to get updated status
+      setTimeout(() => {
+        dispatch(fetchPipelines())
+      }, 1000)
+    } catch (err: any) {
       console.error("Failed to pause pipeline:", err)
+      const errorMessage = err?.payload || err?.message || err?.response?.data?.detail || "Failed to pause pipeline"
+      showError(errorMessage, "Failed to Pause Pipeline")
     }
   }
 
   const handleStopPipeline = async (id: number) => {
+    if (!confirm("Are you sure you want to stop this pipeline?")) {
+      return
+    }
     try {
       await dispatch(stopPipeline(id)).unwrap()
-    } catch (err) {
+      // Refresh pipelines to get updated status
+      setTimeout(() => {
+        dispatch(fetchPipelines())
+      }, 1000)
+    } catch (err: any) {
       console.error("Failed to stop pipeline:", err)
+      const errorMessage = err?.payload || err?.message || err?.response?.data?.detail || "Failed to stop pipeline"
+      showError(errorMessage, "Failed to Stop Pipeline")
     }
   }
 
@@ -571,12 +639,19 @@ export default function PipelinesPage() {
   if (selectedPipelineId) {
     const pipeline = pipelines.find((p) => p.id === selectedPipelineId)
     if (pipeline) {
-      return <PipelineDetail pipeline={pipeline} onBack={() => setSelectedPipelineId(null)} />
+      return (
+        <>
+          <PipelineDetail pipeline={pipeline} onBack={() => setSelectedPipelineId(null)} />
+          <ErrorToastComponent />
+        </>
+      )
     }
   }
 
   return (
-    <ProtectedPage path="/pipelines" requiredPermission="create_pipeline">
+    <>
+      <ErrorToastComponent />
+      <ProtectedPage path="/pipelines" requiredPermission="create_pipeline">
       <div className="p-6 space-y-6">
         <PageHeader
           title="Replication Pipelines"
@@ -630,7 +705,7 @@ export default function PipelinesPage() {
               onClick={() => setSelectedPipelineId(pipeline.id)}
             >
               {/* Animated Green Bar at Top of Card - Always Visible When Running */}
-              {pipeline.status === "active" && (
+              {(pipeline.status === "active" || pipeline.status === "running") && (
                 <div 
                   className="absolute top-0 left-0 right-0 z-50 rounded-t-lg"
                   style={{ 
@@ -684,7 +759,7 @@ export default function PipelinesPage() {
                       <p className="text-xs text-foreground-muted line-clamp-1 mb-2">{pipeline.description}</p>
                     )}
                     <div className="flex items-center gap-1.5 flex-nowrap">
-                      {pipeline.status === "active" && (
+                      {(pipeline.status === "active" || pipeline.status === "running") && (
                         <Badge className="bg-success/20 text-success border border-success/30 text-xs px-1.5 py-0.5 whitespace-nowrap flex-shrink-0">
                           <div className="w-1.5 h-1.5 rounded-full bg-success mr-1 animate-pulse"></div>
                           Running
@@ -770,7 +845,7 @@ export default function PipelinesPage() {
               {/* Actions */}
               <div className="p-3 pt-0 flex items-center justify-between gap-2 border-t border-border">
                 <div className="flex gap-1">
-                  {pipeline.status === "active" ? (
+                  {pipeline.status === "active" || pipeline.status === "running" ? (
                     <>
                       <Button
                         variant="outline"
@@ -948,5 +1023,7 @@ export default function PipelinesPage() {
       />
       </div>
     </ProtectedPage>
+    <ErrorToastComponent />
+    </>
   )
 }
