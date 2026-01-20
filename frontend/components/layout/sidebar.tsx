@@ -18,6 +18,12 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  Sparkles,
+  Code,
+  Eye,
+  Network,
+  Calendar,
+  Monitor,
 } from "lucide-react"
 import { useSidebar } from "@/contexts/sidebar-context"
 import { useAppSelector } from "@/lib/store/hooks"
@@ -48,6 +54,20 @@ const menuSections = [
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
+  {
+    title: "ETL / ETS PLATFORM",
+    items: [
+      { href: "/etl", label: "ETL Home", icon: Sparkles },
+      { href: "/etl/pipelines", label: "ETL Pipelines", icon: GitBranch },
+      { href: "/etl/transformations", label: "Transformations", icon: Code },
+      { href: "/etl/sql-editor", label: "SQL Editor", icon: Code },
+      { href: "/etl/preview", label: "Data Preview", icon: Eye },
+      { href: "/etl/lineage", label: "Data Lineage", icon: Network },
+      { href: "/etl/data-quality", label: "Data Quality", icon: Shield },
+      { href: "/etl/scheduler", label: "Scheduler", icon: Calendar },
+      { href: "/etl/monitoring", label: "ETL Monitoring", icon: Monitor },
+    ],
+  },
 ]
 
 export function Sidebar() {
@@ -60,6 +80,7 @@ export function Sidebar() {
     PLATFORM: true,
     REPLICATION: true,
     OPERATIONS: true,
+    "ETL / ETS PLATFORM": true,
   })
 
   // Filter menu items based on permissions

@@ -1,20 +1,34 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { Card } from "@/components/ui/card"
-import { Activity, Database, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Activity, Database, AlertCircle, CheckCircle, Loader2, GitBranch, Sparkles, ArrowRight, Code2, DatabaseZap } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
 import { fetchReplicationEvents, fetchMonitoringMetrics, addReplicationEvent, addMonitoringMetric } from "@/lib/store/slices/monitoringSlice"
 import { fetchPipelines } from "@/lib/store/slices/pipelineSlice"
 import { wsClient } from "@/lib/websocket/client"
 import { formatDistanceToNow } from "date-fns"
 import { ApplicationLogs } from "./application-logs"
+import { canAccessPage } from "@/lib/store/slices/permissionSlice"
+import { motion } from "framer-motion"
 
 export function DashboardOverview() {
+  const router = useRouter()
   const dispatch = useAppDispatch()
   const { events, metrics, isLoading } = useAppSelector((state) => state.monitoring)
   const { pipelines } = useAppSelector((state) => state.pipelines)
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth)
+  const permissions = useAppSelector((state) => state.permissions)
+  
+  // Check if user can access ETL pages
+  const canAccessEtl = useMemo(() => {
+    if (!user || !isAuthenticated) return false
+    const minimalState = { auth: { user, isAuthenticated }, permissions }
+    return canAccessPage('/etl')(minimalState)
+  }, [user, isAuthenticated, permissions])
 
   const [chartData, setChartData] = useState<any[]>([])
   const [dashboardMetrics, setDashboardMetrics] = useState({
@@ -470,6 +484,106 @@ export function DashboardOverview() {
           )
         })}
       </div>
+
+      {/* Data Engineering Section - CDC & ETL Platform */}
+      {canAccessEtl && (
+        <div className="mt-8 mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <DatabaseZap className="w-7 h-7 text-purple-400" />
+            Data Engineering
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* CDC Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="p-6 bg-gradient-to-br from-cyan-500/10 to-blue-600/5 border-cyan-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 etl-card-shine" />
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/0 to-primary/0 opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-500" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-white transition-colors duration-300">
+                        Change Data Capture (CDC)
+                      </h3>
+                      <p className="text-sm text-foreground-muted group-hover:text-gray-200 transition-colors duration-300">
+                        Real-time replication from source databases
+                      </p>
+                      <ul className="mt-3 space-y-1 text-sm text-foreground-muted/80 group-hover:text-gray-300 transition-colors duration-300">
+                        <li>• Real-time replication</li>
+                        <li>• Full load + CDC</li>
+                        <li>• Schema evolution</li>
+                      </ul>
+                    </div>
+                    <div className="p-3 bg-cyan-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                      <Database className="w-8 h-8 text-cyan-400" />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => router.push('/pipelines')}
+                    className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <GitBranch className="mr-2 h-5 w-5" />
+                    Manage Pipelines
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* ETL Platform Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-600/5 border-purple-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 etl-card-shine" />
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-500" />
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-white transition-colors duration-300 flex items-center gap-2">
+                        ETL / ETS Platform
+                        <span className="text-2xl">🚀</span>
+                      </h3>
+                      <p className="text-sm text-foreground-muted group-hover:text-gray-200 transition-colors duration-300">
+                        Transform, validate & enrich your data
+                      </p>
+                      <ul className="mt-3 space-y-1 text-sm text-foreground-muted/80 group-hover:text-gray-300 transition-colors duration-300">
+                        <li>• SQL-based transformations</li>
+                        <li>• Data quality checks</li>
+                        <li>• Scheduling & monitoring</li>
+                      </ul>
+                    </div>
+                    <div className="p-3 bg-purple-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                      <Sparkles className="w-8 h-8 text-purple-400" />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => router.push('/etl')}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Open ETL Workspace
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      )}
 
       {/* Charts - Enhanced visibility and styling */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

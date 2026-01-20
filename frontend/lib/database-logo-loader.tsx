@@ -87,6 +87,8 @@ const LOGO_FILE_MAP: Record<string, { file: string; ext: string }> = {
   salesforce: { file: "service-icon-salesforce", ext: "png" },
   domo: { file: "service-icon-domo", ext: "png" },
   sas: { file: "service-icon-sas", ext: "svg" },
+  s3: { file: "service-icon-amazon-s3", ext: "svg" },
+  aws_s3: { file: "service-icon-amazon-s3", ext: "svg" },
   custom: { file: "service-icon-generic", ext: "png" },
 }
 

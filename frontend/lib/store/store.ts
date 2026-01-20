@@ -9,6 +9,7 @@ import monitoringReducer from './slices/monitoringSlice';
 import alertsReducer from './slices/alertsSlice';
 import permissionReducer from './slices/permissionSlice';
 import userReducer from './slices/userSlice';
+import etlReducer from './slices/etlSlice';
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
     alerts: alertsReducer,
     permissions: permissionReducer,
     users: userReducer,
+    etl: etlReducer,
   },
 });
 

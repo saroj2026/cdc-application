@@ -109,6 +109,17 @@ class ApiClient {
             }
           }
         }
+        
+        // Handle 500 errors - extract detail message if available
+        if (error.response?.status === 500) {
+          const detail = error.response?.data?.detail || error.response?.data?.message;
+          if (detail) {
+            const detailedError = new Error(detail);
+            (detailedError as any).response = error.response;
+            (detailedError as any).status = 500;
+            return Promise.reject(detailedError);
+          }
+        }
         return Promise.reject(error);
       }
     );
@@ -1308,10 +1319,10 @@ class ApiClient {
         skip,
         limit
       }
+      }
   }
-}
 
-  async getLogLevels() {
+  async getLogLevels(): Promise<string[]> {
     try {
       const response = await this.client.get('/api/v1/logs/application-logs/levels', {
         timeout: 5000 // 5 second timeout for log levels
@@ -1335,6 +1346,99 @@ class ApiClient {
     const response = await this.client.get(`/api/v1/monitoring/lsn-latency`, { 
       params: { pipeline_id: pipelineId, ...params }
     });
+    return response.data;
+  }
+
+  // ============================================================================
+  // ETL / ETS API Methods
+  // ============================================================================
+
+  async getETLPipelines(skip?: number, limit?: number): Promise<any> {
+    const response = await this.client.get('/api/v1/etl/pipelines', {
+      params: { skip, limit }
+    });
+    return response.data;
+  }
+
+  async createETLPipeline(pipelineData: any): Promise<any> {
+    const response = await this.client.post('/api/v1/etl/pipelines', pipelineData);
+    return response.data;
+  }
+
+  async getETLPipeline(pipelineId: string): Promise<any> {
+    const response = await this.client.get(`/api/v1/etl/pipelines/${pipelineId}`);
+    return response.data;
+  }
+
+  async runETLPipeline(pipelineId: string): Promise<any> {
+    const response = await this.client.post(`/api/v1/etl/pipelines/${pipelineId}/run`);
+    return response.data;
+  }
+
+  async pauseETLPipeline(pipelineId: string): Promise<any> {
+    const response = await this.client.post(`/api/v1/etl/pipelines/${pipelineId}/pause`);
+    return response.data;
+  }
+
+  async updateETLPipeline(pipelineId: string, pipelineData: any): Promise<any> {
+    const response = await this.client.put(`/api/v1/etl/pipelines/${pipelineId}`, pipelineData);
+    return response.data;
+  }
+
+  async deleteETLPipeline(pipelineId: string): Promise<void> {
+    await this.client.delete(`/api/v1/etl/pipelines/${pipelineId}`);
+  }
+
+  async getETLTransformations(skip?: number, limit?: number): Promise<any> {
+    const response = await this.client.get('/api/v1/etl/transformations', {
+      params: { skip, limit }
+    });
+    return response.data;
+  }
+
+  async createETLTransformation(transformationData: any): Promise<any> {
+    const response = await this.client.post('/api/v1/etl/transformations', transformationData);
+    return response.data;
+  }
+
+  async getETLTransformation(transformationId: string): Promise<any> {
+    const response = await this.client.get(`/api/v1/etl/transformations/${transformationId}`);
+    return response.data;
+  }
+
+  async updateETLTransformation(transformationId: string, transformationData: any): Promise<any> {
+    const response = await this.client.put(`/api/v1/etl/transformations/${transformationId}`, transformationData);
+    return response.data;
+  }
+
+  async deleteETLTransformation(transformationId: string): Promise<void> {
+    await this.client.delete(`/api/v1/etl/transformations/${transformationId}`);
+  }
+
+  async testETLTransformation(transformationId: string, connectionId: string, limit: number = 100): Promise<any> {
+    const response = await this.client.post(`/api/v1/etl/transformations/${transformationId}/test`, {
+      connection_id: connectionId,
+      limit: limit
+    });
+    return response.data;
+  }
+
+  async getETLRuns(pipelineId?: string, skip?: number, limit?: number): Promise<any> {
+    const response = await this.client.get('/api/v1/etl/runs', {
+      params: { pipeline_id: pipelineId, skip, limit }
+    });
+    return response.data;
+  }
+
+  async getDataQualityRules(pipelineId?: string): Promise<any> {
+    const response = await this.client.get('/api/v1/etl/data-quality/rules', {
+      params: { pipeline_id: pipelineId }
+    });
+    return response.data;
+  }
+
+  async getETLStats(): Promise<any> {
+    const response = await this.client.get('/api/v1/etl/stats');
     return response.data;
   }
 }

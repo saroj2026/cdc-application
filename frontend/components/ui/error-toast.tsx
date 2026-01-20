@@ -1,18 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, AlertCircle, XCircle } from "lucide-react"
+import { X, AlertCircle, XCircle, CheckCircle, Info, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+
+type ToastType = "error" | "success" | "info" | "warning"
 
 interface ErrorToastProps {
   message: string
   title?: string
+  type?: ToastType
   onClose: () => void
   duration?: number
 }
 
-export function ErrorToast({ message, title = "Error", onClose, duration = 5000 }: ErrorToastProps) {
+export function ErrorToast({ message, title, type = "error", onClose, duration = 5000 }: ErrorToastProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -27,23 +30,69 @@ export function ErrorToast({ message, title = "Error", onClose, duration = 5000 
 
   if (!mounted) return null
 
+  // Get styling based on type
+  const getTypeStyles = () => {
+    switch (type) {
+      case "success":
+        return {
+          cardClass: "bg-gradient-to-br from-green-500/10 to-emerald-600/5 border-2 border-green-500/30",
+          iconBgClass: "bg-green-500/10",
+          iconClass: "text-green-400",
+          Icon: CheckCircle,
+          buttonHoverClass: "hover:bg-green-500/10",
+          defaultTitle: "Success"
+        }
+      case "info":
+        return {
+          cardClass: "bg-gradient-to-br from-blue-500/10 to-cyan-600/5 border-2 border-blue-500/30",
+          iconBgClass: "bg-blue-500/10",
+          iconClass: "text-blue-400",
+          Icon: Info,
+          buttonHoverClass: "hover:bg-blue-500/10",
+          defaultTitle: "Info"
+        }
+      case "warning":
+        return {
+          cardClass: "bg-gradient-to-br from-yellow-500/10 to-orange-600/5 border-2 border-yellow-500/30",
+          iconBgClass: "bg-yellow-500/10",
+          iconClass: "text-yellow-400",
+          Icon: AlertTriangle,
+          buttonHoverClass: "hover:bg-yellow-500/10",
+          defaultTitle: "Warning"
+        }
+      case "error":
+      default:
+        return {
+          cardClass: "bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30",
+          iconBgClass: "bg-red-500/10",
+          iconClass: "text-red-400",
+          Icon: XCircle,
+          buttonHoverClass: "hover:bg-red-500/10",
+          defaultTitle: "Error"
+        }
+    }
+  }
+
+  const styles = getTypeStyles()
+  const Icon = styles.Icon
+
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-5">
-      <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30 shadow-2xl max-w-md w-full">
+      <Card className={`${styles.cardClass} shadow-2xl max-w-md w-full`}>
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-              <XCircle className="w-6 h-6 text-red-400" />
+            <div className={`w-10 h-10 rounded-full ${styles.iconBgClass} flex items-center justify-center flex-shrink-0`}>
+              <Icon className={`w-6 h-6 ${styles.iconClass}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground mb-1">{title}</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-1">{title || styles.defaultTitle}</h3>
               <p className="text-sm text-foreground-muted whitespace-pre-wrap break-words">{message}</p>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-6 w-6 p-0 flex-shrink-0 hover:bg-red-500/10"
+              className={`h-6 w-6 p-0 flex-shrink-0 ${styles.buttonHoverClass}`}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -56,23 +105,24 @@ export function ErrorToast({ message, title = "Error", onClose, duration = 5000 
 
 // Hook for easier usage
 export function useErrorToast() {
-  const [error, setError] = useState<{ message: string; title?: string } | null>(null)
+  const [toast, setToast] = useState<{ message: string; title?: string; type?: ToastType } | null>(null)
 
-  const showError = (message: string, title?: string) => {
-    setError({ message, title })
+  const showError = (message: string, title?: string, type?: ToastType) => {
+    setToast({ message, title, type: type || "error" })
   }
 
   const ErrorToastComponent = () => {
-    if (!error) return null
+    if (!toast) return null
     return (
       <ErrorToast
-        message={error.message}
-        title={error.title}
-        onClose={() => setError(null)}
+        message={toast.message}
+        title={toast.title}
+        type={toast.type}
+        onClose={() => setToast(null)}
       />
     )
   }
 
-  return { showError, ErrorToastComponent, error }
+  return { showError, ErrorToastComponent, error: toast }
 }
 

@@ -321,6 +321,174 @@ class UserModel(Base):
     )
 
 
+# ETL Models
+
+class ETLPipelineStatus(str, enum.Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    FAILED = "failed"
+    COMPLETED = "completed"
+
+
+class ETLPipelineModel(Base):
+    __tablename__ = "etl_pipelines"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(255), nullable=False, unique=True, index=True)
+    description = Column(Text, nullable=True)
+    
+    # Source configuration (can be Kafka topic, CDC pipeline output, or direct database)
+    source_type = Column(String(50), nullable=False)  # 'kafka', 'cdc', 'database'
+    source_config = Column(JSON, default={})
+    
+    # Target configuration
+    target_type = Column(String(50), nullable=False)  # 'database', 'kafka', 's3'
+    target_config = Column(JSON, default={})
+    
+    # Transformation chain (ordered list of transformation IDs)
+    transformation_ids = Column(JSON, default=[])  # Array of transformation IDs
+    
+    # Pipeline configuration
+    status = Column(SQLEnum(ETLPipelineStatus, values_callable=lambda x: [e.value for e in x]), default=ETLPipelineStatus.DRAFT)
+    schedule_config = Column(JSON, default={})  # Cron expression or event-based
+    
+    # Metadata
+    created_by = Column(String(36), ForeignKey('users.id'), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    runs = relationship("ETLRunModel", back_populates="pipeline", cascade="all, delete-orphan")
+    quality_rules = relationship("DataQualityRuleModel", back_populates="pipeline", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        Index('idx_etl_pipeline_status', 'status'),
+        Index('idx_etl_pipeline_created', 'created_at'),
+    )
+
+
+class ETLTransformationModel(Base):
+    __tablename__ = "etl_transformations"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(255), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    
+    # SQL transformation
+    sql_query = Column(Text, nullable=False)
+    
+    # Transformation configuration
+    input_schema = Column(JSON, default={})  # Expected input schema
+    output_schema = Column(JSON, default={})  # Generated output schema
+    
+    # Metadata
+    is_reusable = Column(Boolean, default=True)  # Can be used in multiple pipelines
+    version = Column(Integer, default=1)
+    tags = Column(JSON, default=[])
+    
+    created_by = Column(String(36), ForeignKey('users.id'), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
+    
+    __table_args__ = (
+        Index('idx_etl_transform_name', 'name'),
+    )
+
+
+class ETLRunModel(Base):
+    __tablename__ = "etl_runs"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    pipeline_id = Column(String(36), ForeignKey('etl_pipelines.id'), nullable=False)
+    
+    status = Column(String(50), nullable=False)  # 'running', 'completed', 'failed', 'cancelled'
+    
+    # Execution details
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    duration_seconds = Column(Integer, nullable=True)
+    
+    # Results
+    records_processed = Column(Integer, default=0)
+    records_failed = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    
+    # Execution context
+    triggered_by = Column(String(50), nullable=False)  # 'manual', 'schedule', 'event'
+    triggered_by_user_id = Column(String(36), ForeignKey('users.id'), nullable=True)
+    
+    # Relationship
+    pipeline = relationship("ETLPipelineModel", back_populates="runs")
+    
+    __table_args__ = (
+        Index('idx_etl_run_pipeline_status', 'pipeline_id', 'status'),
+        Index('idx_etl_run_started', 'started_at'),
+    )
+
+
+class DataQualityRuleModel(Base):
+    __tablename__ = "data_quality_rules"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    pipeline_id = Column(String(36), ForeignKey('etl_pipelines.id'), nullable=True)
+    
+    name = Column(String(255), nullable=False)
+    category = Column(String(50), nullable=False)  # 'accuracy', 'completeness', 'consistency', 'timeliness'
+    
+    # Rule configuration
+    rule_type = Column(String(50), nullable=False)  # 'null_check', 'range_check', 'unique_check', etc.
+    rule_config = Column(JSON, default={})  # Rule-specific configuration
+    
+    # Target column(s)
+    target_columns = Column(JSON, default=[])  # Array of column names
+    
+    # Execution
+    enabled = Column(Boolean, default=True)
+    last_run_at = Column(DateTime, nullable=True)
+    last_run_status = Column(String(50), nullable=True)  # 'passed', 'failed', 'warning'
+    
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationship
+    pipeline = relationship("ETLPipelineModel", back_populates="quality_rules")
+    
+    __table_args__ = (
+        Index('idx_dq_rule_pipeline', 'pipeline_id'),
+        Index('idx_dq_rule_category', 'category'),
+    )
+
+
+class ETLScheduleModel(Base):
+    __tablename__ = "etl_schedules"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    pipeline_id = Column(String(36), ForeignKey('etl_pipelines.id'), nullable=False, unique=True)
+    
+    # Schedule configuration
+    schedule_type = Column(String(50), nullable=False)  # 'cron', 'interval', 'event'
+    schedule_config = Column(JSON, default={})  # Cron expression or interval seconds
+    
+    # Event-based triggers
+    event_triggers = Column(JSON, default=[])  # Array of event conditions
+    
+    # Schedule status
+    enabled = Column(Boolean, default=True)
+    next_run_at = Column(DateTime, nullable=True)
+    last_run_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    __table_args__ = (
+        Index('idx_etl_schedule_next_run', 'next_run_at'),
+        Index('idx_etl_schedule_enabled', 'enabled'),
+    )
+
+
 class ApplicationLogModel(Base):
     """Application log entry model."""
     __tablename__ = "application_logs"

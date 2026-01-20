@@ -552,6 +552,20 @@
   border-color: rgba(20, 184, 166, 0.4);
 }
 
+/* Pulse once animation for ETL card */
+@keyframes pulse-once {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.animate-pulse-once {
+  animation: pulse-once 3s ease-in-out infinite;
+}
+
 /* Radar scan animation for CDC watching indicator */
 @keyframes radar-scan {
   0% {

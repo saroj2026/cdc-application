@@ -101,6 +101,132 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/etl/data-quality/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/data-quality">> = Specific
+  const handler = {} as typeof import("../../../app/etl/data-quality/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/lineage/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/lineage">> = Specific
+  const handler = {} as typeof import("../../../app/etl/lineage/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/monitoring/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/monitoring">> = Specific
+  const handler = {} as typeof import("../../../app/etl/monitoring/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl">> = Specific
+  const handler = {} as typeof import("../../../app/etl/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/pipelines/[id]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/pipelines/[id]">> = Specific
+  const handler = {} as typeof import("../../../app/etl/pipelines/[id]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/pipelines/create/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/pipelines/create">> = Specific
+  const handler = {} as typeof import("../../../app/etl/pipelines/create/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/pipelines/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/pipelines">> = Specific
+  const handler = {} as typeof import("../../../app/etl/pipelines/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/preview/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/preview">> = Specific
+  const handler = {} as typeof import("../../../app/etl/preview/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/scheduler/create/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/scheduler/create">> = Specific
+  const handler = {} as typeof import("../../../app/etl/scheduler/create/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/scheduler/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/scheduler">> = Specific
+  const handler = {} as typeof import("../../../app/etl/scheduler/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/sql-editor/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/sql-editor">> = Specific
+  const handler = {} as typeof import("../../../app/etl/sql-editor/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/transformations/[id]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/transformations/[id]">> = Specific
+  const handler = {} as typeof import("../../../app/etl/transformations/[id]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/transformations/create/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/transformations/create">> = Specific
+  const handler = {} as typeof import("../../../app/etl/transformations/create/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/etl/transformations/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/etl/transformations">> = Specific
+  const handler = {} as typeof import("../../../app/etl/transformations/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/governance/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/governance">> = Specific
@@ -194,6 +320,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 
 
 
+
+// Validate ../../../app/etl/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/etl">> = Specific
+  const handler = {} as typeof import("../../../app/etl/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
 
 // Validate ../../../app/layout.tsx
 {

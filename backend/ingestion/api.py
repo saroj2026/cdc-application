@@ -68,11 +68,16 @@ try:
     SOCKETIO_AVAILABLE = True
 except ImportError:
     SOCKETIO_AVAILABLE = False
-    logger.warning("python-socketio not available. WebSocket features will be disabled.")
+    logging.warning("python-socketio not available. WebSocket features will be disabled.")
 from ingestion.models import Connection, Pipeline, PipelineStatus, FullLoadStatus, CDCStatus, PipelineMode
 from ingestion.database import get_db
-from ingestion.database.models_db import ConnectionModel, PipelineModel, UserModel, AuditLogModel
+from ingestion.database.models_db import (
+    ConnectionModel, PipelineModel, UserModel, AuditLogModel,
+    ETLPipelineModel, ETLTransformationModel, ETLRunModel,
+    DataQualityRuleModel, ETLScheduleModel, ETLPipelineStatus
+)
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import hashlib
 import secrets
 import os
@@ -6495,7 +6500,831 @@ async def get_audit_logs(
         return []
 
 
-# Mount Socket.IO app if available
+# ============================================================================
+# ETL / ETS API Endpoints
+# ============================================================================
+# IMPORTANT: ETL endpoints must be added BEFORE Socket.IO wrapping
+# because once app is wrapped as ASGIApp, it doesn't have .get(), .post(), etc.
+# IMPORTANT: ETL endpoints must be added AFTER Socket.IO wrapping
+# because FastAPI routes are registered on the original app, not the wrapped one
+
+# ETL Pipeline Models (Pydantic models for request/response)
+class ETLPipelineCreate(BaseModel):
+    name: str = Field(..., description="ETL Pipeline name")
+    description: Optional[str] = None
+    source_type: str = Field(..., description="Source type: kafka, cdc, database")
+    source_config: Dict[str, Any] = Field(default_factory=dict)
+    target_type: str = Field(..., description="Target type: database, kafka, s3")
+    target_config: Dict[str, Any] = Field(default_factory=dict)
+    transformation_ids: List[str] = Field(default_factory=list)
+    schedule_config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ETLTransformationCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    sql_query: str
+    input_schema: Optional[Dict[str, Any]] = None
+    output_schema: Optional[Dict[str, Any]] = None
+    is_reusable: bool = True
+    tags: List[str] = Field(default_factory=list)
+
+
+class DataQualityRuleCreate(BaseModel):
+    name: str
+    category: str  # 'accuracy', 'completeness', 'consistency', 'timeliness'
+    rule_type: str
+    rule_config: Dict[str, Any] = Field(default_factory=dict)
+    target_columns: List[str] = Field(default_factory=list)
+    enabled: bool = True
+
+
+@app.get("/api/v1/etl/pipelines")
+async def get_etl_pipelines(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+) -> Dict[str, Any]:
+    """Get all ETL pipelines."""
+    pipelines = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.deleted_at.is_(None)
+    ).offset(skip).limit(limit).all()
+    
+    return {
+        "pipelines": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "source_type": p.source_type,
+                "source_config": p.source_config,
+                "target_type": p.target_type,
+                "target_config": p.target_config,
+                "transformation_ids": p.transformation_ids,
+                "status": p.status.value if hasattr(p.status, 'value') else str(p.status),
+                "schedule_config": p.schedule_config,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+            }
+            for p in pipelines
+        ],
+        "total": len(pipelines)
+    }
+
+
+@app.post("/api/v1/etl/pipelines", status_code=status.HTTP_201_CREATED)
+async def create_etl_pipeline(
+    pipeline_data: ETLPipelineCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Create a new ETL pipeline."""
+    try:
+        # Check if pipeline with same name already exists
+        existing = db.query(ETLPipelineModel).filter(
+            ETLPipelineModel.name == pipeline_data.name,
+            ETLPipelineModel.deleted_at.is_(None)
+        ).first()
+        
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"ETL pipeline with name '{pipeline_data.name}' already exists"
+            )
+        
+        pipeline = ETLPipelineModel(
+            id=str(uuid.uuid4()),
+            name=pipeline_data.name,
+            description=pipeline_data.description,
+            source_type=pipeline_data.source_type,
+            source_config=pipeline_data.source_config or {},
+            target_type=pipeline_data.target_type,
+            target_config=pipeline_data.target_config or {},
+            transformation_ids=pipeline_data.transformation_ids or [],
+            schedule_config=pipeline_data.schedule_config or {},
+            status=ETLPipelineStatus.DRAFT,
+            created_by=current_user.id if current_user else None,
+        )
+        
+        db.add(pipeline)
+        db.commit()
+        db.refresh(pipeline)
+        
+        return {
+            "id": pipeline.id,
+            "name": pipeline.name,
+            "status": pipeline.status.value if hasattr(pipeline.status, 'value') else str(pipeline.status),
+            "message": "ETL pipeline created successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating ETL pipeline: {e}", exc_info=True)
+        db.rollback()
+        error_msg = str(e)
+        
+        # Handle common database errors
+        if "unique constraint" in error_msg.lower() or "duplicate key" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"ETL pipeline with name '{pipeline_data.name}' already exists"
+            )
+        elif "does not exist" in error_msg.lower() or "relation" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="ETL pipeline table does not exist. Please run database migrations."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create ETL pipeline: {error_msg}"
+            )
+
+
+@app.get("/api/v1/etl/pipelines/{pipeline_id}")
+async def get_etl_pipeline(
+    pipeline_id: str,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get ETL pipeline by ID."""
+    pipeline = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.id == pipeline_id,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).first()
+    
+    if not pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL pipeline not found: {pipeline_id}"
+        )
+    
+    # Get latest run
+    latest_run = db.query(ETLRunModel).filter(
+        ETLRunModel.pipeline_id == pipeline_id
+    ).order_by(ETLRunModel.started_at.desc()).first()
+    
+    return {
+        "id": pipeline.id,
+        "name": pipeline.name,
+        "description": pipeline.description,
+        "source_type": pipeline.source_type,
+        "source_config": pipeline.source_config,
+        "target_type": pipeline.target_type,
+        "target_config": pipeline.target_config,
+        "transformation_ids": pipeline.transformation_ids,
+        "status": pipeline.status.value if hasattr(pipeline.status, 'value') else str(pipeline.status),
+        "schedule_config": pipeline.schedule_config,
+        "latest_run": {
+            "id": latest_run.id,
+            "status": latest_run.status,
+            "started_at": latest_run.started_at.isoformat() if latest_run else None,
+            "records_processed": latest_run.records_processed if latest_run else 0,
+        } if latest_run else None,
+        "created_at": pipeline.created_at.isoformat() if pipeline.created_at else None,
+        "updated_at": pipeline.updated_at.isoformat() if pipeline.updated_at else None,
+    }
+
+
+@app.put("/api/v1/etl/pipelines/{pipeline_id}")
+async def update_etl_pipeline(
+    pipeline_id: str,
+    pipeline_data: ETLPipelineCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Update an ETL pipeline."""
+    pipeline = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.id == pipeline_id,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).first()
+    
+    if not pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL pipeline not found: {pipeline_id}"
+        )
+    
+    try:
+        # Check if name is being changed and if it conflicts with another pipeline
+        if pipeline_data.name != pipeline.name:
+            existing = db.query(ETLPipelineModel).filter(
+                ETLPipelineModel.name == pipeline_data.name,
+                ETLPipelineModel.id != pipeline_id,
+                ETLPipelineModel.deleted_at.is_(None)
+            ).first()
+            
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"ETL pipeline with name '{pipeline_data.name}' already exists"
+                )
+        
+        # Update pipeline
+        pipeline.name = pipeline_data.name
+        pipeline.description = pipeline_data.description
+        pipeline.source_type = pipeline_data.source_type
+        pipeline.source_config = pipeline_data.source_config or {}
+        pipeline.target_type = pipeline_data.target_type
+        pipeline.target_config = pipeline_data.target_config or {}
+        pipeline.transformation_ids = pipeline_data.transformation_ids or []
+        pipeline.schedule_config = pipeline_data.schedule_config or {}
+        pipeline.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(pipeline)
+        
+        return {
+            "id": pipeline.id,
+            "name": pipeline.name,
+            "status": pipeline.status.value if hasattr(pipeline.status, 'value') else str(pipeline.status),
+            "message": "ETL pipeline updated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating ETL pipeline: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update ETL pipeline: {str(e)}"
+        )
+
+
+@app.delete("/api/v1/etl/pipelines/{pipeline_id}")
+async def delete_etl_pipeline(
+    pipeline_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Delete an ETL pipeline (soft delete)."""
+    pipeline = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.id == pipeline_id,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).first()
+    
+    if not pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL pipeline not found: {pipeline_id}"
+        )
+    
+    try:
+        # Soft delete
+        pipeline.deleted_at = datetime.utcnow()
+        db.commit()
+        
+        return {
+            "message": "ETL pipeline deleted successfully",
+            "id": pipeline_id
+        }
+    except Exception as e:
+        logger.error(f"Error deleting ETL pipeline: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete ETL pipeline: {str(e)}"
+        )
+
+
+@app.post("/api/v1/etl/pipelines/{pipeline_id}/pause")
+async def pause_etl_pipeline(
+    pipeline_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Pause an ETL pipeline."""
+    pipeline = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.id == pipeline_id,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).first()
+    
+    if not pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL pipeline not found: {pipeline_id}"
+        )
+    
+    try:
+        pipeline.status = ETLPipelineStatus.PAUSED
+        db.commit()
+        db.refresh(pipeline)
+        
+        return {
+            "id": pipeline.id,
+            "status": pipeline.status.value if hasattr(pipeline.status, 'value') else str(pipeline.status),
+            "message": "ETL pipeline paused successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error pausing ETL pipeline: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to pause ETL pipeline: {str(e)}"
+        )
+
+
+@app.post("/api/v1/etl/pipelines/{pipeline_id}/run")
+async def run_etl_pipeline(
+    pipeline_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Run an ETL pipeline."""
+    pipeline = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.id == pipeline_id,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).first()
+    
+    if not pipeline:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL pipeline not found: {pipeline_id}"
+        )
+    
+    try:
+        # Update pipeline status to active
+        pipeline.status = ETLPipelineStatus.ACTIVE
+        
+        # Create run record
+        run = ETLRunModel(
+            id=str(uuid.uuid4()),
+            pipeline_id=pipeline_id,
+            status="running",
+            triggered_by="manual",
+            triggered_by_user_id=current_user.id if current_user else None,
+        )
+        
+        db.add(run)
+        db.commit()
+        db.refresh(pipeline)
+    except Exception as e:
+        logger.error(f"Error starting ETL pipeline: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start ETL pipeline: {str(e)}"
+        )
+    
+    # TODO: Actually execute the pipeline (async background task)
+    
+    return {
+        "run_id": run.id,
+        "status": "started",
+        "message": "ETL pipeline execution started"
+    }
+
+
+@app.get("/api/v1/etl/transformations")
+async def get_etl_transformations(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+) -> Dict[str, Any]:
+    """Get all ETL transformations."""
+    transformations = db.query(ETLTransformationModel).filter(
+        ETLTransformationModel.deleted_at.is_(None)
+    ).offset(skip).limit(limit).all()
+    
+    return {
+        "transformations": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "sql_query": t.sql_query,
+                "input_schema": t.input_schema,
+                "output_schema": t.output_schema,
+                "is_reusable": t.is_reusable,
+                "tags": t.tags,
+                "version": t.version,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+            }
+            for t in transformations
+        ],
+        "total": len(transformations)
+    }
+
+
+@app.get("/api/v1/etl/transformations/{transformation_id}")
+async def get_etl_transformation(
+    transformation_id: str,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get ETL transformation by ID."""
+    transformation = db.query(ETLTransformationModel).filter(
+        ETLTransformationModel.id == transformation_id,
+        ETLTransformationModel.deleted_at.is_(None)
+    ).first()
+    
+    if not transformation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL transformation not found: {transformation_id}"
+        )
+    
+    return {
+        "id": transformation.id,
+        "name": transformation.name,
+        "description": transformation.description,
+        "sql_query": transformation.sql_query,
+        "input_schema": transformation.input_schema,
+        "output_schema": transformation.output_schema,
+        "is_reusable": transformation.is_reusable,
+        "tags": transformation.tags or [],
+        "version": transformation.version,
+        "created_at": transformation.created_at.isoformat() if transformation.created_at else None,
+        "updated_at": transformation.updated_at.isoformat() if transformation.updated_at else None,
+    }
+
+
+@app.put("/api/v1/etl/transformations/{transformation_id}")
+async def update_etl_transformation(
+    transformation_id: str,
+    transformation_data: ETLTransformationCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Update an ETL transformation."""
+    transformation = db.query(ETLTransformationModel).filter(
+        ETLTransformationModel.id == transformation_id,
+        ETLTransformationModel.deleted_at.is_(None)
+    ).first()
+    
+    if not transformation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL transformation not found: {transformation_id}"
+        )
+    
+    try:
+        # Check if name is being changed and if it conflicts with another transformation
+        if transformation_data.name != transformation.name:
+            existing = db.query(ETLTransformationModel).filter(
+                ETLTransformationModel.name == transformation_data.name,
+                ETLTransformationModel.id != transformation_id,
+                ETLTransformationModel.deleted_at.is_(None)
+            ).first()
+            
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"ETL transformation with name '{transformation_data.name}' already exists"
+                )
+        
+        # Update transformation
+        transformation.name = transformation_data.name
+        transformation.description = transformation_data.description
+        transformation.sql_query = transformation_data.sql_query
+        transformation.input_schema = transformation_data.input_schema or {}
+        transformation.output_schema = transformation_data.output_schema or {}
+        transformation.is_reusable = transformation_data.is_reusable
+        transformation.tags = transformation_data.tags or []
+        transformation.version = (transformation.version or 1) + 1
+        transformation.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(transformation)
+        
+        return {
+            "id": transformation.id,
+            "name": transformation.name,
+            "message": "ETL transformation updated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating ETL transformation: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update ETL transformation: {str(e)}"
+        )
+
+
+@app.delete("/api/v1/etl/transformations/{transformation_id}")
+async def delete_etl_transformation(
+    transformation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Delete an ETL transformation (soft delete)."""
+    transformation = db.query(ETLTransformationModel).filter(
+        ETLTransformationModel.id == transformation_id,
+        ETLTransformationModel.deleted_at.is_(None)
+    ).first()
+    
+    if not transformation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL transformation not found: {transformation_id}"
+        )
+    
+    try:
+        # Soft delete
+        transformation.deleted_at = datetime.utcnow()
+        db.commit()
+        
+        return {
+            "message": "ETL transformation deleted successfully",
+            "id": transformation_id
+        }
+    except Exception as e:
+        logger.error(f"Error deleting ETL transformation: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete ETL transformation: {str(e)}"
+        )
+
+
+class TransformationTestRequest(BaseModel):
+    connection_id: str
+    limit: int = Field(default=100, ge=1, le=1000)
+
+@app.post("/api/v1/etl/transformations/{transformation_id}/test")
+async def test_etl_transformation(
+    transformation_id: str,
+    test_data: TransformationTestRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Test an ETL transformation by executing its SQL query against a connection."""
+    from ingestion.connection_service import ConnectionService
+    
+    connection_id = test_data.connection_id
+    limit = test_data.limit
+    
+    if not connection_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="connection_id is required"
+        )
+    
+    # Get transformation
+    transformation = db.query(ETLTransformationModel).filter(
+        ETLTransformationModel.id == transformation_id,
+        ETLTransformationModel.deleted_at.is_(None)
+    ).first()
+    
+    if not transformation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ETL transformation not found: {transformation_id}"
+        )
+    
+    if not transformation.sql_query:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Transformation has no SQL query to test"
+        )
+    
+    # Get connection
+    connection = db.query(ConnectionModel).filter(
+        ConnectionModel.id == connection_id,
+        ConnectionModel.is_active == True
+    ).first()
+    
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connection not found or inactive: {connection_id}"
+        )
+    
+    try:
+        # Create connection service
+        conn_service = ConnectionService()
+        
+        # Get connector for the connection
+        connector = conn_service._get_connector(connection)
+        
+        # Execute SQL query with limit
+        sql_query = transformation.sql_query.strip()
+        
+        # Add LIMIT clause if not present (for safety)
+        sql_upper = sql_query.upper()
+        if "LIMIT" not in sql_upper and "SELECT" in sql_upper:
+            # Try to add LIMIT before any ORDER BY or at the end
+            if "ORDER BY" in sql_upper:
+                # Insert LIMIT before ORDER BY
+                order_by_pos = sql_upper.find("ORDER BY")
+                sql_query = sql_query[:order_by_pos].strip() + f" LIMIT {limit} " + sql_query[order_by_pos:]
+            else:
+                sql_query = sql_query.rstrip(";") + f" LIMIT {limit}"
+        
+        # Execute query using connector's connection
+        try:
+            conn = connector.connect()
+            cursor = None
+            
+            try:
+                # Use appropriate cursor based on database type
+                if connection.database_type.value in ['postgresql', 'postgres']:
+                    import psycopg2.extras
+                    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+                elif connection.database_type.value in ['mysql', 'mariadb']:
+                    import pymysql.cursors
+                    cursor = conn.cursor(pymysql.cursors.DictCursor)
+                elif connection.database_type.value == 'sqlserver':
+                    # SQL Server - use pyodbc
+                    cursor = conn.cursor()
+                else:
+                    # Default cursor
+                    cursor = conn.cursor()
+                
+                cursor.execute(sql_query)
+                
+                # Fetch results
+                if connection.database_type.value in ['postgresql', 'postgres']:
+                    rows = cursor.fetchall()
+                    # Convert to list of dicts
+                    results = [dict(row) for row in rows]
+                elif connection.database_type.value in ['mysql', 'mariadb']:
+                    rows = cursor.fetchall()
+                    results = rows  # Already dicts
+                elif connection.database_type.value == 'sqlserver':
+                    # SQL Server - fetch and convert
+                    columns = [desc[0] for desc in cursor.description] if cursor.description else []
+                    rows = cursor.fetchall()
+                    results = [dict(zip(columns, row)) for row in rows]
+                else:
+                    # Generic fallback
+                    columns = [desc[0] for desc in cursor.description] if cursor.description else []
+                    rows = cursor.fetchall()
+                    results = [dict(zip(columns, row)) for row in rows]
+                
+                # Format results
+                if isinstance(results, list) and len(results) > 0:
+                    # Get column names from first row
+                    columns = list(results[0].keys()) if isinstance(results[0], dict) else []
+                    rows = results[:limit]  # Ensure we don't exceed limit
+                    
+                    return {
+                        "success": True,
+                        "message": f"Query executed successfully. Returned {len(rows)} row(s).",
+                        "columns": columns,
+                        "rows": rows,
+                        "row_count": len(rows),
+                        "query": sql_query
+                    }
+                else:
+                    return {
+                        "success": True,
+                        "message": "Query executed successfully but returned no rows.",
+                        "columns": [],
+                        "rows": [],
+                        "row_count": 0,
+                        "query": sql_query
+                    }
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+                    
+        except Exception as query_error:
+            logger.error(f"Error executing test query: {query_error}", exc_info=True)
+            return {
+                "success": False,
+                "message": f"Query execution failed: {str(query_error)}",
+                "error": str(query_error),
+                "query": sql_query
+            }
+            
+    except Exception as e:
+        logger.error(f"Error testing ETL transformation: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to test transformation: {str(e)}"
+        )
+
+
+@app.post("/api/v1/etl/transformations", status_code=status.HTTP_201_CREATED)
+async def create_etl_transformation(
+    transformation_data: ETLTransformationCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[UserModel] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Create a new ETL transformation."""
+    transformation = ETLTransformationModel(
+        id=str(uuid.uuid4()),
+        name=transformation_data.name,
+        description=transformation_data.description,
+        sql_query=transformation_data.sql_query,
+        input_schema=transformation_data.input_schema or {},
+        output_schema=transformation_data.output_schema or {},
+        is_reusable=transformation_data.is_reusable,
+        tags=transformation_data.tags,
+        created_by=current_user.id if current_user else None,
+    )
+    
+    db.add(transformation)
+    db.commit()
+    db.refresh(transformation)
+    
+    return {
+        "id": transformation.id,
+        "name": transformation.name,
+        "message": "ETL transformation created successfully"
+    }
+
+
+@app.get("/api/v1/etl/runs")
+async def get_etl_runs(
+    pipeline_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+) -> Dict[str, Any]:
+    """Get ETL pipeline runs."""
+    query = db.query(ETLRunModel)
+    
+    if pipeline_id:
+        query = query.filter(ETLRunModel.pipeline_id == pipeline_id)
+    
+    runs = query.order_by(ETLRunModel.started_at.desc()).offset(skip).limit(limit).all()
+    
+    return {
+        "runs": [
+            {
+                "id": r.id,
+                "pipeline_id": r.pipeline_id,
+                "status": r.status,
+                "started_at": r.started_at.isoformat() if r.started_at else None,
+                "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                "duration_seconds": r.duration_seconds,
+                "records_processed": r.records_processed,
+                "records_failed": r.records_failed,
+                "error_message": r.error_message,
+                "triggered_by": r.triggered_by,
+            }
+            for r in runs
+        ],
+        "total": len(runs)
+    }
+
+
+@app.get("/api/v1/etl/data-quality/rules")
+async def get_data_quality_rules(
+    pipeline_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get data quality rules."""
+    query = db.query(DataQualityRuleModel)
+    
+    if pipeline_id:
+        query = query.filter(DataQualityRuleModel.pipeline_id == pipeline_id)
+    
+    rules = query.filter(DataQualityRuleModel.enabled == True).all()
+    
+    return {
+        "rules": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "category": r.category,
+                "rule_type": r.rule_type,
+                "rule_config": r.rule_config,
+                "target_columns": r.target_columns,
+                "last_run_at": r.last_run_at.isoformat() if r.last_run_at else None,
+                "last_run_status": r.last_run_status,
+            }
+            for r in rules
+        ],
+        "total": len(rules)
+    }
+
+
+@app.get("/api/v1/etl/stats")
+async def get_etl_stats(
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Get ETL platform statistics."""
+    active_pipelines = db.query(ETLPipelineModel).filter(
+        ETLPipelineModel.status == ETLPipelineStatus.ACTIVE,
+        ETLPipelineModel.deleted_at.is_(None)
+    ).count()
+    
+    failed_runs = db.query(ETLRunModel).filter(
+        ETLRunModel.status == "failed",
+        ETLRunModel.started_at >= datetime.utcnow() - timedelta(days=1)
+    ).count()
+    
+    total_records = db.query(func.sum(ETLRunModel.records_processed)).filter(
+        ETLRunModel.started_at >= datetime.utcnow() - timedelta(days=1),
+        ETLRunModel.status == "completed"
+    ).scalar() or 0
+    
+    return {
+        "active_pipelines": active_pipelines,
+        "failed_runs": failed_runs,
+        "records_processed": total_records,
+        "avg_latency": 240,  # TODO: Calculate from actual runs
+    }
+
+
+# Mount Socket.IO app if available (must be AFTER all route definitions)
+# This must come AFTER all @app.get, @app.post, etc. decorators
 if socketio_server and SOCKETIO_AVAILABLE:
     try:
         from socketio import ASGIApp

@@ -1173,6 +1173,14 @@ const LOGO_FILE_MAP = {
         file: "service-icon-sas",
         ext: "svg"
     },
+    s3: {
+        file: "service-icon-amazon-s3",
+        ext: "svg"
+    },
+    aws_s3: {
+        file: "service-icon-amazon-s3",
+        ext: "svg"
+    },
     custom: {
         file: "service-icon-generic",
         ext: "png"
@@ -1244,12 +1252,12 @@ const DatabaseLogo = ({ className = "", size = 24, connectionType, databaseName,
                 unoptimized: true
             }, void 0, false, {
                 fileName: "[project]/lib/database-logo-loader.tsx",
-                lineNumber: 167,
+                lineNumber: 169,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/lib/database-logo-loader.tsx",
-            lineNumber: 163,
+            lineNumber: 165,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0));
     }
@@ -1268,12 +1276,12 @@ const DatabaseLogo = ({ className = "", size = 24, connectionType, databaseName,
             size: size
         }, void 0, false, {
             fileName: "[project]/lib/database-logo-loader.tsx",
-            lineNumber: 184,
+            lineNumber: 186,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/lib/database-logo-loader.tsx",
-        lineNumber: 183,
+        lineNumber: 185,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
