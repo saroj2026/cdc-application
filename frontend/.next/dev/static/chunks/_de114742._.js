@@ -4414,7 +4414,7 @@ function ConnectionModal({ isOpen, onClose, onSave, editingConnection }) {
         columnNumber: 5
     }, this);
 }
-_s(ConnectionModal, "YD1K6FTbtHHbttwuvabhdxZcljs=");
+_s(ConnectionModal, "S4n3XEr/J7/FqUVA5FKscyDIhss=");
 _c = ConnectionModal;
 var _c;
 __turbopack_context__.k.register(_c, "ConnectionModal");

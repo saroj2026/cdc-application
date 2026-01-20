@@ -50,7 +50,6 @@ class CDCManager:
         self.connection_store = connection_store or {}
         self.pipeline_store: Dict[str, Pipeline] = {}
         self.schema_service = SchemaService()
-        self.schema_service = SchemaService()
     
     def add_connection(self, connection: Connection) -> None:
         """Add a connection to the store.
@@ -446,49 +445,49 @@ class CDCManager:
             )
             
             # Check if Debezium connector already exists and is running
-            debezium_exists = False
-            try:
-                connector_info = self.kafka_client.get_connector_info(debezium_connector_name)
-                connector_status = self.kafka_client.get_connector_status(debezium_connector_name)
-                if connector_status is None:
-                    # Connector doesn't exist, will create new one
-                    debezium_exists = False
-                else:
-                    connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
-                
-                if connector_state == 'RUNNING':
-                    logger.info(f"Debezium connector {debezium_connector_name} already exists and is RUNNING, reusing it")
-                    debezium_exists = True
-                    pipeline.debezium_connector_name = debezium_connector_name
-                    pipeline.debezium_config = self.kafka_client.get_connector_config(debezium_connector_name)
-                elif connector_state in ['FAILED', 'STOPPED']:
-                    logger.warning(f"Debezium connector {debezium_connector_name} exists but is {connector_state}, attempting restart...")
-                    try:
-                        self.kafka_client.restart_connector(debezium_connector_name)
-                        if self.kafka_client.wait_for_connector(debezium_connector_name, "RUNNING", max_wait_seconds=30):
-                            logger.info(f"Successfully restarted connector {debezium_connector_name}")
+            # Note: This is different from the earlier check - here we check using the newly generated connector name
+            if not debezium_exists:
+                try:
+                    connector_info = self.kafka_client.get_connector_info(debezium_connector_name)
+                    connector_status = self.kafka_client.get_connector_status(debezium_connector_name)
+                    if connector_status is not None:
+                        connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                        
+                        if connector_state == 'RUNNING':
+                            logger.info(f"Debezium connector {debezium_connector_name} already exists and is RUNNING, reusing it")
                             debezium_exists = True
                             pipeline.debezium_connector_name = debezium_connector_name
                             pipeline.debezium_config = self.kafka_client.get_connector_config(debezium_connector_name)
+                        elif connector_state in ['FAILED', 'STOPPED']:
+                            logger.warning(f"Debezium connector {debezium_connector_name} exists but is {connector_state}, attempting restart...")
+                            try:
+                                self.kafka_client.restart_connector(debezium_connector_name)
+                                if self.kafka_client.wait_for_connector(debezium_connector_name, "RUNNING", max_wait_seconds=30):
+                                    logger.info(f"Successfully restarted connector {debezium_connector_name}")
+                                    debezium_exists = True
+                                    pipeline.debezium_connector_name = debezium_connector_name
+                                    pipeline.debezium_config = self.kafka_client.get_connector_config(debezium_connector_name)
+                                else:
+                                    logger.warning(f"Restart failed, will delete and recreate")
+                                    self.kafka_client.delete_connector(debezium_connector_name)
+                            except Exception as restart_error:
+                                logger.warning(f"Could not restart connector: {restart_error}, will delete and recreate")
+                                self.kafka_client.delete_connector(debezium_connector_name)
                         else:
-                            logger.warning(f"Restart failed, will delete and recreate")
+                            logger.info(f"Debezium connector {debezium_connector_name} exists but state is {connector_state}, will recreate")
+                            # Delete and recreate
                             self.kafka_client.delete_connector(debezium_connector_name)
-                    except Exception as restart_error:
-                        logger.warning(f"Could not restart connector: {restart_error}, will delete and recreate")
-                        self.kafka_client.delete_connector(debezium_connector_name)
-                else:
-                    logger.info(f"Debezium connector {debezium_connector_name} exists but state is {connector_state}, will recreate")
-                    # Delete and recreate
-                    self.kafka_client.delete_connector(debezium_connector_name)
-                    logger.info(f"Deleted existing Debezium connector: {debezium_connector_name}")
-            except requests.exceptions.HTTPError as e:
-                # If 404, connector doesn't exist (fine, will create)
-                if e.response and e.response.status_code == 404:
-                    logger.debug(f"Debezium connector {debezium_connector_name} doesn't exist, will create")
-                else:
+                            logger.info(f"Deleted existing Debezium connector: {debezium_connector_name}")
+                    else:
+                        logger.debug(f"Debezium connector {debezium_connector_name} doesn't exist, will create")
+                except requests.exceptions.HTTPError as e:
+                    # If 404, connector doesn't exist (fine, will create)
+                    if e.response and e.response.status_code == 404:
+                        logger.debug(f"Debezium connector {debezium_connector_name} doesn't exist, will create")
+                    else:
+                        logger.warning(f"Could not check Debezium connector existence (continuing): {e}")
+                except Exception as e:
                     logger.warning(f"Could not check Debezium connector existence (continuing): {e}")
-            except Exception as e:
-                logger.warning(f"Could not check Debezium connector existence (continuing): {e}")
             
             # Create Debezium connector only if it doesn't exist
             if not debezium_exists:
@@ -849,6 +848,17 @@ class CDCManager:
             
             # Persist final status after CDC setup completes
             self._persist_pipeline_status(pipeline)
+            
+            # Register topics with CDC event logger for monitoring
+            try:
+                from ingestion.cdc_event_logger import get_event_logger
+                event_logger = get_event_logger()
+                if event_logger and kafka_topics:
+                    for topic in kafka_topics:
+                        event_logger.add_topic(topic, pipeline.id)
+                    logger.info(f"Registered {len(kafka_topics)} topics with CDC event logger for pipeline {pipeline.name}")
+            except Exception as e:
+                logger.warning(f"Failed to register topics with CDC event logger: {e}")
             
             logger.info(f"Pipeline started successfully: {pipeline.name}")
             
@@ -1855,6 +1865,17 @@ class CDCManager:
             pipeline.status = PipelineStatus.STOPPED
             pipeline.cdc_status = CDCStatus.STOPPED
             result["status"] = "STOPPED"
+            
+            # Unregister topics from CDC event logger
+            try:
+                from ingestion.cdc_event_logger import get_event_logger
+                event_logger = get_event_logger()
+                if event_logger and pipeline.kafka_topics:
+                    for topic in pipeline.kafka_topics:
+                        event_logger.remove_topic(topic)
+                    logger.info(f"Unregistered {len(pipeline.kafka_topics)} topics from CDC event logger for pipeline {pipeline.name}")
+            except Exception as e:
+                logger.warning(f"Failed to unregister topics from CDC event logger: {e}")
             
             logger.info(f"Pipeline stopped: {pipeline.name}")
             
