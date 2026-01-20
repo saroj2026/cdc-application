@@ -60,6 +60,10 @@ from ingestion.monitoring import CDCMonitor
 from ingestion.recovery import RecoveryManager
 from ingestion.cdc_health_monitor import CDCHealthMonitor
 from ingestion.background_monitor import start_background_monitor
+from ingestion.cdc_event_logger import initialize_event_logger, get_event_logger, shutdown_event_logger
+
+# Initialize logger early to use in import error handling
+logger = logging.getLogger(__name__)
 
 # WebSocket support
 try:
@@ -92,8 +96,6 @@ except ImportError:
         JWT_AVAILABLE = True
     except ImportError:
         JWT_AVAILABLE = False
-
-logger = logging.getLogger(__name__)
 
 # Setup database logging handler (if available)
 try:
@@ -278,6 +280,85 @@ try:
     logger.info(f"Background CDC health monitor started (interval: {monitor_interval}s)")
 except Exception as e:
     logger.warning(f"Failed to start background monitor: {e}. Monitoring will still work via API endpoints.")
+
+# Initialize CDC Event Logger for monitoring individual CDC events
+# Get Kafka bootstrap servers from environment or use remote server
+kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092")
+try:
+    from ingestion.database.session import SessionLocal
+    cdc_event_logger = initialize_event_logger(
+        kafka_bootstrap_servers=kafka_bootstrap_servers,
+        db_session_factory=SessionLocal
+    )
+    if cdc_event_logger:
+        logger.info(f"CDC Event Logger initialized with Kafka: {kafka_bootstrap_servers}")
+    else:
+        logger.warning("CDC Event Logger not available (kafka-python may not be installed)")
+except Exception as e:
+    logger.warning(f"Failed to initialize CDC Event Logger: {e}")
+    cdc_event_logger = None
+
+
+def load_existing_pipeline_topics():
+    """Load topics from existing running pipelines into the event logger."""
+    if not cdc_event_logger:
+        return
+    
+    try:
+        from ingestion.database.session import SessionLocal
+        from ingestion.database.models_db import PipelineModel, PipelineStatus as DBPipelineStatus
+        
+        db = SessionLocal()
+        try:
+            # Get all running pipelines with topics
+            running_pipelines = db.query(PipelineModel).filter(
+                PipelineModel.status == DBPipelineStatus.RUNNING,
+                PipelineModel.kafka_topics.isnot(None),
+                PipelineModel.deleted_at.is_(None)
+            ).all()
+            
+            topics = []
+            topic_mapping = {}
+            
+            for pipeline in running_pipelines:
+                if pipeline.kafka_topics:
+                    for topic in pipeline.kafka_topics:
+                        topics.append(topic)
+                        topic_mapping[topic] = pipeline.id
+                        
+            if topics:
+                cdc_event_logger.start(topics=topics, pipeline_mapping=topic_mapping)
+                logger.info(f"CDC Event Logger started with {len(topics)} existing topics from {len(running_pipelines)} running pipelines")
+            else:
+                cdc_event_logger.start()
+                logger.info("CDC Event Logger started (no existing running pipelines with topics)")
+                
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Failed to load existing pipeline topics: {e}")
+        # Start without topics, they can be added later
+        try:
+            cdc_event_logger.start()
+        except Exception:
+            pass
+
+
+# FastAPI startup/shutdown events
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup."""
+    logger.info("Starting CDC Pipeline API...")
+    load_existing_pipeline_topics()
+    logger.info("CDC Pipeline API started successfully")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown."""
+    logger.info("Shutting down CDC Pipeline API...")
+    shutdown_event_logger()
+    logger.info("CDC Pipeline API shutdown complete")
 
 
 # Pydantic models for request/response

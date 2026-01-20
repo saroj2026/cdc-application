@@ -235,17 +235,18 @@ class SinkConfigGenerator:
         topics_list = ",".join(topics)
         
         # Extract table name from topic (format: {server}.{schema}.{table})
-        # For SQL Server, we need schema.table format
+        # For SQL Server JDBC Sink, we should use just the table name, not schema.table
+        # The JDBC connector interprets schema.table as database.table, which causes errors
+        # The schema is determined by the connection's default schema (dbo for SQL Server)
         table_name = None
         if topics:
             first_topic = topics[0]
             topic_parts = first_topic.split(".")
             if len(topic_parts) >= 3:
-                # Format: schema.table (e.g., "dbo.projects_simple")
-                schema_name = topic_parts[-2] if len(topic_parts) >= 2 else schema
+                # Extract just the table name (last part of topic)
                 table_name_only = topic_parts[-1]
-                # For SQL Server, use schema.table format
-                table_name = f"{schema}.{table_name_only}"
+                # For SQL Server, use just the table name - schema is from connection default
+                table_name = table_name_only
         
         config = {
             "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
@@ -263,15 +264,13 @@ class SinkConfigGenerator:
             "auto.create": "true",
             "auto.evolve": "true",
             "delete.enabled": "false",  # Disabled - we only do inserts
-            # Extract 'after' field from Debezium envelope format
-            # With schemas.enable=true, the value structure is: {schema: {...}, payload: {after: {...}}}
-            # ExtractField$Value extracts from the value root, so we need to extract from payload.after
-            # But ExtractField doesn't support nested paths, so we extract 'payload' first, then 'after'
-            "transforms": "extractPayload,extractAfter",
-            "transforms.extractPayload.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
-            "transforms.extractPayload.field": "payload",  # First extract payload
-            "transforms.extractAfter.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
-            "transforms.extractAfter.field": "after",  # Then extract after from payload
+            # Use Debezium's ExtractNewRecordState transform to unwrap the envelope
+            # This properly handles the Debezium message structure and extracts the 'after' field
+            "transforms": "unwrap",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "false",
+            "transforms.unwrap.delete.handling.mode": "none",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
             "errors.tolerance": "all",
             "errors.log.enable": "true",
             "errors.log.include.messages": "true",
