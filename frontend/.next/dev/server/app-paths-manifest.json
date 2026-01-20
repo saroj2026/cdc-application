@@ -1,11 +1,12 @@
 {
   "/analytics/page": "app/analytics/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
   "/connections/page": "app/connections/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/governance/page": "app/governance/page.js",
+  "/errors/page": "app/errors/page.js",
   "/monitoring/page": "app/monitoring/page.js",
-  "/pipelines/[id]/monitor/page": "app/pipelines/[id]/monitor/page.js",
+  "/page": "app/page.js",
   "/pipelines/page": "app/pipelines/page.js",
-  "/settings/page": "app/settings/page.js",
   "/users/page": "app/users/page.js"
 }
