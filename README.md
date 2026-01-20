@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Real-Time CDC Pipeline System
 
 ## Overview
@@ -337,7 +336,3 @@ To make this a complete product:
 6. **Add alerting** for failures
 
 The core functionality is **already production-ready** - it automatically creates all Kafka configurations from user credentials!
-=======
-# seg-cdc-application
-seg-cdc
->>>>>>> 6724e7273eadfd3b3e851553a519923f25c95479
