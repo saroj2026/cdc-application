@@ -61,3 +61,4 @@ print(f"\nConnector status: {json.dumps(status, indent=2)}")
 topics_response = requests.get("http://72.61.233.209:8083/connectors/cdc-pipeline-1-pg-public/topics").json()
 print(f"\nConnector topics: {json.dumps(topics_response, indent=2)}")
 
+

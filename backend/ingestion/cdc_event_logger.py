@@ -438,3 +438,4 @@ def shutdown_event_logger():
         _event_logger = None
         logger.info("CDC Event Logger shutdown complete")
 
+

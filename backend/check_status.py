@@ -36,3 +36,4 @@ except Exception as e:
 topics = requests.get('http://72.61.233.209:8083/connectors/cdc-pipeline-1-pg-public/topics').json()
 print(f'Topics: {json.dumps(topics, indent=2)}')
 
+

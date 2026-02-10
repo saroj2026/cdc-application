@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from ingestion.connectors.base_connector import BaseConnector
 from ingestion.connectors.sqlserver import SQLServerConnector
 from ingestion.connectors.postgresql import PostgreSQLConnector
+from ingestion.connectors.oracle import OracleConnector
+from ingestion.connectors.as400 import AS400Connector
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +23,9 @@ class DataTransfer:
     - PostgreSQL → PostgreSQL
     - SQL Server → PostgreSQL (with type mapping)
     - PostgreSQL → SQL Server (with type mapping)
+    - PostgreSQL → Oracle (with type mapping)
+    - AS400/DB2 → SQL Server (with type mapping)
+    - AS400/DB2 → PostgreSQL (with type mapping)
     """
 
     # Type mapping from SQL Server to PostgreSQL
@@ -80,6 +86,56 @@ class DataTransfer:
         "xml": "xml",
     }
 
+    # Type mapping from PostgreSQL to Oracle (for PostgreSQL → Oracle pipelines)
+    POSTGRESQL_TO_ORACLE_TYPE_MAP = {
+        "integer": "NUMBER(10)",
+        "int": "NUMBER(10)",
+        "bigint": "NUMBER(19)",
+        "smallint": "NUMBER(5)",
+        "boolean": "NUMBER(1)",
+        "numeric": "NUMBER",
+        "decimal": "NUMBER",
+        "double precision": "BINARY_DOUBLE",
+        "real": "BINARY_FLOAT",
+        "char": "CHAR",
+        "character": "CHAR",
+        "varchar": "VARCHAR2",
+        "character varying": "VARCHAR2",
+        "text": "CLOB",
+        "date": "DATE",
+        "time": "TIMESTAMP",
+        "timestamp": "TIMESTAMP",
+        "timestamp without time zone": "TIMESTAMP",
+        "timestamp with time zone": "TIMESTAMP WITH TIME ZONE",
+        "bytea": "BLOB",
+        "uuid": "VARCHAR2(36)",
+        "xml": "XMLTYPE",
+    }
+
+    # Type mapping from AS400/DB2 (IBM i) to SQL Server
+    AS400_TO_SQLSERVER_TYPE_MAP = {
+        "char": "char",
+        "varchar": "varchar",
+        "graphic": "nchar",
+        "vargraphic": "nvarchar",
+        "clob": "nvarchar(max)",
+        "dbclob": "nvarchar(max)",
+        "blob": "varbinary(max)",
+        "decimal": "decimal",
+        "numeric": "decimal",
+        "integer": "int",
+        "int": "int",
+        "smallint": "smallint",
+        "bigint": "bigint",
+        "real": "real",
+        "double": "float",
+        "float": "float",
+        "date": "date",
+        "time": "time",
+        "timestamp": "datetime2",
+        "timezone": "datetimeoffset",
+    }
+
     def __init__(
         self,
         source_connector: BaseConnector,
@@ -122,6 +178,12 @@ class DataTransfer:
             return self.SQLSERVER_TO_POSTGRESQL_TYPE_MAP.get(source_type_lower)
         elif isinstance(self.source, PostgreSQLConnector) and isinstance(self.target, SQLServerConnector):
             return self.POSTGRESQL_TO_SQLSERVER_TYPE_MAP.get(source_type_lower)
+        elif isinstance(self.source, PostgreSQLConnector) and isinstance(self.target, OracleConnector):
+            return self.POSTGRESQL_TO_ORACLE_TYPE_MAP.get(source_type_lower)
+        elif isinstance(self.source, AS400Connector) and isinstance(self.target, SQLServerConnector):
+            return self.AS400_TO_SQLSERVER_TYPE_MAP.get(source_type_lower)
+        elif isinstance(self.source, AS400Connector) and isinstance(self.target, PostgreSQLConnector):
+            return self.AS400_TO_POSTGRESQL_TYPE_MAP.get(source_type_lower)
 
         # Same database type, no mapping needed
         return None
@@ -355,6 +417,10 @@ class DataTransfer:
             self._create_postgresql_table(
                 table_name, source_columns, target_database, target_schema, create_if_not_exists
             )
+        elif isinstance(self.target, OracleConnector):
+            self._create_oracle_table(
+                table_name, source_columns, target_database, target_schema, create_if_not_exists
+            )
         else:
             raise NotImplementedError(
                 f"Schema transfer to {type(self.target).__name__} is not yet supported"
@@ -531,6 +597,14 @@ class DataTransfer:
                 # Log for debugging
                 logger.debug(f"Column {col_name}: {data_type} (max_length={max_length}, precision={precision}, scale={scale})")
 
+            # Add surrogate key and CDC metadata columns for SCD2-style history (matches JDBC Sink + Debezium add.fields)
+            # row_id: surrogate PK so multiple rows per business key are allowed
+            # __op, __source_ts_ms, __deleted: produced by ExtractNewRecordState add.fields=op,source.ts_ms and delete.handling.mode=rewrite
+            column_defs.insert(0, "[row_id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY")
+            column_defs.append("[__op] NVARCHAR(10) NULL")
+            column_defs.append("[__source_ts_ms] BIGINT NULL")
+            column_defs.append("[__deleted] NVARCHAR(10) NULL")
+
             # Create table
             create_query = f"""
                 CREATE TABLE [{schema_name}].[{table_name}] (
@@ -605,9 +679,16 @@ class DataTransfer:
                 # Handle default values - convert SQL Server functions to PostgreSQL equivalents
                 default = ""
                 if default_value:
-                    default_str = str(default_value).upper()
-                    # Convert SQL Server functions to PostgreSQL equivalents
-                    if "GETDATE()" in default_str:
+                    default_str = str(default_value).upper().strip()
+                    # SQL Server bit -> PostgreSQL boolean: 0/((0)) -> false, 1/((1)) -> true
+                    if data_type.lower() == "boolean" and isinstance(self.source, SQLServerConnector):
+                        if default_str in ("0", "((0))", "(0)"):
+                            default = " DEFAULT false"
+                        elif default_str in ("1", "((1))", "(1)"):
+                            default = " DEFAULT true"
+                        else:
+                            default = ""
+                    elif "GETDATE()" in default_str:
                         default = " DEFAULT CURRENT_TIMESTAMP"
                     elif "GETUTCDATE()" in default_str:
                         default = " DEFAULT (NOW() AT TIME ZONE 'UTC')"
@@ -632,6 +713,12 @@ class DataTransfer:
                     )
                 )
 
+            # SCD2-style: surrogate key + CDC metadata (same as SQL Server target)
+            column_defs.insert(0, sql.SQL("row_id BIGSERIAL PRIMARY KEY"))
+            column_defs.append(sql.SQL("{} VARCHAR(10)").format(sql.Identifier("__op")))
+            column_defs.append(sql.SQL("{} BIGINT").format(sql.Identifier("__source_ts_ms")))
+            column_defs.append(sql.SQL("{} VARCHAR(10)").format(sql.Identifier("__deleted")))
+
             # Create table
             create_query = sql.SQL("CREATE TABLE {}.{} ({})").format(
                 sql.Identifier(schema_name),
@@ -645,6 +732,95 @@ class DataTransfer:
         except Exception as e:
             conn.rollback()
             logger.error(f"Failed to create PostgreSQL table: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+
+    def _create_oracle_table(
+        self,
+        table_name: str,
+        columns: List[Dict[str, Any]],
+        database: Optional[str],
+        schema: Optional[str],
+        create_if_not_exists: bool
+    ) -> None:
+        """Create Oracle table from column definitions (e.g. from PostgreSQL source). SCD2-style: row_id + __op, __source_ts_ms, __deleted."""
+        schema_name = (schema or self.target.config.get("schema") or self.target.config.get("user") or "PUBLIC").upper()
+        table_name_upper = table_name.upper()
+        conn = self.target.connect()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "SELECT COUNT(*) FROM all_tables WHERE owner = :1 AND table_name = :2",
+                (schema_name, table_name_upper),
+            )
+            exists = cursor.fetchone()[0] > 0
+
+            if exists and not create_if_not_exists:
+                logger.info(f"Table {schema_name}.{table_name_upper} already exists, skipping creation")
+                return
+
+            if exists:
+                cursor.execute(f'DROP TABLE "{schema_name}"."{table_name_upper}"')
+                conn.commit()
+                logger.info(f"Dropped existing table {schema_name}.{table_name_upper}")
+
+            column_defs = []
+            for col in columns:
+                col_name = col["name"]
+                data_type = col["data_type"]
+                is_nullable = col.get("is_nullable", True)
+                default_value = col.get("default_value")
+                max_length = col.get("max_length")
+                precision = col.get("precision")
+                scale = col.get("scale")
+
+                base_type = data_type.lower().split("(")[0].strip()
+                mapped = self._get_type_mapping(data_type, "oracle") if isinstance(self.source, PostgreSQLConnector) else None
+                if mapped:
+                    data_type = mapped
+                else:
+                    data_type = base_type
+
+                if "VARCHAR2" in data_type.upper():
+                    data_type = f"VARCHAR2({min(max_length or 4000, 4000)})"
+                elif max_length is not None and "CHAR" in data_type.upper() and "VARCHAR" not in data_type.upper():
+                    data_type = f"CHAR({max_length})"
+                elif "NUMBER" in data_type.upper() and "(" not in data_type and (precision is not None or scale is not None):
+                    if precision is not None and scale is not None:
+                        data_type = f"NUMBER({precision},{scale})"
+                    elif precision is not None:
+                        data_type = f"NUMBER({precision})"
+
+                nullable = "" if is_nullable else " NOT NULL"
+                default = ""
+                if default_value:
+                    default_str = str(default_value).upper().strip()
+                    if "CURRENT_TIMESTAMP" in default_str or "NOW()" in default_str:
+                        default = " DEFAULT CURRENT_TIMESTAMP"
+                    elif "CURRENT_DATE" in default_str:
+                        default = " DEFAULT CURRENT_DATE"
+                    elif default_str.startswith("'") and default_str.endswith("'"):
+                        default = f" DEFAULT {default_value}"
+                    else:
+                        default = ""
+                column_defs.append(f'"{col_name}" {data_type}{nullable}{default}')
+
+            column_defs.insert(0, '"row_id" NUMBER GENERATED BY DEFAULT ON NULL AS IDENTITY PRIMARY KEY')
+            column_defs.append('"__op" VARCHAR2(10)')
+            column_defs.append('"__source_ts_ms" NUMBER(19)')
+            column_defs.append('"__deleted" VARCHAR2(10)')
+
+            create_sql = f'CREATE TABLE "{schema_name}"."{table_name_upper}" (\n  ' + ",\n  ".join(column_defs) + "\n)"
+            cursor.execute(create_sql)
+            conn.commit()
+            logger.info(f"Created Oracle table {schema_name}.{table_name_upper}")
+
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to create Oracle table: {e}")
             raise
         finally:
             cursor.close()
@@ -771,6 +947,10 @@ class DataTransfer:
             self._insert_batch_postgresql(
                 table_name, rows, column_names, target_database, target_schema
             )
+        elif isinstance(self.target, OracleConnector):
+            self._insert_batch_oracle(
+                table_name, rows, column_names, target_database, target_schema
+            )
         else:
             raise NotImplementedError(
                 f"Data insertion to {type(self.target).__name__} is not yet supported"
@@ -801,17 +981,23 @@ class DataTransfer:
             if database:
                 cursor.execute(f"USE [{database}]")
 
-            # Build INSERT statement
-            column_list = ", ".join([f"[{col}]" for col in column_names])
-            placeholders = ", ".join(["?" for _ in column_names])
+            # Build INSERT statement; target table has row_id IDENTITY + __op, __source_ts_ms, __deleted (CDC metadata)
+            # So we insert only source columns + __op='r', __source_ts_ms, __deleted for full load
+            ts_ms = int(time.time() * 1000)
+            insert_columns = column_names + ["__op", "__source_ts_ms", "__deleted"]
+            column_list = ", ".join([f"[{col}]" for col in insert_columns])
+            placeholders = ", ".join(["?" for _ in insert_columns])
             insert_query = f"""
                 INSERT INTO [{schema_name}].[{table_name}] ({column_list})
                 VALUES ({placeholders})
             """
 
+            # Append full-load metadata to each row: __op='r', __source_ts_ms, __deleted=NULL
+            rows_with_metadata = [list(row) + ["r", ts_ms, None] for row in rows]
+
             # Execute batch insert within transaction
             try:
-                cursor.executemany(insert_query, rows)
+                cursor.executemany(insert_query, rows_with_metadata)
                 conn.commit()
                 logger.debug(f"Successfully inserted {len(rows)} rows into {schema_name}.{table_name}")
             except Exception as e:
@@ -849,7 +1035,10 @@ class DataTransfer:
         database: Optional[str],
         schema: Optional[str]
     ) -> None:
-        """Insert batch into PostgreSQL with transaction management."""
+        """Insert batch into PostgreSQL with transaction management.
+        Target table has row_id (serial) + __op, __source_ts_ms, __deleted for SCD2.
+        Full load inserts source columns + __op='r', __source_ts_ms, __deleted=NULL.
+        """
         from psycopg2 import sql
         from psycopg2.extras import execute_values
 
@@ -859,13 +1048,16 @@ class DataTransfer:
         
         try:
             conn = self.target.connect()
-            # Disable autocommit to use transactions
             conn.autocommit = False
             cursor = conn.cursor()
 
-            # Build INSERT statement
+            # Insert columns: source columns + __op, __source_ts_ms, __deleted
+            insert_columns = column_names + ["__op", "__source_ts_ms", "__deleted"]
+            ts_ms = int(time.time() * 1000)
+            rows_with_metadata = [list(row) + ["r", ts_ms, None] for row in rows]
+
             column_list = sql.SQL(", ").join([
-                sql.Identifier(col) for col in column_names
+                sql.Identifier(col) for col in insert_columns
             ])
             insert_query = sql.SQL("INSERT INTO {}.{} ({}) VALUES %s").format(
                 sql.Identifier(schema_name),
@@ -873,9 +1065,8 @@ class DataTransfer:
                 column_list
             )
 
-            # Execute batch insert using execute_values within transaction
             try:
-                execute_values(cursor, insert_query, rows)
+                execute_values(cursor, insert_query, rows_with_metadata)
                 conn.commit()
                 logger.debug(f"Successfully inserted {len(rows)} rows into {schema_name}.{table_name}")
             except Exception as e:
@@ -894,6 +1085,56 @@ class DataTransfer:
             raise
         finally:
             # Clean up resources
+            if cursor:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+    def _insert_batch_oracle(
+        self,
+        table_name: str,
+        rows: List[List[Any]],
+        column_names: List[str],
+        database: Optional[str],
+        schema: Optional[str]
+    ) -> None:
+        """Insert batch into Oracle. Target table has row_id IDENTITY + __op, __source_ts_ms, __deleted. Full load appends __op='r', __source_ts_ms, __deleted=NULL."""
+        schema_name = (schema or self.target.config.get("schema") or self.target.config.get("user") or "PUBLIC").upper()
+        table_name_upper = table_name.upper()
+        conn = None
+        cursor = None
+
+        try:
+            conn = self.target.connect()
+            cursor = conn.cursor()
+
+            insert_columns = column_names + ["__op", "__source_ts_ms", "__deleted"]
+            ts_ms = int(time.time() * 1000)
+            rows_with_metadata = [list(row) + ["r", ts_ms, None] for row in rows]
+
+            quoted_cols = ", ".join(f'"{c}"' for c in insert_columns)
+            placeholders = ", ".join(f":{i+1}" for i in range(len(insert_columns)))
+            insert_sql = f'INSERT INTO "{schema_name}"."{table_name_upper}" ({quoted_cols}) VALUES ({placeholders})'
+
+            cursor.executemany(insert_sql, rows_with_metadata)
+            conn.commit()
+            logger.debug(f"Successfully inserted {len(rows)} rows into Oracle {schema_name}.{table_name_upper}")
+
+        except Exception as e:
+            if conn:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+            logger.error(f"Failed to insert batch into Oracle {schema_name}.{table_name_upper}: {e}")
+            raise
+        finally:
             if cursor:
                 try:
                     cursor.close()

@@ -19,3 +19,4 @@ for conn_name in connectors:
         for task in tasks:
             print(f'    Task {task.get("id")}: {task.get("state")}')
 
+

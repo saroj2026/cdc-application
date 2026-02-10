@@ -91,6 +91,18 @@ class SinkConfigGenerator:
                 table_mapping=table_mapping,
                 batch_size=batch_size
             )
+        elif database_type == "oracle":
+            return SinkConfigGenerator._generate_oracle_sink_config(
+                connector_name=connector_name,
+                connection=target_connection,
+                database=target_database,
+                schema=target_schema,
+                topics=kafka_topics,
+                table_mapping=table_mapping,
+                batch_size=batch_size,
+                insert_mode=insert_mode,
+                pk_mode=pk_mode
+            )
         else:
             raise ValueError(f"Unsupported database type for Sink: {database_type}")
     
@@ -136,6 +148,7 @@ class SinkConfigGenerator:
         # Format: {schema}.${topic} where we extract table name from topic
         # Since JDBC Sink doesn't support regex directly, we'll use a Single Message Transform
         
+        # SCD2-style (same as SQL Server target): insert every change as new row with __op, __source_ts_ms, __deleted
         config = {
             "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
             "tasks.max": "1",
@@ -143,47 +156,34 @@ class SinkConfigGenerator:
             "connection.url": connection_url,
             "connection.user": connection.username,
             "connection.password": connection.password,
-            "insert.mode": insert_mode,
-            "pk.mode": "kafka",  # Use Kafka partition/offset as key - works with plain JSON, doesn't require schemas
-            "pk.fields": "kafka_partition,kafka_offset",  # Use partition and offset as composite key
+            "insert.mode": "insert",
+            "pk.mode": "none",  # Allow multiple rows per key for SCD2 history
             "batch.size": str(batch_size),
-            # Extract table name from topic: topic format is {server}.{schema}.{table}
-            # We need to extract just the table name (last part after last dot)
-            # Use regex replace SMT to set a header with table name, then use that in table.name.format
-            "transforms": "extractTable",
-            "transforms.extractTable.type": "org.apache.kafka.connect.transforms.RegexRouter",
-            "transforms.extractTable.regex": ".*\\.([^.]+)$",  # Extract last part after last dot
-            "transforms.extractTable.replacement": "$1",  # Use just the table name
-            "table.name.format": f"{schema}.${{topic}}",  # This will use the transformed topic name
             "auto.create": "true",
-            "auto.evolve": "true",
-            "delete.enabled": "false",  # Disabled - we only do inserts
+            "auto.evolve": "false",  # Target tables created with row_id + CDC metadata
+            "delete.enabled": "false",
+            # Debezium ExtractNewRecordState: unwrap envelope, add __op, __source_ts_ms, keep deletes as __deleted=true
+            "transforms": "unwrap",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "true",
+            "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
+            "consumer.override.auto.offset.reset": "earliest",
             "errors.tolerance": "all",
             "errors.log.enable": "true",
             "errors.log.include.messages": "true",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter.schemas.enable": "false"  # Match Debezium output (plain JSON)
+            "value.converter.schemas.enable": "true",
         }
-        
-        # Actually, RegexRouter changes the topic name, which affects routing
-        # Better approach: Use a simpler table.name.format that extracts from topic
-        # JDBC Sink supports ${topic} variable, but we need to extract table name
-        # Let's use a different approach: calculate table name from first topic
+        # Table name from first topic
         if topics:
-            # Extract table name from first topic (assuming all topics follow same pattern)
             first_topic = topics[0]
             topic_parts = first_topic.split(".")
             if len(topic_parts) >= 3:
-                table_name = topic_parts[-1]  # Last part is table name
-                # Use static table name format
+                table_name = topic_parts[-1]
                 config["table.name.format"] = f"{schema}.{table_name}"
-                # Remove the transforms since we're using static name
-                config.pop("transforms", None)
-                config.pop("transforms.extractTable.type", None)
-                config.pop("transforms.extractTable.regex", None)
-                config.pop("transforms.extractTable.replacement", None)
         
         # If table mapping is provided, use it
         if table_mapping:
@@ -255,22 +255,25 @@ class SinkConfigGenerator:
             "connection.url": connection_url,
             "connection.user": connection.username,
             "connection.password": connection.password,
+            # insert + pk.mode=none: append every change as new row (history/SCD2-style: a,b,c; update a→o adds row with __op=u; delete b adds row with __op=d)
             "insert.mode": insert_mode,
-            "pk.mode": "none",  # No primary key - works with schemas from Debezium envelope
+            "pk.mode": "none",  # Allow multiple rows per id so updates/deletes append new rows
             "batch.size": str(batch_size),
             # For SQL Server, use just table name (schema defaults to dbo when databaseName is in connection URL)
             # The JDBC connector interprets schema.table as database.table, so we use just the table name
             "table.name.format": table_name if table_name else "${topic}",
             "auto.create": "true",
-            "auto.evolve": "true",
+            "auto.evolve": "false",  # Avoid schema drift; target tables created with __op, __source_ts_ms, __deleted
             "delete.enabled": "false",  # Disabled - we only do inserts
             # Use Debezium's ExtractNewRecordState transform to unwrap the envelope
-            # This properly handles the Debezium message structure and extracts the 'after' field
             "transforms": "unwrap",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-            "transforms.unwrap.drop.tombstones": "false",
-            "transforms.unwrap.delete.handling.mode": "none",
+            "transforms.unwrap.drop.tombstones": "true",
+            # rewrite: keep DELETE events as records with __deleted=true (for SCD2-style tracking)
+            "transforms.unwrap.delete.handling.mode": "rewrite",
+            # Add envelope metadata; use default names so Debezium produces __op, __source_ts_ms (double underscore)
             "transforms.unwrap.add.fields": "op,source.ts_ms",
+            "consumer.override.auto.offset.reset": "earliest",  # New consumer groups start from beginning
             "errors.tolerance": "all",
             "errors.log.enable": "true",
             "errors.log.include.messages": "true",
@@ -289,6 +292,78 @@ class SinkConfigGenerator:
         if connection.additional_config.get("trust_server_certificate", False):
             config["connection.url"] += ";trustServerCertificate=true"
         
+        return config
+    
+    @staticmethod
+    def _generate_oracle_sink_config(
+        connector_name: str,
+        connection: Connection,
+        database: str,
+        schema: str,
+        topics: List[str],
+        table_mapping: Optional[Dict[str, str]],
+        batch_size: int,
+        insert_mode: str,
+        pk_mode: str
+    ) -> Dict[str, Any]:
+        """Generate Oracle JDBC Sink connector configuration (SCD2-style).
+        
+        Args:
+            connector_name: Connector name
+            connection: Oracle connection
+            database: Database/service name
+            schema: Schema name (Oracle schema/user)
+            topics: Kafka topics
+            table_mapping: Topic to table mapping
+            batch_size: Batch size
+            insert_mode: Insert mode
+            pk_mode: Primary key mode
+            
+        Returns:
+            Oracle Sink connector configuration
+        """
+        # Oracle JDBC URL: jdbc:oracle:thin:@//host:port/service_name
+        service_name = database or connection.additional_config.get("service_name") or "ORCL"
+        connection_url = (
+            f"jdbc:oracle:thin:@//{connection.host}:{connection.port}/{service_name}"
+        )
+        topics_list = ",".join(topics)
+        # Oracle uses schema.table; schema is typically uppercase
+        schema_upper = (schema or connection.additional_config.get("schema") or connection.username or "").upper()
+        config = {
+            "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+            "tasks.max": "1",
+            "topics": topics_list,
+            "connection.url": connection_url,
+            "connection.user": connection.username,
+            "connection.password": connection.password,
+            "insert.mode": insert_mode,
+            "pk.mode": "none",
+            "batch.size": str(batch_size),
+            "auto.create": "true",
+            "auto.evolve": "false",
+            "delete.enabled": "false",
+            "transforms": "unwrap",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "true",
+            "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
+            "consumer.override.auto.offset.reset": "earliest",
+            "errors.tolerance": "all",
+            "errors.log.enable": "true",
+            "errors.log.include.messages": "true",
+            "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "key.converter.schemas.enable": "false",
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "value.converter.schemas.enable": "true",
+        }
+        if topics:
+            first_topic = topics[0]
+            topic_parts = first_topic.split(".")
+            table_name = topic_parts[-1] if len(topic_parts) >= 2 else first_topic
+            config["table.name.format"] = f"{schema_upper}.{table_name}"
+        if table_mapping and topics and topics[0] in table_mapping:
+            config["table.name.format"] = f"{schema_upper}.{table_mapping[topics[0]]}"
         return config
     
     @staticmethod
@@ -312,6 +387,8 @@ class SinkConfigGenerator:
             db_short = "pg"
         elif database_type in ["sqlserver", "mssql"]:
             db_short = "mssql"
+        elif database_type == "oracle":
+            db_short = "oracle"
         elif database_type == "s3":
             db_short = "s3"
         else:

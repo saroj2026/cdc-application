@@ -194,11 +194,15 @@ class CDCManager:
     def start_pipeline(self, pipeline_id: str) -> Dict[str, Any]:
         """Start a CDC pipeline.
         
-        This orchestrates:
-        1. Full load (if enabled)
-        2. LSN capture
-        3. Debezium connector creation
-        4. Sink connector creation
+        Default flow for any source and target (when mode is full_load_and_cdc):
+        
+        1. Auto-create schema: Create target schema and tables (source schema + CDC metadata
+           columns: row_id, __op, __source_ts_ms, __deleted for SQL Server SCD2-style history).
+        2. Full load: Copy existing data from source to target (with __op='r' for initial load).
+        3. CDC: Create Debezium source connector and JDBC Sink connector; stream changes.
+        
+        Steps 1 and 2 are skipped if full load was already completed. Step 3 is skipped
+        for full_load_only mode.
         
         Args:
             pipeline_id: Pipeline ID
@@ -244,9 +248,36 @@ class CDCManager:
             if isinstance(mode, str):
                 mode = PipelineMode(mode)
             
+            # DB2 / AS400 source: use Debezium initial snapshot for "full load" (no backend ODBC needed)
+            # Same path for as400 or db2 — use existing AS400 connection (e.g. f1bbe13a) with Db2 connector
+            source_db_type = (source_connection.database_type.value if hasattr(source_connection.database_type, "value") else str(source_connection.database_type)).lower()
+            source_uses_debezium_snapshot = source_db_type in ["db2", "as400", "ibm_i"]
+            logger.info(f"start_pipeline: source_db_type={source_db_type!r}, source_uses_debezium_snapshot={source_uses_debezium_snapshot}, mode={getattr(mode, 'value', mode)}")
+            if source_uses_debezium_snapshot and mode in [PipelineMode.FULL_LOAD_AND_CDC, PipelineMode.FULL_LOAD_ONLY]:
+                logger.info("Source is DB2/AS400: using Debezium initial snapshot for initial load (no backend ODBC required)")
+                if pipeline.full_load_status != FullLoadStatus.COMPLETED:
+                    pipeline.full_load_status = FullLoadStatus.COMPLETED
+                    pipeline.full_load_lsn = None
+                    self._persist_pipeline_status(pipeline)
+                result["full_load"] = {
+                    "success": True,
+                    "message": "Initial load will be done by Debezium snapshot (DB2/AS400 source, no backend full load)",
+                    "tables_transferred": 0,
+                    "total_rows": 0,
+                    "lsn": None
+                }
+                if mode == PipelineMode.FULL_LOAD_ONLY:
+                    logger.info("Step 2: FULL_LOAD_ONLY with DB2/AS400 source - use Debezium snapshot then stop, or run full_load_and_cdc")
+                    pipeline.status = PipelineStatus.RUNNING
+                    self._persist_pipeline_status(pipeline)
+                    return result
+            
             # Step 0: Auto-create target schema/tables if enabled
             # Skip if full load is already completed (schema/tables already exist)
-            if pipeline.auto_create_target and pipeline.full_load_status != FullLoadStatus.COMPLETED:
+            # Skip for DB2/AS400 source (no ODBC on backend; tables created by Sink auto.create when Debezium snapshot arrives)
+            if source_uses_debezium_snapshot:
+                logger.info("Step 0: DB2/AS400/IBM i source (Sink will auto-create tables), skipping schema creation (no ODBC)")
+            elif pipeline.auto_create_target and pipeline.full_load_status != FullLoadStatus.COMPLETED:
                 logger.info(f"Step 0: Auto-creating target schema/tables for pipeline: {pipeline.name}")
                 try:
                     # For S3 targets, skip schema creation (S3 doesn't support schemas)
@@ -270,26 +301,35 @@ class CDCManager:
                         rows_transferred=0,
                         error=str(e)
                     )
-            elif pipeline.full_load_status == FullLoadStatus.COMPLETED:
-                logger.info("Step 0: Full load already completed, skipping schema creation")
+            else:
+                logger.info("Step 0: Full load already completed or schema creation disabled, skipping")
             
             # Step 1: Run full load if mode requires it AND it hasn't been completed yet
             if mode in [PipelineMode.FULL_LOAD_ONLY, PipelineMode.FULL_LOAD_AND_CDC]:
-                # Skip full load if already completed
-                if pipeline.full_load_status == FullLoadStatus.COMPLETED:
-                    logger.info(f"Step 1: Full load already completed, skipping (status: {pipeline.full_load_status})")
+                # Skip full load for DB2/AS400 (Debezium snapshot does initial load; no backend ODBC)
+                _full_done = (
+                    getattr(pipeline.full_load_status, "value", str(pipeline.full_load_status or "")).lower() == "completed"
+                    or source_uses_debezium_snapshot
+                )
+                if _full_done:
+                    if source_uses_debezium_snapshot:
+                        pipeline.full_load_status = FullLoadStatus.COMPLETED
+                        pipeline.full_load_lsn = None
+                        self._persist_pipeline_status(pipeline)
+                        logger.info("Step 1: DB2/AS400 source - skipping backend full load (Debezium snapshot will do initial load)")
+                    else:
+                        logger.info(f"Step 1: Full load already completed, skipping (status: {pipeline.full_load_status})")
                     result["full_load"] = {
                         "success": True,
-                        "message": "Full load already completed",
+                        "message": "Full load already completed" if not source_uses_debezium_snapshot else "Initial load will be done by Debezium snapshot (DB2/AS400)",
                         "tables_transferred": [],
                         "total_rows": 0,
                         "lsn": pipeline.full_load_lsn
                     }
-                    # Use existing LSN if available
                     if pipeline.full_load_lsn:
                         logger.info(f"Step 1: Using existing LSN/offset: {pipeline.full_load_lsn}")
                 else:
-                    logger.info(f"Step 1: Starting full load for pipeline: {pipeline.name} (mode: {mode.value})")
+                    logger.info(f"Step 1: Starting full load for pipeline: {pipeline.name} (mode: {getattr(mode, 'value', mode)})")
                     logger.info(f"Step 1: Source: {pipeline.source_database}.{pipeline.source_schema}, Tables: {pipeline.source_tables}")
                     logger.info(f"Step 1: Target: {pipeline.target_database or target_connection.database}.{pipeline.target_schema or target_connection.schema or 'public'}")
                     
@@ -686,11 +726,13 @@ class CDCManager:
                         table_upper = table.upper()
                         topic_name = f"{pipeline.name}.{schema_upper}.{table_upper}"
                     else:
-                        # Use get_topic_name which sanitizes invalid characters
+                        # SQL Server Debezium uses {topic.prefix}.{database}.{schema}.{table}; pass database
+                        source_db = pipeline.source_database or source_connection.database
                         topic_name = DebeziumConfigGenerator.get_topic_name(
                             pipeline_name=pipeline.name,
                             schema=pipeline.source_schema or "public",
-                            table=table
+                            table=table,
+                            database=source_db if source_connection.database_type in ("sqlserver", "mssql") else None
                         )
                     kafka_topics.append(topic_name)
                 logger.info(f"Generated topic names: {kafka_topics}")
@@ -910,7 +952,8 @@ class CDCManager:
                 source_connector = PostgreSQLConnector(source_config)
             elif source_connection.database_type in ["sqlserver", "mssql"]:
                 source_connector = SQLServerConnector(source_config)
-            elif source_connection.database_type in ["as400", "ibm_i"]:
+            elif source_connection.database_type in ["as400", "ibm_i", "db2"]:
+                # DB2 normalized to AS400 connector (same pyodbc/ODBC path); backend needs IBM i Access ODBC driver for full load
                 from ingestion.connectors.as400 import AS400Connector
                 source_connector = AS400Connector(source_config)
             elif source_connection.database_type == "oracle":
@@ -950,6 +993,9 @@ class CDCManager:
                 target_connector = PostgreSQLConnector(target_config)
             elif target_connection.database_type in ["sqlserver", "mssql"]:
                 target_connector = SQLServerConnector(target_config)
+            elif target_connection.database_type == "oracle":
+                from ingestion.connectors.oracle import OracleConnector
+                target_connector = OracleConnector(target_config)
             else:
                 raise ValueError(f"Unsupported target database type: {target_connection.database_type}")
             
@@ -990,8 +1036,17 @@ class CDCManager:
             
             logger.info(f"Transfer completed: {transfer_result.get('tables_successful', 0)} successful, {transfer_result.get('tables_failed', 0)} failed")
             
-            # Post-transfer validation: Verify target row counts
+            # Build set of table names that failed transfer (skip validation for these)
+            failed_table_names = set()
+            for t in transfer_result.get("tables", []):
+                if t.get("errors") or t.get("error"):
+                    failed_table_names.add(t.get("table_name", ""))
+            
+            # Post-transfer validation: Verify target row counts (only for tables that transferred successfully)
             for table_name in pipeline.source_tables:
+                if table_name in failed_table_names:
+                    logger.warning(f"Skipping validation for {table_name} (transfer had errors)")
+                    continue
                 target_table_name = pipeline.target_table_mapping.get(table_name, table_name) if pipeline.target_table_mapping else table_name
                 
                 # Parse target_table_name to extract schema and table if it contains a dot
@@ -1029,8 +1084,25 @@ class CDCManager:
                     )
                     logger.info(f"Row count validation passed for {target_table_name}: {validation_result.get('source_rows', 0)} rows match")
                 except ValidationError as e:
+                    err_msg = str(e).lower()
+                    # If target table does not exist, transfer likely failed - surface the transfer error
+                    if "does not exist" in err_msg or "relation" in err_msg:
+                        transfer_error = None
+                        for t in transfer_result.get("tables", []):
+                            if t.get("table_name") == table_name:
+                                if t.get("errors"):
+                                    transfer_error = t["errors"][0] if isinstance(t["errors"], list) else t["errors"]
+                                else:
+                                    transfer_error = t.get("error")
+                                break
+                        raise FullLoadError(
+                            f"Target table {target_schema_final}.{target_table_final} was not created. "
+                            f"{'Transfer error: ' + str(transfer_error) if transfer_error else str(e)}",
+                            table_name=target_table_name,
+                            rows_transferred=transfer_result.get('total_rows_transferred', 0)
+                        )
                     # Check if this is a row count mismatch
-                    if "row count mismatch" in str(e).lower() or (hasattr(e, 'validation_type') and e.validation_type == "row_count"):
+                    if "row count mismatch" in err_msg or (hasattr(e, 'validation_type') and e.validation_type == "row_count"):
                         # Extract row counts from error details
                         source_rows = None
                         target_rows = None
@@ -1046,20 +1118,12 @@ class CDCManager:
                                 target_rows = int(match.group(2))
                         
                         # Log warning but don't fail - allow pipeline to continue
-                        # This could happen if:
-                        # 1. Target table already had some data
-                        # 2. Some rows failed to insert (duplicates, constraints, etc.)
-                        # 3. Data was filtered during transfer
-                        # 4. Partial transfer due to errors
                         logger.warning(
                             f"⚠️  Row count mismatch for {target_table_name}: "
                             f"source has {source_rows or 'unknown'} rows, target has {target_rows or 'unknown'} rows. "
-                            f"This may be expected if the target table had existing data, some rows were filtered, "
-                            f"or there were insertion errors. Pipeline will continue, but please verify data integrity manually."
+                            f"Pipeline will continue; please verify data integrity manually."
                         )
-                        # Don't raise error - just log warning and continue
                     else:
-                        # For other validation errors, still raise
                         logger.error(f"Validation failed for {target_table_name}: {e}")
                         raise FullLoadError(
                             f"Post-transfer validation failed for {target_table_name}: {str(e)}",

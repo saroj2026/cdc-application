@@ -48,3 +48,4 @@ print(f'cdc_user permissions on department: {[p[0] for p in perms]}')
 conn.close()
 print('Connection test completed')
 
+

@@ -38,7 +38,8 @@ class DebeziumConfigGenerator:
         Returns:
             Debezium connector configuration dictionary
         """
-        database_type = source_connection.database_type.lower()
+        dt = source_connection.database_type
+        database_type = (getattr(dt, "value", None) or str(dt)).lower()
         
         if database_type == "postgresql":
             return DebeziumConfigGenerator._generate_postgresql_config(
@@ -61,7 +62,19 @@ class DebeziumConfigGenerator:
                 snapshot_mode=snapshot_mode
             )
         elif database_type in ["as400", "ibm_i"]:
+            # Use AS400 RPC connector (io.debezium.connector.db2as400.As400RpcConnector)
+            # REQUIRES: debezium-connector-ibmi plugin installed in Kafka Connect
             return DebeziumConfigGenerator._generate_as400_config(
+                pipeline_name=pipeline_name,
+                connection=source_connection,
+                database=source_database,
+                schema=source_schema,
+                tables=source_tables,
+                full_load_lsn=full_load_lsn,
+                snapshot_mode=snapshot_mode
+            )
+        elif database_type == "db2":
+            return DebeziumConfigGenerator._generate_db2_config(
                 pipeline_name=pipeline_name,
                 connection=source_connection,
                 database=source_database,
@@ -269,20 +282,19 @@ class DebeziumConfigGenerator:
             "snapshot.mode": snapshot_mode,
             "snapshot.isolation.mode": "snapshot",
             "database.history.skip.unparseable.ddl": "true",
-            # Schema history configuration (required)
+            # Schema history configuration (required) - use same Kafka as Connect worker
             "schema.history.internal": "io.debezium.storage.kafka.history.KafkaSchemaHistory",
-            "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+            "schema.history.internal.kafka.bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092"),
             "schema.history.internal.kafka.topic": f"{pipeline_name}.schema.history.internal",
             # SSL/TLS configuration
             "database.encrypt": str(encrypt).lower(),
             "database.trustServerCertificate": str(trust_server_cert).lower(),
-            "transforms": "unwrap,addOp",
+            # ExtractNewRecordState: unwrap envelope and add __op, __source_ts_ms from envelope (not static)
+            "transforms": "unwrap",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
             "transforms.unwrap.delete.handling.mode": "rewrite",
-            "transforms.addOp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-            "transforms.addOp.static.field": "__op",
-            "transforms.addOp.static.value": "c",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -402,14 +414,16 @@ class DebeziumConfigGenerator:
             "snapshot.locking.mode": "none",
             # AS400/IBM i specific settings
             "database.history.skip.unparseable.ddl": "true",
-            # Schema history configuration
+            # Schema history configuration (use same bootstrap as SQL Server - reachable from Connect)
             "schema.history.internal": "io.debezium.storage.kafka.history.KafkaSchemaHistory",
-            "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+            "schema.history.internal.kafka.bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092"),
             "schema.history.internal.kafka.topic": f"{pipeline_name}.schema.history.internal",
-            # Transforms to flatten messages
+            # Transforms to flatten messages; add __op, __source_ts_ms for SCD2 sink
             "transforms": "unwrap",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-            "transforms.unwrap.drop.tombstones": "false",
+            "transforms.unwrap.drop.tombstones": "true",
+            "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -431,6 +445,77 @@ class DebeziumConfigGenerator:
         
         logger.info(f"Generated AS400/IBM i Debezium config for {pipeline_name}")
         
+        return config
+    
+    @staticmethod
+    def _generate_db2_config(
+        pipeline_name: str,
+        connection: Connection,
+        database: str,
+        schema: str,
+        tables: List[str],
+        full_load_lsn: Optional[str],
+        snapshot_mode: str
+    ) -> Dict[str, Any]:
+        """Generate Debezium Db2 connector configuration (io.debezium.connector.db2.Db2Connector).
+        
+        Use this when Kafka Connect has the standard Db2 connector (not As400RpcConnector).
+        Topic format: {topic.prefix}.{schema}.{table}.
+        """
+        if not schema:
+            schema = connection.schema or connection.additional_config.get("schema") if connection.additional_config else "DB2INST1"
+            logger.warning(f"Schema not provided for Db2 pipeline {pipeline_name}, using: {schema}")
+        if not tables:
+            logger.warning(f"No tables provided for Db2 pipeline {pipeline_name}")
+        
+        table_include_list = ",".join([f"{schema}.{t}" for t in tables])
+        db_hostname = connection.additional_config.get("docker_hostname", connection.host) if connection.additional_config else connection.host
+        port = connection.port or 50000  # Db2 LUW default; use connection.port for AS400/IBM i (e.g. 9471)
+        
+        if snapshot_mode == "never" and not full_load_lsn:
+            logger.warning(f"Db2 connector: snapshot.mode='never' but no full_load_lsn. Using 'initial'.")
+            snapshot_mode = "initial"
+        elif snapshot_mode == "never":
+            snapshot_mode = "never"
+        elif snapshot_mode == "schema_only" and full_load_lsn:
+            snapshot_mode = "schema_only"
+        elif snapshot_mode == "schema_only":
+            snapshot_mode = "no_data"  # Db2 uses no_data for schema-only
+        elif full_load_lsn:
+            snapshot_mode = "never"
+        else:
+            snapshot_mode = snapshot_mode or "initial"
+        
+        config = {
+            "connector.class": "io.debezium.connector.db2.Db2Connector",
+            "tasks.max": "1",
+            "database.hostname": db_hostname,
+            "database.port": str(port),
+            "database.user": connection.username,
+            "database.password": connection.password,
+            "database.dbname": database or schema,
+            "database.server.name": pipeline_name,
+            "topic.prefix": pipeline_name,
+            "table.include.list": table_include_list,
+            "snapshot.mode": snapshot_mode,
+            "schema.history.internal": "io.debezium.storage.kafka.history.KafkaSchemaHistory",
+            "schema.history.internal.kafka.bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092"),
+            "schema.history.internal.kafka.topic": f"{pipeline_name}.schema.history.internal",
+            "transforms": "unwrap",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "true",
+            "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.add.fields": "op,source.ts_ms",
+            "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "key.converter.schemas.enable": "false",
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "value.converter.schemas.enable": "true",
+            "errors.tolerance": "all",
+            "errors.log.enable": "true",
+            "errors.log.include.messages": "true",
+        }
+        
+        logger.info(f"Generated Db2 Debezium config for {pipeline_name}")
         return config
     
     @staticmethod
@@ -628,6 +713,8 @@ class DebeziumConfigGenerator:
             db_short = "mssql"
         elif database_type in ["as400", "ibm_i"]:
             db_short = "as400"
+        elif database_type == "db2":
+            db_short = "db2"
         elif database_type == "oracle":
             db_short = "ora"
         else:
@@ -649,34 +736,29 @@ class DebeziumConfigGenerator:
     def get_topic_name(
         pipeline_name: str,
         schema: str,
-        table: str
+        table: str,
+        database: Optional[str] = None
     ) -> str:
         """Get Kafka topic name for a table.
         
         Args:
-            pipeline_name: Pipeline name (database.server.name)
+            pipeline_name: Pipeline name (database.server.name / topic.prefix)
             schema: Schema name
             table: Table name
+            database: Database name (optional). Required for SQL Server - Debezium uses
+                      {topic.prefix}.{database}.{schema}.{table}; without it we get wrong topic.
             
         Returns:
             Kafka topic name (sanitized to remove invalid characters)
         """
-        # Sanitize schema and table names for Kafka topic naming
-        # IMPORTANT: Match Debezium's sanitization behavior exactly
-        # Debezium replaces each invalid character with a single underscore
-        # It does NOT collapse multiple consecutive underscores
-        # Example: c##cdc_user -> c__cdc_user (double underscore, one for each #)
-        #
-        # Kafka topic names can only contain: alphanumeric, period (.), underscore (_), hyphen (-)
         import re
-        # Replace each invalid char with underscore (don't collapse multiple underscores)
-        # This matches Debezium's behavior: c##cdc_user -> c__cdc_user
-        sanitized_schema = re.sub(r'[^a-zA-Z0-9._-]', '_', schema)
-        sanitized_table = re.sub(r'[^a-zA-Z0-9._-]', '_', table)
-        # Remove leading/trailing underscores (but keep multiple consecutive underscores)
-        sanitized_schema = sanitized_schema.strip('_')
-        sanitized_table = sanitized_table.strip('_')
-        
-        # Debezium topic format: {database.server.name}.{schema}.{table}
+        # Replace each invalid char with underscore
+        sanitized_schema = re.sub(r'[^a-zA-Z0-9._-]', '_', schema).strip('_')
+        sanitized_table = re.sub(r'[^a-zA-Z0-9._-]', '_', table).strip('_')
+        # SQL Server Debezium topic format: {topic.prefix}.{database}.{schema}.{table}
+        if database:
+            sanitized_db = re.sub(r'[^a-zA-Z0-9._-]', '_', database).strip('_')
+            return f"{pipeline_name}.{sanitized_db}.{sanitized_schema}.{sanitized_table}"
+        # PostgreSQL and others: {database.server.name}.{schema}.{table}
         return f"{pipeline_name}.{sanitized_schema}.{sanitized_table}"
 

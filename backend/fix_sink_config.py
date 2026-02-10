@@ -45,3 +45,4 @@ if restart_response.status_code in [200, 202, 204]:
 else:
     print(f"✗ Error restarting: {restart_response.status_code}")
 
+

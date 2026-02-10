@@ -33,3 +33,4 @@ if restart_resp.status_code in [200, 202, 204]:
 else:
     print(f"Restart response: {restart_resp.status_code}")
 
+
