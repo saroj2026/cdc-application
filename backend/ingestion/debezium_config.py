@@ -294,6 +294,7 @@ class DebeziumConfigGenerator:
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
             "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.delete.tombstone.handling.mode": "rewrite",  # Debezium 3.4+ uses this; ensures deletes become rows with __deleted=true
             "transforms.unwrap.add.fields": "op,source.ts_ms",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",
@@ -398,6 +399,11 @@ class DebeziumConfigGenerator:
             schema=schema
         )
         
+        # On AS400/IBM i: database.dbname = default library (e.g. QGPL); database.schema = library where table lives (e.g. SEGMETRIQ1).
+        # User credentials: database=QGPL, username=segmetriq, password=..., host=pub400.com, port=9471.
+        dbname = database or (connection.database if connection.database else None) or "QGPL"
+        if connection.additional_config and connection.additional_config.get("default_library"):
+            dbname = connection.additional_config["default_library"]
         config = {
             "connector.class": "io.debezium.connector.db2as400.As400RpcConnector",
             "tasks.max": "1",
@@ -405,8 +411,8 @@ class DebeziumConfigGenerator:
             "database.port": str(port),
             "database.user": connection.username,
             "database.password": connection.password,
-            "database.dbname": database or schema,  # Use database or schema as library
-            "database.schema": schema,  # Required: schema/library name for AS400
+            "database.dbname": dbname,  # Default library (e.g. QGPL) - connector uses this to obtain real DB name
+            "database.schema": schema,  # Library where table lives (e.g. SEGMETRIQ1)
             "database.server.name": pipeline_name,
             "topic.prefix": pipeline_name,
             "table.include.list": table_include_list,
@@ -418,7 +424,7 @@ class DebeziumConfigGenerator:
             "schema.history.internal": "io.debezium.storage.kafka.history.KafkaSchemaHistory",
             "schema.history.internal.kafka.bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092"),
             "schema.history.internal.kafka.topic": f"{pipeline_name}.schema.history.internal",
-            # Transforms to flatten messages; add __op, __source_ts_ms for SCD2 sink
+            # Transforms to flatten messages; add __op, __source_ts_ms for SCD2 sink (no 3.4+ only props for 2.6)
             "transforms": "unwrap",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "true",
@@ -505,6 +511,7 @@ class DebeziumConfigGenerator:
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "true",
             "transforms.unwrap.delete.handling.mode": "rewrite",
+            "transforms.unwrap.delete.tombstone.handling.mode": "rewrite",  # Debezium 3.4+; deletes become rows with __deleted=true
             "transforms.unwrap.add.fields": "op,source.ts_ms",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",

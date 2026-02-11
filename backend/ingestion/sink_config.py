@@ -167,6 +167,7 @@ class SinkConfigGenerator:
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "true",
             "transforms.unwrap.delete.handling.mode": "rewrite",
+            # Omit delete.tombstone.handling.mode for Kafka Connect 2.6 (Debezium 3.4+ only)
             "transforms.unwrap.add.fields": "op,source.ts_ms",
             "consumer.override.auto.offset.reset": "earliest",
             "errors.tolerance": "all",
@@ -271,6 +272,7 @@ class SinkConfigGenerator:
             "transforms.unwrap.drop.tombstones": "true",
             # rewrite: keep DELETE events as records with __deleted=true (for SCD2-style tracking)
             "transforms.unwrap.delete.handling.mode": "rewrite",
+            # Omit delete.tombstone.handling.mode for Kafka Connect 2.6 (Debezium 3.4+ only)
             # Add envelope metadata; use default names so Debezium produces __op, __source_ts_ms (double underscore)
             "transforms.unwrap.add.fields": "op,source.ts_ms",
             "consumer.override.auto.offset.reset": "earliest",  # New consumer groups start from beginning
@@ -347,6 +349,7 @@ class SinkConfigGenerator:
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "true",
             "transforms.unwrap.delete.handling.mode": "rewrite",
+            # Omit delete.tombstone.handling.mode for Kafka Connect 2.6 (Debezium 3.4+ only)
             "transforms.unwrap.add.fields": "op,source.ts_ms",
             "consumer.override.auto.offset.reset": "earliest",
             "errors.tolerance": "all",

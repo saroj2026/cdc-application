@@ -10,10 +10,17 @@ import time
 
 API_URL = "http://localhost:8000/api/v1"
 
-# Use existing AS400 connection that succeeded previously (public.connections)
+# Use existing AS400 connection (public.connections)
 AS400_CONNECTION_ID = "2ac747c6-2e03-4ff7-954d-0f239e519193"
 
-# Source table from AS400 (schema.table from that connection)
+# AS400 credentials: database QGPL, host pub400.com, port 9471
+AS400_HOST = "pub400.com"
+AS400_PORT = 9471
+AS400_DATABASE = "QGPL"
+AS400_USERNAME = "segmetriq"
+AS400_PASSWORD = "segmetriq123"
+
+# Source table from AS400 (library SEGMETRIQ1)
 SOURCE_SCHEMA = "SEGMETRIQ1"
 SOURCE_TABLE = "MYTABLE"
 
@@ -38,13 +45,32 @@ if r.status_code != 200:
     exit(1)
 conns = r.json()
 
-# 2. Use existing AS400 connection (f1bbe13a-a3e7-4a86-9ff5-4e6a95f8557b)
+# 2. Use existing AS400 connection and ensure credentials (QGPL, pub400.com:9471)
 source_conn = next((c for c in conns if c.get("id") == AS400_CONNECTION_ID), None)
 if not source_conn:
     print(f"   AS400 connection {AS400_CONNECTION_ID} not found in public.connections")
     exit(1)
 source_id = source_conn["id"]
-print(f"   Using existing AS400 connection: {source_id[:8]}... ({source_conn.get('name', '')})")
+print(f"   Using AS400 connection: {source_id[:8]}... ({source_conn.get('name', '')})")
+
+# Ensure AS400 connection has correct credentials (database=QGPL, host=pub400.com, port=9471)
+update_payload = {
+    "name": source_conn.get("name") or "AS400 pub400",
+    "connection_type": source_conn.get("connection_type") or "source",
+    "database_type": source_conn.get("database_type") or "as400",
+    "host": AS400_HOST,
+    "port": AS400_PORT,
+    "database": AS400_DATABASE,
+    "username": AS400_USERNAME,
+    "password": AS400_PASSWORD,
+    "schema": source_conn.get("schema"),
+    "additional_config": source_conn.get("additional_config") or {},
+}
+up = requests.put(f"{API_URL}/connections/{source_id}", json=update_payload, timeout=10)
+if up.status_code == 200:
+    print("   Updated AS400 connection: database=QGPL, host=pub400.com, port=9471")
+else:
+    print("   Warning: could not update AS400 connection:", up.status_code, up.text[:200])
 
 # 3. Find or create SQL Server connection (cdctest, SA)
 mssql_conn = next(
@@ -139,6 +165,8 @@ print("\n3. Starting pipeline-6 (full load + CDC)...")
 r = requests.post(f"{API_URL}/pipelines/{pipeline_id}/start", timeout=180)
 if r.status_code != 200:
     print("   Error starting pipeline:", r.status_code, r.text[:800])
+    if r.status_code == 500 and "500 error responses" in (r.text or ""):
+        print("   Tip: Restart the backend and run this script again (Kafka Connect 500 is no longer retried).")
     exit(1)
 res = r.json()
 print("   Full load:", res.get("full_load", {}).get("success"))

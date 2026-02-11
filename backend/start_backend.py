@@ -29,7 +29,7 @@ env = os.environ.copy()
 env['PYTHONPATH'] = backend_dir
 
 try:
-    print("🚀 Starting uvicorn server...")
+    print("Starting uvicorn server...")
     print("   Press Ctrl+C to stop")
     print("=" * 70)
     print()
@@ -44,20 +44,20 @@ try:
     ], env=env, check=True)
     
 except KeyboardInterrupt:
-    print("\n\n✅ Backend stopped by user")
+    print("\n\nBackend stopped by user")
 except subprocess.CalledProcessError as e:
-    print(f"\n❌ Error starting backend: {e}")
+    print(f"\nError starting backend: {e}")
     print("\nTrying to diagnose...")
     try:
         # Try importing the module to see if there's an import error
         import ingestion.api
-        print("✅ Module imports successfully")
+        print("Module imports successfully")
     except Exception as import_error:
-        print(f"❌ Import error: {import_error}")
+        print(f"Import error: {import_error}")
         import traceback
         traceback.print_exc()
 except Exception as e:
-    print(f"\n❌ Unexpected error: {e}")
+    print(f"\nUnexpected error: {e}")
     import traceback
     traceback.print_exc()
 

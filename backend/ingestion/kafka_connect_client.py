@@ -36,11 +36,12 @@ class KafkaConnectClient:
         self.timeout = timeout
         self.session = requests.Session()
         
-        # Configure retry strategy - retry on transient errors
+        # Configure retry strategy - retry on transient errors but NOT on 500 so we get
+        # the actual error body (500 often carries the real message from Kafka Connect).
         retry_strategy = Retry(
-            total=3,  # 3 retry attempts
+            total=3,
             backoff_factor=1.0,
-            status_forcelist=[429, 500, 502, 503, 504],  # Retry on server errors
+            status_forcelist=[429, 502, 503, 504],  # Do not retry on 500
             allowed_methods=["GET", "POST", "PUT", "DELETE"]
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -326,8 +327,9 @@ class KafkaConnectClient:
         logger.debug(f"Request body structure: name={connector_name}, config keys={list(config.keys())}")
         
         # Validate config before creating (optional but helpful for debugging)
+        # Skip validation for As400RpcConnector - validate endpoint can return 500 for this plugin
         connector_class = config.get("connector.class")
-        if connector_class:
+        if connector_class and "As400RpcConnector" not in str(connector_class):
             try:
                 validation_result = self.validate_connector_config(connector_class, config)
                 logger.debug(f"Config validation result: {validation_result}")
@@ -343,10 +345,31 @@ class KafkaConnectClient:
             except Exception as validation_error:
                 logger.warning(f"Could not validate config (continuing anyway): {validation_error}")
         
+        # Use requests.post (not self.session) so we don't retry on 500 and can capture
+        # the actual error body (session has Retry on 500 which masks the message).
+        url = f"{self.base_url}/connectors"
         try:
-            response = self._request("POST", "/connectors", data=data)
+            response = requests.post(
+                url,
+                json=data,
+                timeout=self.timeout,
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
             logger.info(f"Connector created: {connector_name}")
-            return response
+            return response.json() if response.content else {}
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code >= 500:
+                try:
+                    err_body = e.response.json()
+                    err_msg = err_body.get("message") or err_body.get("error") or e.response.text[:500]
+                    logger.error(f"Kafka Connect 5xx creating connector: {err_msg}")
+                    raise type(e)(f"Kafka Connect error: {err_msg}", response=e.response) from e
+                except (ValueError, KeyError):
+                    pass
+            raise
+        except requests.exceptions.RequestException as e:
+            raise
         except requests.exceptions.HTTPError as e:
             if e.response and e.response.status_code == 409:
                 # Connector already exists - check its status
