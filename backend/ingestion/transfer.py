@@ -29,6 +29,8 @@ class DataTransfer:
     """
 
     # Type mapping from SQL Server to PostgreSQL
+    # Note: datetime2 maps to bigint because Debezium SQL Server sends it as epoch nanoseconds (int64).
+    # For a readable timestamp, add a generated column: col_ts timestamp GENERATED ALWAYS AS (to_timestamp(col/1e9)) STORED
     SQLSERVER_TO_POSTGRESQL_TYPE_MAP = {
         "int": "integer",
         "bigint": "bigint",
@@ -50,7 +52,7 @@ class DataTransfer:
         "date": "date",
         "time": "time",
         "datetime": "timestamp",
-        "datetime2": "timestamp",
+        "datetime2": "bigint",  # Debezium emits epoch nanoseconds; use generated column for timestamp display
         "smalldatetime": "timestamp",
         "datetimeoffset": "timestamp with time zone",
         "timestamp": "bytea",  # SQL Server timestamp is binary
