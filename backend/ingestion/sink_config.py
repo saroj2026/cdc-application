@@ -163,6 +163,8 @@ class SinkConfigGenerator:
             "auto.evolve": "false",  # Target tables created with row_id + CDC metadata
             "delete.enabled": "false",
             # Debezium ExtractNewRecordState: unwrap envelope, add __op, __source_ts_ms, keep deletes as __deleted=true
+            # Note: Debezium SQL Server sends datetime2 as epoch nanoseconds (int64). Store as bigint in Postgres
+            # and use a generated column (registration_ts) for timestamp display - see fix_customer2_registration_date_postgres.sql
             "transforms": "unwrap",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "true",
