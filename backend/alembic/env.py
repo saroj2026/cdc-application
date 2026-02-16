@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Add backend directory to path so imports work
+backend_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, backend_dir)
 
 from ingestion.database.base import Base
 from ingestion.database import models_db

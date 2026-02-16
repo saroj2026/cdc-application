@@ -900,8 +900,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 ;
 function ProtectedPage({ children, requiredPermission, path }) {
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
-    const state = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAppSelector"])((state)=>state);
+    // Use specific selectors instead of entire state to avoid unnecessary rerenders
     const { user, isAuthenticated } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAppSelector"])((state)=>state.auth);
+    const permissions = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAppSelector"])((state)=>state.permissions);
     const [mounted, setMounted] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [hasAccess, setHasAccess] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     // Handle client-side mounting to prevent hydration mismatch
@@ -918,13 +919,31 @@ function ProtectedPage({ children, requiredPermission, path }) {
         // If not authenticated, redirect to login
         if (!isAuthenticated || !user) {
             setHasAccess(false);
-            router.push("/login");
+            router.push("/auth/login");
             return;
         }
-        // Check page access
+        // Super admin bypass - check first before any permission checks
+        if (user?.is_superuser === true) {
+            setHasAccess(true);
+            return;
+        }
+        // Check page access - create a minimal state object for permission checks
         let access = true;
         if (path) {
-            access = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["canAccessPage"])(path)(state);
+            // Dashboard is accessible to all authenticated users
+            if (path === "/dashboard") {
+                setHasAccess(true);
+                return;
+            }
+            // Create a minimal state object with only what permission functions need
+            const minimalState = {
+                auth: {
+                    user,
+                    isAuthenticated
+                },
+                permissions
+            };
+            access = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["canAccessPage"])(path)(minimalState);
             if (!access) {
                 setHasAccess(false);
                 router.push("/dashboard"); // Redirect to dashboard if no access
@@ -933,7 +952,15 @@ function ProtectedPage({ children, requiredPermission, path }) {
         }
         // Check specific permission if provided
         if (requiredPermission) {
-            access = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["hasPermission"])(requiredPermission)(state);
+            // Create a minimal state object with only what permission functions need
+            const minimalState = {
+                auth: {
+                    user,
+                    isAuthenticated
+                },
+                permissions
+            };
+            access = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["hasPermission"])(requiredPermission)(minimalState);
             if (!access) {
                 setHasAccess(false);
                 router.push("/dashboard"); // Redirect to dashboard if no access
@@ -948,7 +975,7 @@ function ProtectedPage({ children, requiredPermission, path }) {
         path,
         requiredPermission,
         router,
-        state
+        permissions
     ]);
     // Show loading while checking auth (client-side only to prevent hydration mismatch)
     if (!mounted || isAuthenticated === undefined || hasAccess === null) {
@@ -958,12 +985,12 @@ function ProtectedPage({ children, requiredPermission, path }) {
                 className: "w-6 h-6 animate-spin text-foreground-muted"
             }, void 0, false, {
                 fileName: "[project]/components/auth/ProtectedPage.tsx",
-                lineNumber: 71,
+                lineNumber: 88,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/components/auth/ProtectedPage.tsx",
-            lineNumber: 70,
+            lineNumber: 87,
             columnNumber: 7
         }, this);
     }
@@ -980,7 +1007,7 @@ function ProtectedPage({ children, requiredPermission, path }) {
                             children: "Access Denied"
                         }, void 0, false, {
                             fileName: "[project]/components/auth/ProtectedPage.tsx",
-                            lineNumber: 82,
+                            lineNumber: 99,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -988,18 +1015,18 @@ function ProtectedPage({ children, requiredPermission, path }) {
                             children: "You don't have permission to access this page."
                         }, void 0, false, {
                             fileName: "[project]/components/auth/ProtectedPage.tsx",
-                            lineNumber: 83,
+                            lineNumber: 100,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/auth/ProtectedPage.tsx",
-                    lineNumber: 81,
+                    lineNumber: 98,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/auth/ProtectedPage.tsx",
-                lineNumber: 80,
+                lineNumber: 97,
                 columnNumber: 9
             }, this);
         }

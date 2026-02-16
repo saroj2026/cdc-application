@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_as400_enum'
-down_revision = None  # Update this to the latest revision
+down_revision = '377dc4f79e07'  # Continue from S3 migration
 branch_labels = None
 depends_on = None
 

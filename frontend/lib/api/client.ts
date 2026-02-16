@@ -10,10 +10,10 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       timeout: 10000, // 10 seconds timeout for API requests (reduced from 45s)
     });
 
@@ -34,26 +34,40 @@ class ApiClient {
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
           // Don't log for endpoints with retry logic - they handle their own errors silently
           const url = error.config?.url || '';
-          const hasRetryLogic = url.includes('/api/v1/connections/') || 
-                                url.includes('/api/v1/pipelines/') ||
-                                url.includes('/api/v1/monitoring/') ||
-                                url.includes('/api/v1/audit-logs') ||
-                                url.includes('/api/v1/logs/');
-          // Suppress all timeout logging for endpoints with retry logic
+          const hasRetryLogic = url.includes('/api/v1/connections/') ||
+            url.includes('/api/v1/pipelines/') ||
+            url.includes('/api/v1/monitoring/') ||
+            url.includes('/api/v1/audit-logs') ||
+            url.includes('/api/v1/logs/');
+          // Table discovery endpoints can be slow, don't log timeout errors
+          const isTableDiscovery = url.includes('/tables') && !url.includes('/data');
+          // Suppress all timeout logging for endpoints with retry logic or table discovery
           // Only log in development for endpoints without retry logic
-          if (!hasRetryLogic && process.env.NODE_ENV === 'development') {
+          if (!hasRetryLogic && !isTableDiscovery && process.env.NODE_ENV === 'development') {
             console.error('Request timeout:', url);
           }
-          const timeoutError = new Error('Request timeout: The server took too long to respond. Please try again.');
+          // Create a more helpful error message based on the endpoint
+          let errorMessage = 'Request timeout: The server took too long to respond.';
+          if (url.includes('/tables') && !url.includes('/data')) {
+            errorMessage = 'Request timeout: Table discovery is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and accessible.';
+          } else if (url.includes('/test')) {
+            errorMessage = 'Request timeout: Connection test is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and the backend is accessible.';
+          } else if (url.includes('/trigger') || url.includes('/start')) {
+            errorMessage = 'Request timeout: Pipeline start is taking longer than expected. Please check backend logs for details.';
+          } else {
+            errorMessage = 'Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.';
+          }
+
+          const timeoutError = new Error(errorMessage);
           (timeoutError as any).isTimeout = true;
           (timeoutError as any).code = 'ECONNABORTED';
           return Promise.reject(timeoutError);
         }
-        
+
         // Handle network errors - but skip for table data endpoints which have their own error handling
         const url = error.config?.url || error.request?.responseURL || '';
         const isTableDataEndpoint = url.includes('/tables/') && url.includes('/data');
-        
+
         // Log for debugging
         if (process.env.NODE_ENV === 'development') {
           console.log('[Axios Interceptor] Error caught:', {
@@ -65,7 +79,7 @@ class ApiClient {
             responseStatus: error.response?.status
           });
         }
-        
+
         // Only handle network errors for non-table-data endpoints
         // Table data endpoints have longer timeouts and better error handling
         if (!isTableDataEndpoint && (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error'))) {
@@ -73,7 +87,7 @@ class ApiClient {
           (networkError as any).isNetworkError = true;
           return Promise.reject(networkError);
         }
-        
+
         // For table data endpoints, preserve the original error so getTableData can handle it
         if (isTableDataEndpoint) {
           // Mark network errors but don't transform them - let getTableData handle it
@@ -83,7 +97,7 @@ class ApiClient {
           // Don't transform the error - let getTableData handle it with proper error messages
           return Promise.reject(error);
         }
-        
+
         if (error.response?.status === 401 || error.response?.status === 403) {
           // Clear token and redirect to login for auth errors
           this.clearToken();
@@ -230,7 +244,7 @@ class ApiClient {
           return result;
         } catch (error: any) {
           lastError = error;
-          
+
           // Don't retry on 401 (auth errors) or 4xx errors
           if (error.response?.status >= 400 && error.response?.status < 500) {
             if (requestKey) {
@@ -238,15 +252,15 @@ class ApiClient {
             }
             throw error;
           }
-          
+
           // Check for timeout or network errors
-          const isTimeout = error.code === 'ECONNABORTED' || 
-                           error.message?.includes('timeout') || 
-                           error.isTimeout;
-          const isNetworkError = error.code === 'ERR_NETWORK' || 
-                                error.message?.includes('Network Error') ||
-                                error.isNetworkError;
-          
+          const isTimeout = error.code === 'ECONNABORTED' ||
+            error.message?.includes('timeout') ||
+            error.isTimeout;
+          const isNetworkError = error.code === 'ERR_NETWORK' ||
+            error.message?.includes('Network Error') ||
+            error.isNetworkError;
+
           // Don't retry on timeout - fail fast
           if (isTimeout) {
             if (requestKey) {
@@ -257,7 +271,7 @@ class ApiClient {
             (timeoutError as any).code = 'ECONNABORTED';
             throw timeoutError;
           }
-          
+
           // Retry only on network errors (connection refused, etc.)
           if (attempt < retries && isNetworkError) {
             const delay = 1000 * (attempt + 1); // Linear backoff: 1s, 2s
@@ -268,7 +282,7 @@ class ApiClient {
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
-          
+
           // If no more retries, mark error appropriately
           if (isNetworkError) {
             if (requestKey) {
@@ -279,7 +293,7 @@ class ApiClient {
             (networkError as any).code = 'ERR_NETWORK';
             throw networkError;
           }
-          
+
           // Remove from pending on error
           if (requestKey) {
             this.pendingRequests.delete(requestKey);
@@ -295,12 +309,12 @@ class ApiClient {
     };
 
     const requestPromise = makeRequest();
-    
+
     // Store pending request if key is provided
     if (requestKey) {
       this.pendingRequests.set(requestKey, requestPromise);
     }
-    
+
     return requestPromise;
   }
 
@@ -351,7 +365,10 @@ class ApiClient {
   }
 
   async getConnectionTables(connectionId: number | string) {
-    const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`);
+    // Use longer timeout for table discovery (AS400 can be slow)
+    const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`, {
+      timeout: 60000, // 60 seconds for table discovery
+    });
     return response.data;
   }
 
@@ -363,22 +380,22 @@ class ApiClient {
     }
     const url = `/api/v1/connections/${connectionId}/tables/${tableName}/data?${params}`;
     const fullUrl = `${this.client.defaults.baseURL || ''}${url}`;
-    
+
     // Enhanced logging for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log('[API Client] getTableData request:', { 
-        connectionId, 
-        tableName, 
-        schema, 
-        limit, 
-        url, 
+      console.log('[API Client] getTableData request:', {
+        connectionId,
+        tableName,
+        schema,
+        limit,
+        url,
         fullUrl,
         baseURL: this.client.defaults.baseURL,
         retries,
         isOracleConnection
       });
     }
-    
+
     // Check backend health first (but don't fail if it's slow - just log)
     try {
       const healthController = new AbortController();
@@ -397,47 +414,47 @@ class ApiClient {
         console.warn('[API Client] Backend health check failed, but continuing:', healthError.message);
       }
     }
-    
+
     let lastError: any = null;
-    
+
     // Determine if Oracle or SQL Server connection for timeout adjustment
     // Backend timeout is 120s for Oracle/SQL Server, 60s for others
     // Frontend timeout should be slightly longer to allow backend to complete
-    const isOracle = isOracleConnection !== undefined ? isOracleConnection : 
-                    (url.includes('oracle') || connectionId.toString().toLowerCase().includes('oracle'));
-    const isSqlServer = url.includes('sqlserver') || url.includes('sql-server') || 
-                       connectionId.toString().toLowerCase().includes('sqlserver');
+    const isOracle = isOracleConnection !== undefined ? isOracleConnection :
+      (url.includes('oracle') || connectionId.toString().toLowerCase().includes('oracle'));
+    const isSqlServer = url.includes('sqlserver') || url.includes('sql-server') ||
+      connectionId.toString().toLowerCase().includes('sqlserver');
     // Use 130s for Oracle/SQL Server (slightly longer than backend 120s), 70s for others (slightly longer than backend 60s)
     const frontendTimeout = (isOracle || isSqlServer) ? 130000 : 70000;
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         controller.abort();
       }, frontendTimeout);
-      
+
       try {
         const response = await this.client.get(url, {
           timeout: frontendTimeout,
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        
+
         // Validate response
         if (!response || !response.data) {
           throw new Error('Backend returned an empty or invalid response');
         }
-        
+
         // Check if response has expected structure
         if (typeof response.data !== 'object') {
           throw new Error('Backend returned an invalid response format');
         }
-        
+
         return response.data;
       } catch (err: any) {
         clearTimeout(timeoutId);
         lastError = err;
-        
+
         // Enhanced error logging for debugging
         if (process.env.NODE_ENV === 'development') {
           console.error(`[API Client] getTableData error (attempt ${attempt + 1}/${retries + 1}):`, {
@@ -453,24 +470,24 @@ class ApiClient {
             fullUrl
           });
         }
-        
+
         // IMPORTANT: Check for HTTP responses FIRST (before timeout/network checks)
         // This ensures 500 errors are properly handled as server errors, not network errors
-        
+
         // Check for server errors (500+) - don't retry these
         if (err.response && err.response.status >= 500) {
           // Server error - don't retry, just store and break
           lastError = err;
           break;
         }
-        
+
         // Check for client errors (400-499) - don't retry these
         if (err.response && err.response.status >= 400 && err.response.status < 500) {
           // Client error - don't retry, just store and break
           lastError = err;
           break;
         }
-        
+
         // Don't retry on abort/timeout - fail fast
         if (err.name === 'AbortError' || err.code === 'ECONNABORTED' || err.message?.includes('aborted')) {
           if (isOracle) {
@@ -497,24 +514,24 @@ class ApiClient {
           }
           break; // Don't retry timeouts
         }
-        
+
         // Check for empty response or parsing errors - don't retry
         if (err.response && (!err.response.data || (typeof err.response.data === 'object' && Object.keys(err.response.data).length === 0))) {
           lastError = new Error('Server returned an empty response. The backend may have crashed or encountered an error. Please check the backend logs.');
           (lastError as any).isNetworkError = true;
           break; // Don't retry empty responses
         }
-        
+
         // Check for network errors - retry if not last attempt
         // ONLY check for network errors if there's NO response (error.response is null/undefined)
         const isNetworkError = !err.response && (
-          err.code === 'ECONNREFUSED' || 
+          err.code === 'ECONNREFUSED' ||
           err.code === 'ERR_NETWORK' ||
           err.code === 'ERR_INTERNET_DISCONNECTED' ||
           err.message === 'Network Error' ||
           err.message?.includes('Network Error')
         );
-        
+
         if (isNetworkError && attempt < retries) {
           // Wait before retry (exponential backoff)
           const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
@@ -522,267 +539,315 @@ class ApiClient {
           await new Promise(resolve => setTimeout(resolve, delay));
           continue; // Retry
         }
-        
+
         // If last attempt or not a network error, break immediately
         // Don't continue the loop - this prevents multiple error throws
         break;
       }
     }
-    
+
     // Process final error - only if we have one
     if (!lastError) {
       throw new Error('Unexpected error: No error was captured but request failed');
     }
-    
+
     const error = lastError;
-    
+
     // Log the full error for debugging - handle different error types
     if (process.env.NODE_ENV === 'development') {
-        const errorInfo: any = {
-          errorType: typeof error,
-          errorConstructor: error?.constructor?.name,
-          isError: error instanceof Error,
-        };
-        
-        // Try to extract all possible error properties
-        if (error instanceof Error) {
-          errorInfo.message = error.message;
-          errorInfo.name = error.name;
-          errorInfo.stack = error.stack;
-        }
-        
-        // Check for axios error properties
-        if (error.response) {
-          errorInfo.response = {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            data: error.response.data,
-            headers: error.response.headers,
-          };
-        }
-        
-        // Check for axios request properties
-        if (error.request) {
-          errorInfo.request = {
-            method: error.config?.method,
-            url: error.config?.url,
-            timeout: error.config?.timeout,
-          };
-        }
-        
-        // Check for custom properties
-        errorInfo.code = error.code;
-        errorInfo.isTimeout = error.isTimeout;
-        errorInfo.isNetworkError = error.isNetworkError;
-        errorInfo.config = error.config;
-        
-        // If error is a string, include it
-        if (typeof error === 'string') {
-          errorInfo.stringValue = error;
-        }
-        
-        // Try JSON.stringify to see the full object
-        try {
-          errorInfo.jsonString = JSON.stringify(error, Object.getOwnPropertyNames(error));
-        } catch (e) {
-          errorInfo.jsonError = String(e);
-        }
-        
-        console.error('[API Client] getTableData error:', errorInfo);
-        console.error('[API Client] Raw error object:', error);
+      const errorInfo: any = {
+        errorType: typeof error,
+        errorConstructor: error?.constructor?.name,
+        isError: error instanceof Error,
+      };
+
+      // Try to extract all possible error properties
+      if (error instanceof Error) {
+        errorInfo.message = error.message;
+        errorInfo.name = error.name;
+        errorInfo.stack = error.stack;
       }
-      
-      // Extract error message - handle different error types
-      let errorMessage = '';
-      if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.response?.statusText) {
-        errorMessage = error.response.statusText;
-      } else {
-        errorMessage = 'Unknown error occurred';
-      }
-      
-      // Check for HTTP status codes FIRST (before network/timeout errors)
-      // This ensures we properly handle validation errors, server errors, etc.
-      
-      // Check for validation errors (422) - these are NOT network errors
-      if (error.response?.status === 422) {
-        const validationError = error.response?.data?.detail || errorMessage || 'Validation error';
-        // Check if it's a list of validation errors (Pydantic format)
-        if (Array.isArray(validationError)) {
-          const errorDetails = validationError.map((err: any) => {
-            if (typeof err === 'object' && err.loc && err.msg) {
-              return `${err.loc.join('.')}: ${err.msg}`;
-            }
-            return String(err);
-          }).join('\n');
-          throw new Error(`Validation Error: Invalid request parameters.\n\n${errorDetails}\n\nPlease check:\n- Connection ID is valid\n- Table name is correct\n- Schema name is correct (if provided)`);
-        }
-        throw new Error(`Validation Error: ${validationError}\n\nPlease check:\n- Connection ID is valid\n- Table name is correct\n- Schema name is correct (if provided)`);
-      }
-      
-      // Check for other client errors (400-499) - but not 422 (already handled above)
-      if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 422) {
-        const errorDetail = error.response?.data?.detail || errorMessage || 'Invalid request';
-        throw new Error(`Request Error (${error.response.status}): ${errorDetail}`);
-      }
-      
-      // Check for server errors (500+) - handle these with detailed messages
-      if (error.response?.status >= 500) {
-        let errorDetail = error.response?.data?.detail || error.response?.data || errorMessage || 'Server error occurred';
-        
-        // If errorDetail is a string, use it directly; if it's an object, try to extract message
-        if (typeof errorDetail === 'object') {
-          errorDetail = errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
-        }
-        
-        // Check if this is an Oracle-related error
-        const isOracleError = (
-          typeof errorDetail === 'string' && (
-            errorDetail.toLowerCase().includes('oracle') ||
-            errorDetail.toLowerCase().includes('ora-') ||
-            errorDetail.toLowerCase().includes('service name') ||
-            errorDetail.toLowerCase().includes('listener')
-          )
-        );
-        
-        if (isOracleError) {
-          throw new Error(
-            `Oracle Database Error:\n\n${errorDetail}\n\n` +
-            `Troubleshooting Steps:\n` +
-            `1. Verify Oracle server is running and accessible\n` +
-            `2. Check Oracle listener: Run 'lsnrctl status' on Oracle server\n` +
-            `3. Test network connectivity: ping the Oracle host and telnet to the Oracle port\n` +
-            `4. Verify service name: Should be XE, ORCL, PDB1, etc. (NOT your username)\n` +
-            `5. Check firewall: Ensure Oracle port (usually 1521) is not blocked\n` +
-            `6. Verify credentials: Username and password are correct\n\n` +
-            `Please check the backend terminal logs for more details.`
-          );
-        }
-        
-        throw new Error(`Server Error (${error.response.status}): ${errorDetail}\n\nPlease check the backend terminal logs for more details.`);
-      }
-      
-      // Check for gateway timeout (504)
-      if (error.response?.status === 504) {
-        throw new Error(`Request timeout: The backend took too long to fetch data from the database. The table "${tableName}" may be very large or the database connection is slow.`);
-      }
-      
-      // Check for timeout (before network errors)
-      if (error.isTimeout || error.code === 'ECONNABORTED' || errorMessage?.includes('timeout') || errorMessage?.includes('Timeout')) {
-        // Check if this is likely an Oracle connection issue
-        const isOracleIssue = errorMessage?.toLowerCase().includes('oracle') || 
-                              errorMessage?.toLowerCase().includes('ora-') ||
-                              tableName?.toLowerCase().includes('oracle');
-        
-        if (isOracleIssue) {
-          throw new Error(
-            `Oracle Connection Timeout: The request to fetch table data from Oracle timed out.\n\n` +
-            `This usually means:\n` +
-            `1. Oracle database server is not reachable\n` +
-            `2. Oracle listener is not running\n` +
-            `3. Network/firewall is blocking the connection\n` +
-            `4. Service name is incorrect\n\n` +
-            `Please check:\n` +
-            `- Oracle server is running and accessible\n` +
-            `- Oracle listener is active (run 'lsnrctl status' on Oracle server)\n` +
-            `- Network connectivity to Oracle server\n` +
-            `- Service name is correct (should be XE, ORCL, PDB1, etc., NOT your username)\n` +
-            `- Firewall allows connections on Oracle port (usually 1521)\n\n` +
-            `Try reducing the number of records or check the Oracle connection configuration.`
-          );
-        }
-        throw new Error(`Timeout while fetching table data. The table "${tableName}" may be very large or the database connection is slow. Try reducing the limit.`);
-      }
-      
-      // Check for empty response (backend may have crashed or returned invalid response)
-      if (error.response && (!error.response.data || (typeof error.response.data === 'object' && Object.keys(error.response.data).length === 0))) {
-        throw new Error('Server returned an empty response. The backend may have encountered an error. Please check the backend logs and try again.');
-      }
-      
-      // Check for network errors - ONLY if there's NO response (error.response is null/undefined)
-      // This means the request never reached the server or the server didn't respond
-      // This can happen if: backend crashes, CORS blocks, connection refused, or request times out
-      // IMPORTANT: Only treat as network error if there's NO response (error.response is null/undefined)
-      const isNetworkError = !error.response && (
-        error.isNetworkError || 
-        error.code === 'ECONNREFUSED' || 
-        error.code === 'ERR_NETWORK' ||
-        error.code === 'ERR_INTERNET_DISCONNECTED' ||
-        error.code === 'ERR_CONNECTION_REFUSED' ||
-        error.code === 'ETIMEDOUT' ||
-        errorMessage === 'Network Error' ||
-        errorMessage?.includes('Network Error') || 
-        errorMessage?.includes('Cannot connect to server') ||
-        errorMessage?.includes('Failed to load response data') ||
-        (error.name === 'AxiosError' && errorMessage === 'Network Error') ||
-        (error.request && !error.response) // Request was made but no response received
-      );
-      
-      if (isNetworkError) {
-        // Check if backend is still alive
-        let backendAlive = false;
-        try {
-          const healthController = new AbortController();
-          const healthTimeout = setTimeout(() => healthController.abort(), 3000);
-          try {
-            const healthCheck = await fetch('http://localhost:8000/api/health', { 
-              method: 'GET',
-              signal: healthController.signal
-            });
-            backendAlive = healthCheck.ok;
-          } finally {
-            clearTimeout(healthTimeout);
-          }
-        } catch (healthErr) {
-          backendAlive = false;
-        }
-        
-        // Provide a helpful error message with troubleshooting steps
-        let troubleshootingMsg = `Network Error: The request to fetch table data failed.\n\n`;
-        
-        if (!backendAlive) {
-          troubleshootingMsg += `⚠️ Backend is not responding. The server may have crashed.\n\n`;
-        } else {
-          troubleshootingMsg += `⚠️ Backend is running but the request timed out or failed.\n\n`;
-        }
-        
-        troubleshootingMsg += `Possible causes:\n` +
-          `1. Database connection is hanging (Oracle/SQL Server may be unreachable)\n` +
-          `2. Backend server crashed or is not responding\n` +
-          `3. Request timeout (table may be too large or database is slow)\n` +
-          `4. Network connectivity issue\n\n` +
-          `Please check:\n` +
-          `- Backend is running on http://localhost:8000\n` +
-          `- Check backend terminal for error logs\n` +
-          `- Database servers are accessible and responding\n` +
-          `- Try the "Retry Target" button\n` +
-          `- Reduce the number of records if table is very large`;
-        
-        throw new Error(troubleshootingMsg);
-      }
-      
-      // If we get here and have a response, it's an unhandled status code
+
+      // Check for axios error properties
       if (error.response) {
-        const status = error.response.status;
-        const errorDetail = error.response?.data?.detail || errorMessage || `HTTP ${status} error`;
-        throw new Error(`Request failed with status ${status}: ${errorDetail}`);
+        errorInfo.response = {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers,
+        };
       }
-      
-      // Re-throw with a meaningful message
-      throw new Error(errorMessage || 'An unexpected error occurred while fetching table data');
+
+      // Check for axios request properties
+      if (error.request) {
+        errorInfo.request = {
+          method: error.config?.method,
+          url: error.config?.url,
+          timeout: error.config?.timeout,
+        };
+      }
+
+      // Check for custom properties
+      errorInfo.code = error.code;
+      errorInfo.isTimeout = error.isTimeout;
+      errorInfo.isNetworkError = error.isNetworkError;
+      errorInfo.config = error.config;
+
+      // If error is a string, include it
+      if (typeof error === 'string') {
+        errorInfo.stringValue = error;
+      }
+
+      // Try JSON.stringify to see the full object
+      try {
+        errorInfo.jsonString = JSON.stringify(error, Object.getOwnPropertyNames(error));
+      } catch (e) {
+        errorInfo.jsonError = String(e);
+      }
+
+      console.error('[API Client] getTableData error:', errorInfo);
+      console.error('[API Client] Raw error object:', error);
+    }
+
+    // Extract error message - handle different error types
+    // Also sanitize error messages to handle escaped % characters from backend
+    let errorMessage = '';
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    } else if (error?.response?.data?.detail) {
+      errorMessage = error.response.data.detail;
+    } else if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.response?.statusText) {
+      errorMessage = error.response.statusText;
+    } else {
+      errorMessage = 'Unknown error occurred';
+    }
+
+    // Sanitize error message: convert escaped %% back to % for display
+    // Backend escapes % to %% to prevent Python string formatting issues
+    // Frontend should display the original % character
+    if (typeof errorMessage === 'string') {
+      errorMessage = errorMessage.replace(/%%/g, '%');
+    }
+
+    // Check for HTTP status codes FIRST (before network/timeout errors)
+    // This ensures we properly handle validation errors, server errors, etc.
+
+    // Check for validation errors (422) - these are NOT network errors
+    if (error.response?.status === 422) {
+      let validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+      // Sanitize error message: convert escaped %% back to % for display
+      if (typeof validationError === 'string') {
+        validationError = validationError.replace(/%%/g, '%');
+      }
+      // Check if it's a list of validation errors (Pydantic format)
+      if (Array.isArray(validationError)) {
+        const errorDetails = validationError.map((err: any) => {
+          if (typeof err === 'object' && err.loc && err.msg) {
+            return `${err.loc.join('.')}: ${err.msg}`;
+          }
+          return String(err);
+        }).join('\n');
+        throw new Error(`Validation Error: Invalid request parameters.\n\n${errorDetails}\n\nPlease check:\n- Connection ID is valid\n- Table name is correct\n- Schema name is correct (if provided)`);
+      }
+      throw new Error(`Validation Error: ${validationError}\n\nPlease check:\n- Connection ID is valid\n- Table name is correct\n- Schema name is correct (if provided)`);
+    }
+
+    // Check for other client errors (400-499) - but not 422 (already handled above)
+    if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 422) {
+      const errorDetail = error.response?.data?.detail || errorMessage || 'Invalid request';
+      throw new Error(`Request Error (${error.response.status}): ${errorDetail}`);
+    }
+
+    // Check for server errors (500+) - handle these with detailed messages
+    if (error.response?.status >= 500) {
+      let errorDetail = error.response?.data?.detail || error.response?.data || errorMessage || 'Server error occurred';
+
+      // If errorDetail is a string, use it directly; if it's an object, try to extract message
+      if (typeof errorDetail === 'object') {
+        errorDetail = errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
+      }
+
+      // Sanitize error message: convert escaped %% back to % for display
+      // Backend escapes % to %% to prevent Python string formatting issues
+      // Frontend should display the original % character
+      if (typeof errorDetail === 'string') {
+        errorDetail = errorDetail.replace(/%%/g, '%');
+      }
+
+      // Check if this is an Oracle-related error (but exclude other database types)
+      // Only treat as Oracle error if it's clearly an Oracle error, not S3, Snowflake, etc.
+      const errorDetailLower = typeof errorDetail === 'string' ? errorDetail.toLowerCase() : '';
+      const isOracleError = (
+        typeof errorDetail === 'string' &&
+        !errorDetailLower.includes('aws_s3') &&
+        !errorDetailLower.includes('s3') &&
+        !errorDetailLower.includes('snowflake') &&
+        !errorDetailLower.includes('object storage') &&
+        !errorDetailLower.includes('table comparison is not supported') &&
+        (
+          errorDetailLower.includes('ora-') ||  // Oracle error codes like ORA-00942
+          (errorDetailLower.includes('oracle') && (
+            errorDetailLower.includes('listener') ||
+            errorDetailLower.includes('service name') ||
+            errorDetailLower.includes('tns') ||
+            errorDetailLower.includes('does not exist') ||
+            errorDetailLower.includes('connection')
+          ))
+        )
+      );
+
+      if (isOracleError) {
+        throw new Error(
+          `Oracle Database Error:\n\n${errorDetail}\n\n` +
+          `Troubleshooting Steps:\n` +
+          `1. Verify Oracle server is running and accessible\n` +
+          `2. Check Oracle listener: Run 'lsnrctl status' on Oracle server\n` +
+          `3. Test network connectivity: ping the Oracle host and telnet to the Oracle port\n` +
+          `4. Verify service name: Should be XE, ORCL, PDB1, etc. (NOT your username)\n` +
+          `5. Check firewall: Ensure Oracle port (usually 1521) is not blocked\n` +
+          `6. Verify credentials: Username and password are correct\n\n` +
+          `Please check the backend terminal logs for more details.`
+        );
+      }
+
+      // Check if this is an S3/object storage error
+      const isS3Error = (
+        typeof errorDetail === 'string' &&
+        (
+          errorDetailLower.includes('aws_s3') ||
+          errorDetailLower.includes('s3') && errorDetailLower.includes('object storage') ||
+          errorDetailLower.includes('table comparison is not supported') && errorDetailLower.includes('s3')
+        )
+      );
+
+      // For S3 errors, use the backend message as-is (it's already clear and informative)
+      // Don't add generic "Server Error" prefix
+      if (isS3Error) {
+        throw new Error(errorDetail);
+      }
+
+      // For other errors, include status code for debugging
+      throw new Error(`Server Error (${error.response.status}): ${errorDetail}\n\nPlease check the backend terminal logs for more details.`);
+    }
+
+    // Check for gateway timeout (504)
+    if (error.response?.status === 504) {
+      throw new Error(`Request timeout: The backend took too long to fetch data from the database. The table "${tableName}" may be very large or the database connection is slow.`);
+    }
+
+    // Check for timeout (before network errors)
+    if (error.isTimeout || error.code === 'ECONNABORTED' || errorMessage?.includes('timeout') || errorMessage?.includes('Timeout')) {
+      // Check if this is likely an Oracle connection issue
+      const isOracleIssue = errorMessage?.toLowerCase().includes('oracle') ||
+        errorMessage?.toLowerCase().includes('ora-') ||
+        tableName?.toLowerCase().includes('oracle');
+
+      if (isOracleIssue) {
+        throw new Error(
+          `Oracle Connection Timeout: The request to fetch table data from Oracle timed out.\n\n` +
+          `This usually means:\n` +
+          `1. Oracle database server is not reachable\n` +
+          `2. Oracle listener is not running\n` +
+          `3. Network/firewall is blocking the connection\n` +
+          `4. Service name is incorrect\n\n` +
+          `Please check:\n` +
+          `- Oracle server is running and accessible\n` +
+          `- Oracle listener is active (run 'lsnrctl status' on Oracle server)\n` +
+          `- Network connectivity to Oracle server\n` +
+          `- Service name is correct (should be XE, ORCL, PDB1, etc., NOT your username)\n` +
+          `- Firewall allows connections on Oracle port (usually 1521)\n\n` +
+          `Try reducing the number of records or check the Oracle connection configuration.`
+        );
+      }
+      throw new Error(`Timeout while fetching table data. The table "${tableName}" may be very large or the database connection is slow. Try reducing the limit.`);
+    }
+
+    // Check for empty response (backend may have crashed or returned invalid response)
+    if (error.response && (!error.response.data || (typeof error.response.data === 'object' && Object.keys(error.response.data).length === 0))) {
+      throw new Error('Server returned an empty response. The backend may have encountered an error. Please check the backend logs and try again.');
+    }
+
+    // Check for network errors - ONLY if there's NO response (error.response is null/undefined)
+    // This means the request never reached the server or the server didn't respond
+    // This can happen if: backend crashes, CORS blocks, connection refused, or request times out
+    // IMPORTANT: Only treat as network error if there's NO response (error.response is null/undefined)
+    const isNetworkError = !error.response && (
+      error.isNetworkError ||
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ERR_NETWORK' ||
+      error.code === 'ERR_INTERNET_DISCONNECTED' ||
+      error.code === 'ERR_CONNECTION_REFUSED' ||
+      error.code === 'ETIMEDOUT' ||
+      errorMessage === 'Network Error' ||
+      errorMessage?.includes('Network Error') ||
+      errorMessage?.includes('Cannot connect to server') ||
+      errorMessage?.includes('Failed to load response data') ||
+      (error.name === 'AxiosError' && errorMessage === 'Network Error') ||
+      (error.request && !error.response) // Request was made but no response received
+    );
+
+    if (isNetworkError) {
+      // Check if backend is still alive
+      let backendAlive = false;
+      try {
+        const healthController = new AbortController();
+        const healthTimeout = setTimeout(() => healthController.abort(), 3000);
+        try {
+          const healthCheck = await fetch('http://localhost:8000/api/health', {
+            method: 'GET',
+            signal: healthController.signal
+          });
+          backendAlive = healthCheck.ok;
+        } finally {
+          clearTimeout(healthTimeout);
+        }
+      } catch (healthErr) {
+        backendAlive = false;
+      }
+
+      // Provide a helpful error message with troubleshooting steps
+      let troubleshootingMsg = `Network Error: The request to fetch table data failed.\n\n`;
+
+      if (!backendAlive) {
+        troubleshootingMsg += `⚠️ Backend is not responding. The server may have crashed.\n\n`;
+      } else {
+        troubleshootingMsg += `⚠️ Backend is running but the request timed out or failed.\n\n`;
+      }
+
+      troubleshootingMsg += `Possible causes:\n` +
+        `1. Database connection is hanging (Oracle/SQL Server may be unreachable)\n` +
+        `2. Backend server crashed or is not responding\n` +
+        `3. Request timeout (table may be too large or database is slow)\n` +
+        `4. Network connectivity issue\n\n` +
+        `Please check:\n` +
+        `- Backend is running on http://localhost:8000\n` +
+        `- Check backend terminal for error logs\n` +
+        `- Database servers are accessible and responding\n` +
+        `- Try the "Retry Target" button\n` +
+        `- Reduce the number of records if table is very large`;
+
+      throw new Error(troubleshootingMsg);
+    }
+
+    // If we get here and have a response, it's an unhandled status code
+    if (error.response) {
+      const status = error.response.status;
+      const errorDetail = error.response?.data?.detail || errorMessage || `HTTP ${status} error`;
+      throw new Error(`Request failed with status ${status}: ${errorDetail}`);
+    }
+
+    // Re-throw with a meaningful message
+    throw new Error(errorMessage || 'An unexpected error occurred while fetching table data');
   }
 
   // Pipeline endpoints
   async getPipelines(skip?: number, limit?: number, retries?: number) {
     const skipValue = skip ?? 0;
-    const limitValue = limit ?? 100;
+    const limitValue = limit ?? 10000;  // Increased default limit to fetch all pipelines
     const retriesValue = retries ?? 1;
     const requestKey = `pipelines-${skipValue}-${limitValue}`;
     return this.retryRequest(
@@ -797,9 +862,42 @@ class ApiClient {
     );
   }
 
-  async getPipeline(pipelineId: number) {
-    const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`);
-    return response.data;
+  async getPipeline(pipelineId: string | number) {
+    try {
+      const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
+        timeout: 15000 // 15 seconds timeout (increased from 5s to handle slow backend responses)
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle all errors gracefully - return basic pipeline info to prevent UI breakage
+      const isTimeout = error.isTimeout ||
+        error.code === 'ECONNABORTED' ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('took too long');
+      const isServerError = error.response?.status >= 500;
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+
+      if (isTimeout || isServerError || isNetworkError) {
+        // Return minimal pipeline info to prevent UI breakage
+        console.warn(`Pipeline ${pipelineId} endpoint timeout or error, returning minimal info`);
+        return {
+          id: String(pipelineId),
+          name: `Pipeline ${pipelineId}`,
+          status: 'UNKNOWN',
+          full_load_status: 'NOT_STARTED',
+          cdc_status: 'NOT_STARTED',
+          error: 'Endpoint timeout or unavailable'
+        };
+      }
+      // For other errors (like 404), also return minimal info
+      return {
+        id: String(pipelineId),
+        name: `Pipeline ${pipelineId}`,
+        status: 'NOT_FOUND',
+        full_load_status: 'NOT_STARTED',
+        cdc_status: 'NOT_STARTED'
+      };
+    }
   }
 
   async fixOrphanedConnections() {
@@ -825,7 +923,7 @@ class ApiClient {
         isTimeout: error.isTimeout,
         isNetworkError: error.isNetworkError,
       };
-      
+
       // Add response data if available
       if (error.response) {
         errorInfo.status = error.response.status;
@@ -833,18 +931,18 @@ class ApiClient {
         errorInfo.data = error.response.data;
         errorInfo.headers = error.response.headers;
       }
-      
+
       // Add request config if available
       if (error.config) {
         errorInfo.url = error.config.url;
         errorInfo.method = error.config.method;
         errorInfo.data = error.config.data;
       }
-      
+
       // Log the full error object
       console.error('[API Client] createPipeline error:', errorInfo);
       console.error('[API Client] Full error object:', error);
-      
+
       // Re-throw with better error message
       if (error.response?.data?.detail) {
         const detailedError = new Error(error.response.data.detail);
@@ -852,7 +950,7 @@ class ApiClient {
         (detailedError as any).status = error.response.status;
         throw detailedError;
       }
-      
+
       throw error;
     }
   }
@@ -876,11 +974,29 @@ class ApiClient {
   // Checkpoint management
   async getPipelineCheckpoints(pipelineId: string | number) {
     // LSN metrics router is under /monitoring prefix, but endpoints start with /pipelines
-    // Increase timeout as this endpoint may query multiple collections and potentially connect to source DB
-    const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
-      timeout: 20000 // 20 seconds timeout
-    });
-    return response.data;
+    // Use shorter timeout and handle errors gracefully
+    try {
+      const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
+        timeout: 5000 // 5 seconds timeout - backend should respond quickly
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle all errors gracefully - return empty checkpoints to prevent UI breakage
+      const isTimeout = error.isTimeout ||
+        error.code === 'ECONNABORTED' ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('took too long');
+      const isServerError = error.response?.status >= 500;
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+
+      // Always return empty checkpoints for any error - prevents UI breakage
+      // This includes timeouts, network errors, server errors, and 404s
+      return {
+        checkpoints: [],
+        pipeline_id: String(pipelineId),
+        count: 0
+      };
+    }
   }
 
   async getPipelineCheckpoint(pipelineId: string | number, tableName: string, schemaName?: string) {
@@ -923,8 +1039,12 @@ class ApiClient {
   }
 
   async triggerPipeline(pipelineId: string | number, runType = 'full_load') {
+    // Pipeline start can take time (schema creation, connector setup, etc.)
+    // Increase timeout to 120 seconds to allow for full initialization and connector setup
     const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
       run_type: runType,
+    }, {
+      timeout: 180000 // 180 seconds (3 minutes) timeout for pipeline start (increased from 120s)
     });
     return response.data;
   }
@@ -937,10 +1057,30 @@ class ApiClient {
   async getPipelineProgress(pipelineId: string | number) {
     // Progress endpoint is optimized to return immediately from memory (no DB queries)
     // Using shorter timeout since endpoint should respond instantly
-    const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-      timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
-    });
-    return response.data;
+    try {
+      const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
+        timeout: 10000 // 10 seconds timeout (increased from 3s to handle slow backend responses)
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle timeout/errors gracefully - return empty progress
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      if (isTimeout || error.response?.status >= 500) {
+        console.warn(`Pipeline progress endpoint timeout for ${pipelineId}, returning empty progress`);
+        return {
+          pipeline_id: String(pipelineId),
+          progress: 0,
+          status: 'UNKNOWN',
+          message: 'Progress unavailable'
+        };
+      }
+      // For other errors, return empty progress
+      return {
+        pipeline_id: String(pipelineId),
+        progress: 0,
+        status: 'UNKNOWN'
+      };
+    }
   }
 
   async pausePipeline(pipelineId: string | number) {
@@ -949,30 +1089,33 @@ class ApiClient {
   }
 
   async stopPipeline(pipelineId: string | number) {
-    const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`);
+    // Increase timeout for stop pipeline as it may take time to stop connectors
+    const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`, {}, {
+      timeout: 35000, // 35 seconds timeout for stopping pipeline
+    });
     return response.data;
   }
 
-  async getPipelineRuns(pipelineId: number, skip = 0, limit = 100) {
+  async getPipelineRuns(pipelineId: string | number, skip = 0, limit = 100) {
     const response = await this.client.get(`/api/v1/pipelines/${pipelineId}/runs`, {
       params: { skip, limit },
     });
     return response.data;
   }
 
-  async getPipelineStatus(pipelineId: number) {
+  async getPipelineStatus(pipelineId: string | number) {
     const response = await this.client.get(`/api/v1/pipelines/${pipelineId}/status`);
     return response.data;
   }
 
-  async getPipelineOffset(pipelineId: number, fetchFromDb = false) {
+  async getPipelineOffset(pipelineId: string | number, fetchFromDb = false) {
     const response = await this.client.get(`/api/v1/pipelines/${pipelineId}/offset`, {
       params: { fetch_from_db: fetchFromDb }
     });
     return response.data;
   }
 
-  async updatePipelineOffset(pipelineId: number, offsetData: {
+  async updatePipelineOffset(pipelineId: string | number, offsetData: {
     current_lsn?: string;
     current_offset?: string;
     current_scn?: string;
@@ -995,11 +1138,11 @@ class ApiClient {
     const requestKey = `events-${pipelineId || 'all'}-${skip}-${limit}-${todayOnly}-${startDate || ''}-${endDate || ''}-${tableName || ''}`;
     // Convert to string for UUIDs, or use as-is for numbers
     const pipelineIdParam = pipelineId ? String(pipelineId) : undefined;
-    
+
     // Convert Date objects to ISO strings if needed
     const startDateParam = startDate instanceof Date ? startDate.toISOString() : startDate;
     const endDateParam = endDate instanceof Date ? endDate.toISOString() : endDate;
-    
+
     return this.retryRequest(
       () => this.client.get('/api/v1/monitoring/events', {
         params: {
@@ -1012,7 +1155,23 @@ class ApiClient {
           end_date: endDateParam,
         },
         timeout: 10000, // Reduced to 10 seconds
-      }).then(res => res.data),
+      }).then(res => {
+        // CRITICAL: Log API response for debugging
+        const eventsData = res.data;
+        const eventsArray = Array.isArray(eventsData) ? eventsData : [];
+        console.log('[API] getReplicationEvents response:', {
+          pipelineId: pipelineIdParam || 'all',
+          receivedCount: eventsArray.length,
+          limit,
+          isArray: Array.isArray(eventsData),
+          sampleEvent: eventsArray.length > 0 ? {
+            id: eventsArray[0].id,
+            pipeline_id: eventsArray[0].pipeline_id,
+            event_type: eventsArray[0].event_type
+          } : null
+        });
+        return eventsData;
+      }),
       'replication events',
       retries,
       10000,
@@ -1022,18 +1181,49 @@ class ApiClient {
 
   async getDashboardStats() {
     try {
-      const response = await this.client.get('/api/v1/monitoring/dashboard');
+      const response = await this.client.get('/api/v1/monitoring/dashboard', {
+        timeout: 5000 // 5 second timeout
+      });
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
+      // Handle all errors gracefully - return empty dashboard data
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK'
+      const isServerError = error.response?.status >= 500
+
+      if (isTimeout || isNetworkError || isServerError) {
+        // Return empty dashboard data on errors
+        return {
+          total_pipelines: 0,
+          active_pipelines: 0,
+          stopped_pipelines: 0,
+          error_pipelines: 0,
+          total_events: 0,
+          failed_events: 0,
+          success_events: 0,
+          recent_metrics: [],
+          timestamp: new Date().toISOString()
+        }
+      }
+      // For other errors, also return empty dashboard
+      return {
+        total_pipelines: 0,
+        active_pipelines: 0,
+        stopped_pipelines: 0,
+        error_pipelines: 0,
+        total_events: 0,
+        failed_events: 0,
+        success_events: 0,
+        recent_metrics: [],
+        timestamp: new Date().toISOString()
+      }
     }
   }
 
   async getMonitoringMetrics(
-    pipelineId: number | string, 
-    startTime?: string | Date, 
-    endTime?: string | Date, 
+    pipelineId: number | string,
+    startTime?: string | Date,
+    endTime?: string | Date,
     retries = 1
   ) {
     // Convert to string to handle both numeric IDs and UUID strings
@@ -1042,18 +1232,18 @@ class ApiClient {
     if (pipelineIdStr === 'NaN' || pipelineIdStr === 'undefined' || !pipelineIdStr) {
       throw new Error('Invalid pipeline ID')
     }
-    
+
     // Convert Date objects to ISO strings if necessary
     const formattedStartTime = startTime instanceof Date ? startTime.toISOString() : startTime
     const formattedEndTime = endTime instanceof Date ? endTime.toISOString() : endTime
-    
+
     const requestKey = `metrics-${pipelineIdStr}-${formattedStartTime || ''}-${formattedEndTime || ''}`;
     return this.retryRequest(
       () => this.client.get('/api/v1/monitoring/metrics', {
-        params: { 
-          pipeline_id: pipelineIdStr, 
-          start_time: formattedStartTime, 
-          end_time: formattedEndTime 
+        params: {
+          pipelineId: pipelineIdStr,  // Use pipelineId (camelCase) to match backend
+          startTime: formattedStartTime,
+          endTime: formattedEndTime
         },
         timeout: 10000, // Reduced to 10 seconds
       }).then(res => res.data),
@@ -1105,12 +1295,35 @@ class ApiClient {
       if (search) params.search = search
       if (startDate) params.start_date = startDate
       if (endDate) params.end_date = endDate
-      
-      const response = await this.client.get('/api/v1/logs/application-logs', { params })
+
+      // Reduced timeout and limit for faster response
+      const response = await this.client.get('/api/v1/logs/application-logs', {
+        params,
+        timeout: 5000 // 5 second timeout
+      })
       return response.data
     } catch (error: any) {
-      console.error('Error fetching application logs:', error)
-      throw error
+      // Handle all errors gracefully - return empty logs to prevent UI breakage
+      const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+      const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK'
+      const isServerError = error.response?.status >= 500
+
+      if (isTimeout || isNetworkError || isServerError) {
+        // Silently return empty logs - don't log as error to avoid noise
+        return {
+          logs: [],
+          total: 0,
+          skip,
+          limit
+        }
+      }
+      // For other errors (like 404), also return empty logs
+      return {
+        logs: [],
+        total: 0,
+        skip,
+        limit
+      }
     }
   }
 
@@ -1130,15 +1343,47 @@ class ApiClient {
       return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     }
   }
-
   async getLsnLatencyMetrics(pipelineId: string, startTime?: string, endTime?: string, limit: number = 100) {
     const params: any = { limit };
     if (startTime) params.start_time = startTime;
     if (endTime) params.end_time = endTime;
-    const response = await this.client.get(`/api/v1/monitoring/lsn-latency`, { 
+    const response = await this.client.get(`/api/v1/monitoring/lsn-latency`, {
       params: { pipeline_id: pipelineId, ...params }
     });
     return response.data;
+  }
+
+  async getAuditLogs(
+    skip: number = 0,
+    limit: number = 20,
+    action?: string,
+    resourceType?: string,
+    startDate?: string,
+    endDate?: string
+  ) {
+    const params: any = { skip, limit }
+    if (action) params.action = action
+    if (resourceType) params.resource_type = resourceType
+    if (startDate) params.start_date = startDate
+    if (endDate) params.end_date = endDate
+
+    const response = await this.client.get('/api/v1/audit-logs', { params })
+    return response.data
+  }
+
+  async getAuditLogFilters() {
+    const response = await this.client.get('/api/v1/audit-logs/filters')
+    return response.data
+  }
+
+  async getEventLoggerStatus() {
+    const response = await this.client.get('/api/v1/monitoring/event-logger-status')
+    return response.data
+  }
+
+  async getSystemHealth() {
+    const response = await this.client.get('/api/monitoring/health')
+    return response.data
   }
 }
 

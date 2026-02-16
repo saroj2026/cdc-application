@@ -3,9 +3,13 @@ from fastapi import Request
 from typing import Optional, Dict, Any
 from datetime import datetime
 import uuid
+import json
+import logging
 from sqlalchemy.orm import Session
 
 from ingestion.database.models_db import AuditLogModel, UserModel
+
+logger = logging.getLogger(__name__)
 
 
 def log_audit_event(
@@ -54,14 +58,13 @@ def log_audit_event(
             except Exception:
                 pass
         
-        # Serialize JSON values properly to avoid SQLAlchemy f405 error
-        import json
+        # Serialize JSON values properly to avoid SQLAlchemy errors
         old_value_json = None
         new_value_json = None
         
         if old_value is not None:
             try:
-                # Convert dict to JSON string if needed, or use as-is if already serializable
+                # Convert dict to JSON-serializable format
                 if isinstance(old_value, (dict, list)):
                     old_value_json = json.loads(json.dumps(old_value))  # Ensure it's JSON-serializable
                 else:
@@ -71,7 +74,7 @@ def log_audit_event(
         
         if new_value is not None:
             try:
-                # Convert dict to JSON string if needed, or use as-is if already serializable
+                # Convert dict to JSON-serializable format
                 if isinstance(new_value, (dict, list)):
                     new_value_json = json.loads(json.dumps(new_value))  # Ensure it's JSON-serializable
                 else:
@@ -79,7 +82,8 @@ def log_audit_event(
             except Exception:
                 new_value_json = None
         
-        # Create audit log entry
+        # Create audit log entry (support both new and legacy structure)
+        created_at = datetime.utcnow()
         audit_log = AuditLogModel(
             id=str(uuid.uuid4()),
             tenant_id=tenant_id,
@@ -91,7 +95,13 @@ def log_audit_event(
             new_value=new_value_json,
             ip_address=ip_address,
             user_agent=user_agent,
-            created_at=datetime.utcnow()
+            created_at=created_at,
+            # Legacy fields for backward compatibility
+            entity_type=resource_type,
+            entity_id=resource_id,
+            old_values=old_value_json,
+            new_values=new_value_json,
+            timestamp=created_at
         )
         
         db.add(audit_log)
@@ -115,18 +125,17 @@ def log_audit_event(
         except Exception:
             pass  # If rollback fails, continue anyway
         
-        import logging
         error_msg = str(e)
         # Check if it's a table doesn't exist error
         if "does not exist" in error_msg.lower() or "relation" in error_msg.lower() or "table" in error_msg.lower():
-            logging.warning(f"audit_logs table does not exist. Please run create_audit_logs_table.py")
+            logger.warning(f"audit_logs table does not exist. Audit logging disabled.")
         elif "column" in error_msg.lower() and "does not exist" in error_msg.lower():
-            logging.warning(f"audit_logs table is missing columns. Please run create_audit_logs_table.py")
+            logger.warning(f"audit_logs table is missing columns. Audit logging disabled.")
         else:
             # Log the full error for debugging
-            logging.error(f"Failed to log audit event: {type(e).__name__}: {error_msg}")
+            logger.error(f"Failed to log audit event: {type(e).__name__}: {error_msg}")
             # Also log the action that failed
-            logging.error(f"  Action: {action}, Resource: {resource_type}, Resource ID: {resource_id}")
+            logger.error(f"  Action: {action}, Resource: {resource_type}, Resource ID: {resource_id}")
 
 
 def mask_sensitive_data(data: Dict[str, Any]) -> Dict[str, Any]:

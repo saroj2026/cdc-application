@@ -1,109 +1,99 @@
-"""Script to run user management migration."""
+"""Run user management migration script."""
 import os
-import sys
-from sqlalchemy import create_engine, text
-from urllib.parse import quote_plus
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get database URL from environment
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://cdc_user:cdc_pass@72.61.233.209:5432/cdctest"
-)
+database_url = os.getenv("DATABASE_URL", "postgresql://cdc_user:cdc_pass@72.61.233.209:5432/cdctest")
 
-def run_migration():
-    """Run the user management migration."""
-    print("=" * 60)
-    print("User Management Migration")
-    print("=" * 60)
-    print(f"Database: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
+# Parse database URL
+# Format: postgresql://user:password@host:port/database
+url_parts = database_url.replace("postgresql://", "").split("/")
+auth_part = url_parts[0]
+database = url_parts[1] if len(url_parts) > 1 else "cdctest"
+
+auth_parts = auth_part.split("@")
+credentials = auth_parts[0].split(":")
+host_port = auth_parts[1].split(":") if len(auth_parts) > 1 else ["72.61.233.209", "5432"]
+
+user = credentials[0]
+password = credentials[1] if len(credentials) > 1 else "cdc_pass"
+host = host_port[0]
+port = int(host_port[1]) if len(host_port) > 1 else 5432
+
+print("=" * 70)
+print("Running User Management Migration")
+print("=" * 70)
+print(f"Host: {host}:{port}")
+print(f"Database: {database}")
+print(f"User: {user}")
+print()
+
+try:
+    # Connect to database
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        database=database,
+        user=user,
+        password=password
+    )
+    conn.autocommit = True
+    cursor = conn.cursor()
+    
+    print("✅ Connected to database")
+    
+    # Read migration script (migrations folder is in backend directory)
+    migration_path = os.path.join(os.path.dirname(__file__), "migrations", "add_user_management_features.sql")
+    with open(migration_path, "r") as f:
+        migration_sql = f.read()
+    
+    print("📄 Reading migration script...")
+    
+    # Execute migration
+    print("🚀 Running migration...")
+    cursor.execute(migration_sql)
+    
+    print("✅ Migration completed successfully!")
     print()
     
-    try:
-        # Create engine
-        engine = create_engine(DATABASE_URL)
-        
-        # Read migration SQL
-        migration_file = os.path.join(os.path.dirname(__file__), "migrations", "add_user_management_columns.sql")
-        
-        if not os.path.exists(migration_file):
-            print(f"ERROR: Migration file not found: {migration_file}")
-            return 1
-        
-        with open(migration_file, 'r') as f:
-            migration_sql = f.read()
-        
-        print("Running migration...")
-        print()
-        
-        # Execute migration
-        with engine.begin() as conn:  # Use begin() for transaction management
-            # Split by semicolons but preserve DO $$ blocks
-            statements = []
-            current_statement = ""
-            in_do_block = False
-            dollar_quote = None
-            
-            for line in migration_sql.split('\n'):
-                line = line.strip()
-                if not line or line.startswith('--'):
-                    continue
-                
-                # Check for DO $$ blocks
-                if 'DO $$' in line.upper():
-                    in_do_block = True
-                    dollar_quote = '$$'
-                    current_statement = line
-                    continue
-                
-                if in_do_block:
-                    current_statement += '\n' + line
-                    # Check for END $$
-                    if line.strip().upper().startswith('END $$'):
-                        statements.append(current_statement)
-                        current_statement = ""
-                        in_do_block = False
-                        dollar_quote = None
-                    continue
-                
-                # Regular statements
-                current_statement += '\n' + line if current_statement else line
-                if line.endswith(';'):
-                    statements.append(current_statement)
-                    current_statement = ""
-            
-            # Execute each statement
-            for statement in statements:
-                statement = statement.strip()
-                if statement:
-                    try:
-                        conn.execute(text(statement))
-                    except Exception as e:
-                        error_str = str(e).lower()
-                        # Ignore "already exists" errors
-                        if "already exists" not in error_str and "duplicate" not in error_str:
-                            print(f"Warning: {str(e)[:100]}")
-        
-        print("✅ Migration completed successfully!")
-        print()
-        print("New columns added to 'users' table:")
-        print("  - tenant_id (UUID)")
-        print("  - status (VARCHAR)")
-        print("  - last_login (TIMESTAMP)")
-        print()
-        print("New tables created:")
-        print("  - user_sessions (for refresh tokens)")
-        print("  - audit_logs (for audit trail)")
-        print()
-        print("Existing users updated with default values.")
-        
-        return 0
-        
-    except Exception as e:
-        print(f"ERROR: Migration failed: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return 1
-
-if __name__ == "__main__":
-    sys.exit(run_migration())
+    # Verify changes
+    print("Verifying changes...")
+    cursor.execute("""
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns
+        WHERE table_name = 'users'
+        ORDER BY ordinal_position;
+    """)
+    
+    print("\nUsers table columns:")
+    for row in cursor.fetchall():
+        print(f"  - {row[0]} ({row[1]}, nullable: {row[2]})")
+    
+    # Check if user_sessions table exists
+    cursor.execute("""
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'user_sessions'
+        );
+    """)
+    if cursor.fetchone()[0]:
+        print("\n✅ user_sessions table created")
+    else:
+        print("\n⚠️  user_sessions table not found")
+    
+    cursor.close()
+    conn.close()
+    
+    print("\n" + "=" * 70)
+    print("Migration completed successfully!")
+    print("=" * 70)
+    
+except Exception as e:
+    print(f"\n❌ Error running migration: {e}")
+    import traceback
+    traceback.print_exc()
+    exit(1)
 

@@ -173,6 +173,20 @@ export const CockroachLogo: React.FC<LogoProps> = ({ className = "", size = 24 }
 )
 
 // Default Database Icon
+// AWS S3 Logo - Official AWS S3 bucket design
+export const S3Logo: React.FC<LogoProps> = ({ className = "", size = 24 }) => (
+  <svg viewBox="0 0 24 24" className={className} width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* AWS S3 Bucket - Official Design */}
+    <rect x="4" y="6" width="16" height="12" rx="1" fill="#FF9900"/>
+    <rect x="4" y="6" width="16" height="3" rx="1" fill="#FFB347"/>
+    <rect x="4" y="15" width="16" height="3" rx="1" fill="#E68900"/>
+    <path d="M6 9h12M6 12h12M6 15h12" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.3"/>
+    <circle cx="8" cy="10.5" r="1" fill="#FFFFFF" opacity="0.6"/>
+    <circle cx="10.5" cy="10.5" r="1" fill="#FFFFFF" opacity="0.6"/>
+    <circle cx="13" cy="10.5" r="1" fill="#FFFFFF" opacity="0.6"/>
+  </svg>
+)
+
 export const DefaultDatabaseLogo: React.FC<LogoProps> = ({ className = "", size = 24 }) => (
   <svg viewBox="0 0 24 24" className={className} width={size} height={size} fill="none" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="12" cy="5" rx="8" ry="2" fill="#6B7280"/>

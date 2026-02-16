@@ -132,226 +132,226 @@ export default function ErrorsPage() {
     <ProtectedPage path="/errors" requiredPermission="view_metrics">
       <div className="p-6 space-y-6">
         <PageHeader
-        title="Errors & Alerts"
-        subtitle="Monitor replication errors and data quality issues"
-        icon={AlertCircle}
-        action={
-          <div className="text-right">
-            <p className="text-4xl font-extrabold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">{unresolvedCount}</p>
-            <p className="text-sm text-foreground-muted font-semibold">Unresolved Errors</p>
-          </div>
-        }
-      />
-
-      {/* Summary Cards - Enhanced */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-5 bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Total Errors (24h)</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">{alerts.length}</p>
+          title="Errors & Alerts"
+          subtitle="Monitor replication errors and data quality issues"
+          icon={AlertCircle}
+          action={
+            <div className="text-right">
+              <p className="text-4xl font-extrabold text-error">{unresolvedCount}</p>
+              <p className="text-sm text-foreground-muted font-semibold">Unresolved Errors</p>
             </div>
-            <AlertTriangle className="w-10 h-10 text-red-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-rose-500/10 to-rose-600/5 border-rose-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Critical Issues</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-rose-400 to-rose-600 bg-clip-text text-transparent">{criticalCount}</p>
-            </div>
-            <XCircle className="w-10 h-10 text-rose-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Data Quality Issues</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">{dataQualityIssues.length}</p>
-            </div>
-            <AlertTriangle className="w-10 h-10 text-amber-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-green-500/10 to-emerald-600/5 border-green-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Resolution Rate</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{resolutionRate}%</p>
-            </div>
-            <CheckCircle className="w-10 h-10 text-green-400" />
-          </div>
-        </Card>
-      </div>
+          }
+        />
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-border">
-        <button
-          onClick={() => setErrorFilter("all")}
-          className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "all"
-              ? "border-primary text-foreground"
-              : "border-transparent text-foreground-muted hover:text-foreground"
-            }`}
-        >
-          All Errors ({alerts.length})
-        </button>
-        <button
-          onClick={() => setErrorFilter("unresolved")}
-          className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "unresolved"
-              ? "border-primary text-foreground"
-              : "border-transparent text-foreground-muted hover:text-foreground"
-            }`}
-        >
-          Unresolved ({unresolvedCount})
-        </button>
-        <button
-          onClick={() => setErrorFilter("acknowledged")}
-          className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "acknowledged"
-              ? "border-primary text-foreground"
-              : "border-transparent text-foreground-muted hover:text-foreground"
-            }`}
-        >
-          Acknowledged ({alerts.filter((e) => e.status === "acknowledged").length})
-        </button>
-      </div>
-
-      {/* Error List */}
-      <div className="space-y-3">
-        {filteredErrors.length > 0 ? (
-          filteredErrors.map((error) => (
-            <Card
-              key={error.id}
-              className="bg-surface border-border p-4 hover:border-border/80 cursor-pointer transition-all"
-              onClick={() => setSelectedError(selectedError === error.id ? null : error.id)}
-            >
-              <div className="flex items-start gap-4">
-                {getSeverityIcon(error.severity)}
-
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-4 mb-2">
-                    <div>
-                      <h3 className="text-foreground font-semibold">{error.message}</h3>
-                      <p className="text-sm text-foreground-muted mt-1">
-                        {error.sourceName || error.source} {error.table ? `• ${error.table}` : ''}
-                      </p>
-                    </div>
-                    {getStatusBadge(error.status)}
-                  </div>
-
-                  {selectedError === error.id && (
-                    <div className="mt-4 p-4 bg-surface-hover rounded-lg space-y-2 border-l-2 border-primary">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-foreground-muted">Timestamp</p>
-                          <p className="text-foreground font-mono">
-                            {format(new Date(error.timestamp), "yyyy-MM-dd HH:mm:ss")}
-                          </p>
-                        </div>
-                        {error.rowsAffected !== undefined && (
-                          <div>
-                            <p className="text-foreground-muted">Rows Affected</p>
-                            <p className="text-foreground font-semibold">{error.rowsAffected}</p>
-                          </div>
-                        )}
-                        {error.details && (
-                          <div className="col-span-2">
-                            <p className="text-foreground-muted">Details</p>
-                            <p className="text-foreground">{error.details}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        {error.status === 'unresolved' && (
-                          <Button
-                            size="sm"
-                            className="bg-primary hover:bg-primary/90 text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              dispatch(updateAlertStatus({ id: error.id, status: 'acknowledged' }))
-                            }}
-                          >
-                            Acknowledge
-                          </Button>
-                        )}
-                        {error.status !== 'resolved' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-transparent border-border hover:bg-surface-hover"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              dispatch(updateAlertStatus({ id: error.id, status: 'resolved' }))
-                            }}
-                          >
-                            Mark Resolved
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xs text-foreground-muted">
-                    {formatDistanceToNow(new Date(error.timestamp), { addSuffix: true })}
-                  </p>
-                </div>
+        {/* Summary Cards - Enhanced */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="p-5 bg-card border-l-4 border-l-red-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <AlertTriangle className="absolute -right-4 -bottom-4 w-24 h-24 text-red-500/10 group-hover:text-red-500/15 transition-colors transform rotate-12" />
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Total Errors (24h)</p>
+                <p className="text-3xl font-extrabold text-red-500">{alerts.length}</p>
               </div>
-            </Card>
-          ))
-        ) : (
-          <Card className="card-heartbeat bg-surface border-border p-8 text-center">
-            <CheckCircle className="w-12 h-12 text-success mx-auto mb-4 opacity-50" />
-            <p className="text-foreground-muted">No errors found</p>
+            </div>
           </Card>
-        )}
-      </div>
+          <Card className="p-5 bg-card border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <XCircle className="absolute -right-4 -bottom-4 w-24 h-24 text-rose-500/10 group-hover:text-rose-500/15 transition-colors transform rotate-12" />
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Critical Issues</p>
+                <p className="text-3xl font-extrabold text-rose-500">{criticalCount}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5 bg-card border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <AlertTriangle className="absolute -right-4 -bottom-4 w-24 h-24 text-amber-500/10 group-hover:text-amber-500/15 transition-colors transform rotate-12" />
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Data Quality Issues</p>
+                <p className="text-3xl font-extrabold text-amber-500">{dataQualityIssues.length}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5 bg-card border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <CheckCircle className="absolute -right-4 -bottom-4 w-24 h-24 text-green-500/10 group-hover:text-green-500/15 transition-colors transform rotate-12" />
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Resolution Rate</p>
+                <p className="text-3xl font-extrabold text-green-500">{resolutionRate}%</p>
+              </div>
+            </div>
+          </Card>
+        </div>
 
-      {/* Data Quality Monitoring */}
-      {dataQualityIssues.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Data Quality Monitoring</h2>
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-border">
+          <button
+            onClick={() => setErrorFilter("all")}
+            className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "all"
+              ? "border-primary text-foreground"
+              : "border-transparent text-foreground-muted hover:text-foreground"
+              }`}
+          >
+            All Errors ({alerts.length})
+          </button>
+          <button
+            onClick={() => setErrorFilter("unresolved")}
+            className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "unresolved"
+              ? "border-primary text-foreground"
+              : "border-transparent text-foreground-muted hover:text-foreground"
+              }`}
+          >
+            Unresolved ({unresolvedCount})
+          </button>
+          <button
+            onClick={() => setErrorFilter("acknowledged")}
+            className={`px-4 py-2 font-medium border-b-2 ${errorFilter === "acknowledged"
+              ? "border-primary text-foreground"
+              : "border-transparent text-foreground-muted hover:text-foreground"
+              }`}
+          >
+            Acknowledged ({alerts.filter((e) => e.status === "acknowledged").length})
+          </button>
+        </div>
 
-          <div className="space-y-3">
-            {dataQualityIssues.map((issue) => (
-              <Card key={issue.id} className="bg-surface border-border p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    {issue.severity === "critical" ? (
-                      <XCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                    ) : issue.severity === "high" ? (
-                      <AlertTriangle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-                    )}
+        {/* Error List */}
+        <div className="space-y-3">
+          {filteredErrors.length > 0 ? (
+            filteredErrors.map((error) => (
+              <Card
+                key={error.id}
+                className="bg-card border-l-4 border-l-red-500 shadow-sm p-4 hover:shadow-md cursor-pointer transition-all"
+                onClick={() => setSelectedError(selectedError === error.id ? null : error.id)}
+              >
+                <div className="flex items-start gap-4">
+                  {getSeverityIcon(error.severity)}
 
-                    <div className="flex-1">
-                      <h3 className="text-foreground font-semibold">
-                        {issue.table}.{issue.column}
-                      </h3>
-                      <p className="text-sm text-foreground-muted mt-1">{issue.issue}</p>
-                      <p className="text-xs text-foreground-muted mt-2">Last detected: {issue.lastDetected}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-4 mb-2">
+                      <div>
+                        <h3 className="text-foreground font-semibold">{error.message}</h3>
+                        <p className="text-sm text-foreground-muted mt-1">
+                          {error.sourceName || error.source} {error.table ? `• ${error.table}` : ''}
+                        </p>
+                      </div>
+                      {getStatusBadge(error.status)}
                     </div>
+
+                    {selectedError === error.id && (
+                      <div className="mt-4 p-4 bg-surface-hover rounded-lg space-y-2 border-l-2 border-primary">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-foreground-muted">Timestamp</p>
+                            <p className="text-foreground font-mono">
+                              {format(new Date(error.timestamp), "yyyy-MM-dd HH:mm:ss")}
+                            </p>
+                          </div>
+                          {error.rowsAffected !== undefined && (
+                            <div>
+                              <p className="text-foreground-muted">Rows Affected</p>
+                              <p className="text-foreground font-semibold">{error.rowsAffected}</p>
+                            </div>
+                          )}
+                          {error.details && (
+                            <div className="col-span-2">
+                              <p className="text-foreground-muted">Details</p>
+                              <p className="text-foreground">{error.details}</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          {error.status === 'unresolved' && (
+                            <Button
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90 text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                dispatch(updateAlertStatus({ id: error.id, status: 'acknowledged' }))
+                              }}
+                            >
+                              Acknowledge
+                            </Button>
+                          )}
+                          {error.status !== 'resolved' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-transparent border-border hover:bg-surface-hover"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                dispatch(updateAlertStatus({ id: error.id, status: 'resolved' }))
+                              }}
+                            >
+                              Mark Resolved
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-right flex-shrink-0">
-                    <p className="text-2xl font-bold text-foreground">{issue.count}</p>
-                    <Badge
-                      className={`${issue.severity === "critical"
+                    <p className="text-xs text-foreground-muted">
+                      {formatDistanceToNow(new Date(error.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <Card className="bg-card border-l-4 border-l-success shadow-sm p-8 text-center flex flex-col items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-success mb-4 opacity-50" />
+              <p className="text-foreground-muted">No errors found</p>
+            </Card>
+          )}
+        </div>
+
+        {/* Data Quality Monitoring */}
+        {dataQualityIssues.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Data Quality Monitoring</h2>
+
+            <div className="space-y-3">
+              {dataQualityIssues.map((issue) => (
+                <Card key={issue.id} className="bg-card border-l-4 border-l-warning shadow-sm p-4 hover:shadow-md transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-4 flex-1">
+                      {issue.severity === "critical" ? (
+                        <XCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                      ) : issue.severity === "high" ? (
+                        <AlertTriangle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                      )}
+
+                      <div className="flex-1">
+                        <h3 className="text-foreground font-semibold">
+                          {issue.table}.{issue.column}
+                        </h3>
+                        <p className="text-sm text-foreground-muted mt-1">{issue.issue}</p>
+                        <p className="text-xs text-foreground-muted mt-2">Last detected: {issue.lastDetected}</p>
+                      </div>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-2xl font-bold text-foreground">{issue.count}</p>
+                      <Badge
+                        className={`${issue.severity === "critical"
                           ? "bg-destructive/20 text-destructive"
                           : issue.severity === "high"
                             ? "bg-error/20 text-error"
                             : "bg-warning/20 text-warning"
-                        }`}
-                    >
-                      {issue.severity}
-                    </Badge>
+                          }`}
+                      >
+                        {issue.severity}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </ProtectedPage>
   )

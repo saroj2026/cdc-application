@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { User, Bell, Settings, Moon, Sun, LogOut } from "lucide-react"
+import { User, Bell, Settings, Moon, Sun, LogOut, Database, Menu, ChevronLeft } from "lucide-react"
 import { useTheme } from "@/contexts/theme-context"
+import { useSidebar } from "@/contexts/sidebar-context"
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks"
 import { logout } from "@/lib/store/slices/authSlice"
 import {
@@ -17,6 +18,7 @@ import {
 
 export function TopNav() {
   const { theme, toggleTheme } = useTheme()
+  const { isCollapsed, toggleCollapse } = useSidebar()
   const router = useRouter()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
@@ -43,10 +45,17 @@ export function TopNav() {
   const userEmail = user?.email || ""
 
   return (
-    <div className="h-16 border-b border-border bg-sidebar flex items-center justify-between px-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Change Data Capture Platform</h2>
-        <p className="text-sm text-foreground-muted">Real-time Replication & Monitoring</p>
+    <div className="h-16 border-b border-border bg-sidebar flex items-center justify-between px-4 shrink-0">
+      <div className="flex items-center gap-4">
+        {/* Toggle Sidebar Button */}
+        <button
+          onClick={toggleCollapse}
+          className="p-2 hover:bg-surface-hover rounded-lg transition-colors text-foreground-muted hover:text-primary"
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+        </button>
+
       </div>
 
       <div className="flex items-center gap-4">
@@ -62,7 +71,11 @@ export function TopNav() {
             </span>
           )}
         </button>
-        <button className="p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary" aria-label="Settings">
+        <button
+          onClick={() => router.push("/settings")}
+          className="p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary"
+          aria-label="Settings"
+        >
           <Settings className="w-5 h-5 text-foreground-muted hover:text-primary transition-colors" />
         </button>
         <button
@@ -75,14 +88,25 @@ export function TopNav() {
           <Moon className={`w-5 h-5 text-foreground-muted ${mounted && theme === "light" ? "block" : "hidden"}`} />
           {!mounted && <Moon className="w-5 h-5 text-foreground-muted" />}
         </button>
-        
+
         {/* User Menu with Logout - Always render, but disable interactions until mounted */}
         <div suppressHydrationWarning>
           {mounted ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary" aria-label="User menu">
-                  <User className="w-5 h-5 text-foreground-muted hover:text-primary transition-colors" />
+                <button className="relative outline-none group" aria-label="User menu">
+                  {/* Modern 2026 User Identity Component */}
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-cyan-500 rounded-full blur-[2px] opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                    <div className="relative w-9 h-9 border-2 border-border/50 bg-card rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:border-primary/50 transition-all duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5"></div>
+                      <div className="w-full h-full flex items-center justify-center font-bold text-xs text-primary group-hover:bg-primary/10 transition-colors">
+                        {userName.charAt(0).toUpperCase()}
+                      </div>
+                      {/* Live status orbit indicator */}
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-background rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    </div>
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-surface border-border">
@@ -105,9 +129,9 @@ export function TopNav() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <button className="p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary" aria-label="User menu" disabled>
-              <User className="w-5 h-5 text-foreground-muted hover:text-primary transition-colors" />
-            </button>
+            <div className="relative w-9 h-9 border-2 border-border/20 bg-muted/30 rounded-full flex items-center justify-center opacity-50 grayscale animate-pulse">
+              <User className="w-4 h-4 text-muted-foreground" />
+            </div>
           )}
         </div>
       </div>

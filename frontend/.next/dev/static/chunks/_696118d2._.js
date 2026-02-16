@@ -258,8 +258,13 @@ const hasAllPermissions = (permissions)=>(state)=>{
 const canAccessPage = (path)=>(state)=>{
         const user = state.auth?.user;
         if (!user) return false;
-        // Super admin has access to all pages
-        if (user.is_superuser || user.role_name === 'super_admin') {
+        // Super admin has access to all pages - check multiple ways
+        const isSuperAdmin = user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || user.role_name === 'super_admin' || user.role_name === 'admin';
+        if (isSuperAdmin) {
+            return true;
+        }
+        // Dashboard is accessible to all authenticated users
+        if (path === '/dashboard') {
             return true;
         }
         // Get required permissions for the page
@@ -296,8 +301,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$house$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Home$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/house.js [app-client] (ecmascript) <export default as Home>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/shield.js [app-client] (ecmascript) <export default as Shield>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-client] (ecmascript) <export default as Users>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-left.js [app-client] (ecmascript) <export default as ChevronLeft>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-right.js [app-client] (ecmascript) <export default as ChevronRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-client] (ecmascript) <export default as ChevronDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-up.js [app-client] (ecmascript) <export default as ChevronUp>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/contexts/sidebar-context.tsx [app-client] (ecmascript)");
@@ -380,9 +383,13 @@ function Sidebar() {
     _s();
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     const { isCollapsed, toggleCollapse, mounted } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"])();
-    const state = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
-        "Sidebar.useAppSelector[state]": (state)=>state
-    }["Sidebar.useAppSelector[state]"]);
+    // Use specific selectors instead of root state to prevent unnecessary rerenders
+    const { user, isAuthenticated } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
+        "Sidebar.useAppSelector": (state)=>state.auth
+    }["Sidebar.useAppSelector"]);
+    const permissions = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
+        "Sidebar.useAppSelector[permissions]": (state)=>state.permissions
+    }["Sidebar.useAppSelector[permissions]"]);
     const [expandedSections, setExpandedSections] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
         PLATFORM: true,
         REPLICATION: true,
@@ -390,11 +397,28 @@ function Sidebar() {
     });
     // Filter menu items based on permissions
     const getFilteredMenuSections = ()=>{
+        // If user is not loaded yet, show all items (will be filtered once user loads)
+        if (!user || !isAuthenticated) {
+            return menuSections;
+        }
+        // Super admin bypass - show all menu items for super admin
+        const isSuperAdmin = user.is_superuser === true || user.role_name === 'super_admin' || user.role_name === 'admin' || String(user.is_superuser).toLowerCase() === 'true';
+        if (isSuperAdmin) {
+            return menuSections;
+        }
+        // Create minimal state object for permission checks
+        const minimalState = {
+            auth: {
+                user,
+                isAuthenticated
+            },
+            permissions
+        };
         return menuSections.map((section)=>({
                 ...section,
                 items: section.items.filter((item)=>{
                     // Check if user can access this page
-                    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["canAccessPage"])(item.href)(state);
+                    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$permissionSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["canAccessPage"])(item.href)(minimalState);
                 })
             })).filter((section)=>section.items.length > 0) // Remove empty sections
         ;
@@ -418,7 +442,7 @@ function Sidebar() {
     }["Sidebar.useEffect"], [
         pathname,
         isCollapsed
-    ]);
+    ]); // Removed setExpandedSections from deps to avoid loop
     const toggleSection = (sectionTitle)=>{
         if (isCollapsed) return;
         setExpandedSections((prev)=>({
@@ -426,6 +450,7 @@ function Sidebar() {
                 [sectionTitle]: !prev[sectionTitle]
             }));
     };
+    // Show loading state if not mounted
     if (!mounted) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
             className: "w-64 border-r border-border bg-sidebar flex flex-col transition-all duration-300",
@@ -433,276 +458,297 @@ function Sidebar() {
                 className: "p-6 border-b border-border"
             }, void 0, false, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 99,
+                lineNumber: 120,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/components/layout/sidebar.tsx",
-            lineNumber: 98,
+            lineNumber: 119,
             columnNumber: 7
         }, this);
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("border-r border-border bg-sidebar flex flex-col transition-all duration-300", isCollapsed ? "w-20" : "w-64"),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-screen border-r border-border bg-sidebar flex flex-col transition-all duration-300 relative z-20 shadow-sm sticky top-0", isCollapsed ? "w-[72px]" : "w-64"),
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "p-6 border-b border-border flex items-center justify-between",
-                children: [
-                    !isCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex items-center gap-2",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "w-8 h-8 bg-gradient-to-br from-primary to-info rounded-lg flex items-center justify-center flex-shrink-0",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                                    className: "w-5 h-5 text-foreground"
+                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("h-16 border-b border-border flex items-center px-4 shrink-0 transition-all duration-300", "bg-white dark:bg-sidebar shadow-sm", isCollapsed ? "justify-center" : "justify-start gap-3"),
+                children: !isCollapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-center gap-2.5 group cursor-default",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "relative",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "absolute -inset-1 bg-gradient-to-tr from-primary/40 via-purple-500/40 to-cyan-500/40 rounded-lg blur-[4px] opacity-20 group-hover:opacity-60 transition duration-700"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 116,
+                                    lineNumber: 142,
                                     columnNumber: 15
-                                }, this)
-                            }, void 0, false, {
-                                fileName: "[project]/components/layout/sidebar.tsx",
-                                lineNumber: 115,
-                                columnNumber: 13
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                        className: "font-bold text-foreground text-sm",
-                                        children: "CDC Admin"
-                                    }, void 0, false, {
-                                        fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 119,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "text-xs text-foreground-muted",
-                                        children: "Platform"
-                                    }, void 0, false, {
-                                        fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 120,
-                                        columnNumber: 15
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/components/layout/sidebar.tsx",
-                                lineNumber: 118,
-                                columnNumber: 13
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 114,
-                        columnNumber: 11
-                    }, this),
-                    isCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "w-8 h-8 bg-gradient-to-br from-primary to-info rounded-lg flex items-center justify-center",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                            className: "w-5 h-5 text-foreground"
-                        }, void 0, false, {
-                            fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 126,
-                            columnNumber: 13
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 125,
-                        columnNumber: 11
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        onClick: toggleCollapse,
-                        className: "p-1.5 hover:bg-surface-hover rounded-lg transition-colors",
-                        "aria-label": "Toggle sidebar",
-                        children: isCollapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
-                            className: "w-4 h-4"
-                        }, void 0, false, {
-                            fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 134,
-                            columnNumber: 26
-                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__["ChevronLeft"], {
-                            className: "w-4 h-4"
-                        }, void 0, false, {
-                            fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 134,
-                            columnNumber: 65
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 129,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 112,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
-                className: "flex-1 overflow-y-auto px-3 py-4 space-y-6",
-                children: getFilteredMenuSections().map((section)=>{
-                    const isExpanded = expandedSections[section.title] ?? true;
-                    const hasActiveItem = section.items.some((item)=>pathname === item.href || pathname.startsWith(item.href + "/"));
-                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        children: !isCollapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                    onClick: ()=>toggleSection(section.title),
-                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-2 transition-colors hover:bg-surface-hover hover:text-primary", hasActiveItem && "text-primary"),
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "relative w-9 h-9 bg-gradient-to-br from-primary via-primary/80 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/20 shadow-xl overflow-hidden",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            children: section.title
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 158,
-                                            columnNumber: 21
+                                            lineNumber: 146,
+                                            columnNumber: 17
                                         }, this),
-                                        isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
-                                            className: "w-3 h-3"
-                                        }, void 0, false, {
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "relative flex items-center justify-center",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                    className: "w-5 h-5 text-white group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/components/layout/sidebar.tsx",
+                                                    lineNumber: 148,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "absolute -top-1 -right-1 w-1.5 h-1.5 bg-cyan-300 rounded-full animate-pulse shadow-[0_0_5px_rgba(103,232,249,0.8)]"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/components/layout/sidebar.tsx",
+                                                    lineNumber: 149,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 160,
-                                            columnNumber: 23
-                                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
-                                            className: "w-3 h-3"
-                                        }, void 0, false, {
-                                            fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 162,
-                                            columnNumber: 23
+                                            lineNumber: 147,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 151,
-                                    columnNumber: 19
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("space-y-1 overflow-hidden transition-all duration-300 ease-in-out", isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"),
-                                    children: section.items.map((item)=>{
-                                        const Icon = item.icon;
-                                        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                            href: item.href,
-                                            className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors", isActive ? "bg-primary/20 text-primary border border-primary/30 font-semibold" : "text-foreground-muted hover:text-primary hover:bg-surface-hover"),
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                                    className: "w-4 h-4 flex-shrink-0"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/components/layout/sidebar.tsx",
-                                                    lineNumber: 187,
-                                                    columnNumber: 27
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    children: item.label
-                                                }, void 0, false, {
-                                                    fileName: "[project]/components/layout/sidebar.tsx",
-                                                    lineNumber: 188,
-                                                    columnNumber: 27
-                                                }, this)
-                                            ]
-                                        }, item.href, true, {
-                                            fileName: "[project]/components/layout/sidebar.tsx",
-                                            lineNumber: 177,
-                                            columnNumber: 25
-                                        }, this);
-                                    })
-                                }, void 0, false, {
-                                    fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 167,
-                                    columnNumber: 19
+                                    lineNumber: 145,
+                                    columnNumber: 15
                                 }, this)
                             ]
-                        }, void 0, true) : /* Collapsed Sidebar - Show all items without dropdown */ /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "space-y-1",
+                        }, void 0, true, {
+                            fileName: "[project]/components/layout/sidebar.tsx",
+                            lineNumber: 140,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex flex-col",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-baseline",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-slate-900 to-slate-800 dark:via-white dark:to-white/70",
+                                            children: "CDC"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/layout/sidebar.tsx",
+                                            lineNumber: 156,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "ml-1 text-[10px] font-bold text-primary tracking-widest uppercase opacity-80",
+                                            children: "Nexus"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/layout/sidebar.tsx",
+                                            lineNumber: 159,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/components/layout/sidebar.tsx",
+                                    lineNumber: 155,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "h-[1.5px] w-full bg-gradient-to-r from-primary to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/layout/sidebar.tsx",
+                                    lineNumber: 163,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/components/layout/sidebar.tsx",
+                            lineNumber: 154,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/components/layout/sidebar.tsx",
+                    lineNumber: 139,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "relative group",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "absolute -inset-0.5 bg-gradient-to-tr from-primary to-purple-500 rounded-lg blur-[2px] opacity-40"
+                        }, void 0, false, {
+                            fileName: "[project]/components/layout/sidebar.tsx",
+                            lineNumber: 168,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "relative w-10 h-10 bg-gradient-to-br from-primary to-purple-700 rounded-lg flex items-center justify-center shadow-lg border border-white/10",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                className: "w-5 h-5 text-white"
+                            }, void 0, false, {
+                                fileName: "[project]/components/layout/sidebar.tsx",
+                                lineNumber: 170,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/components/layout/sidebar.tsx",
+                            lineNumber: 169,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/components/layout/sidebar.tsx",
+                    lineNumber: 167,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/components/layout/sidebar.tsx",
+                lineNumber: 133,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                className: "flex-1 overflow-y-auto px-3 py-4 space-y-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent",
+                children: getFilteredMenuSections().map((section)=>{
+                    const isExpanded = expandedSections[section.title] ?? true;
+                    const hasActiveItem = section.items.some((item)=>pathname === item.href || pathname.startsWith(item.href + "/"));
+                    // Skip rendering section header in collapsed mode if checking for active item
+                    if (isCollapsed) {
+                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "space-y-1 mb-4 border-b border-border/50 pb-4 last:border-0",
                             children: section.items.map((item)=>{
                                 const Icon = item.icon;
                                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                                 return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                     href: item.href,
                                     title: item.label,
-                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center gap-3 py-2 rounded-lg text-sm font-medium transition-colors justify-center px-0", isActive ? "bg-primary/20 text-primary border border-primary/30 font-semibold" : "text-foreground-muted hover:text-primary hover:bg-surface-hover"),
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                        className: "w-4 h-4 flex-shrink-0"
-                                    }, void 0, false, {
-                                        fileName: "[project]/components/layout/sidebar.tsx",
-                                        lineNumber: 212,
-                                        columnNumber: 25
-                                    }, this)
-                                }, item.href, false, {
+                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-all duration-200 group relative", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"),
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                            className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-5 h-5", isActive ? "text-white" : "")
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/layout/sidebar.tsx",
+                                            lineNumber: 202,
+                                            columnNumber: 23
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "absolute left-12 ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none z-50 border border-border",
+                                            children: item.label
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/layout/sidebar.tsx",
+                                            lineNumber: 204,
+                                            columnNumber: 23
+                                        }, this)
+                                    ]
+                                }, item.href, true, {
                                     fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 201,
-                                    columnNumber: 23
+                                    lineNumber: 191,
+                                    columnNumber: 21
                                 }, this);
                             })
-                        }, void 0, false, {
+                        }, section.title, false, {
                             fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 196,
-                            columnNumber: 17
-                        }, this)
-                    }, section.title, false, {
+                            lineNumber: 186,
+                            columnNumber: 15
+                        }, this);
+                    }
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "group/section",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: ()=>toggleSection(section.title),
+                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[10px] font-bold text-foreground-muted/70 uppercase tracking-wider mb-1 transition-colors hover:text-foreground", hasActiveItem && "text-primary/90"),
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        children: section.title
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/layout/sidebar.tsx",
+                                        lineNumber: 224,
+                                        columnNumber: 17
+                                    }, this),
+                                    isExpanded ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
+                                        className: "w-3 h-3 opacity-50"
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/layout/sidebar.tsx",
+                                        lineNumber: 226,
+                                        columnNumber: 19
+                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                                        className: "w-3 h-3 opacity-50"
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/layout/sidebar.tsx",
+                                        lineNumber: 228,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/components/layout/sidebar.tsx",
+                                lineNumber: 217,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out", isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"),
+                                children: section.items.map((item)=>{
+                                    const Icon = item.icon;
+                                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                        href: item.href,
+                                        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 border border-transparent", isActive ? "bg-primary/5 text-primary border-primary/10 shadow-sm" // Clean active state
+                                         : "text-foreground-muted hover:text-foreground hover:bg-surface-hover hover:border-border/50"),
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-4 h-4 flex-shrink-0 transition-colors", isActive ? "text-primary" : "text-foreground-muted group-hover:text-foreground")
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/layout/sidebar.tsx",
+                                                lineNumber: 253,
+                                                columnNumber: 23
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                children: item.label
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/layout/sidebar.tsx",
+                                                lineNumber: 254,
+                                                columnNumber: 23
+                                            }, this)
+                                        ]
+                                    }, item.href, true, {
+                                        fileName: "[project]/components/layout/sidebar.tsx",
+                                        lineNumber: 243,
+                                        columnNumber: 21
+                                    }, this);
+                                })
+                            }, void 0, false, {
+                                fileName: "[project]/components/layout/sidebar.tsx",
+                                lineNumber: 233,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, section.title, true, {
                         fileName: "[project]/components/layout/sidebar.tsx",
-                        lineNumber: 147,
+                        lineNumber: 215,
                         columnNumber: 13
                     }, this);
                 })
             }, void 0, false, {
                 fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 139,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "p-3 border-t border-border",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("glass p-3 rounded-lg text-xs text-foreground-muted", isCollapsed && "flex justify-center"),
-                    children: [
-                        !isCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "font-semibold mb-1",
-                                    children: "v1.0.0"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 228,
-                                    columnNumber: 15
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    children: "Real-time CDC Platform"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/layout/sidebar.tsx",
-                                    lineNumber: 229,
-                                    columnNumber: 15
-                                }, this)
-                            ]
-                        }, void 0, true),
-                        isCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                            className: "font-semibold",
-                            children: "v1"
-                        }, void 0, false, {
-                            fileName: "[project]/components/layout/sidebar.tsx",
-                            lineNumber: 232,
-                            columnNumber: 27
-                        }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/components/layout/sidebar.tsx",
-                    lineNumber: 225,
-                    columnNumber: 9
-                }, this)
-            }, void 0, false, {
-                fileName: "[project]/components/layout/sidebar.tsx",
-                lineNumber: 224,
+                lineNumber: 176,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/layout/sidebar.tsx",
-        lineNumber: 105,
+        lineNumber: 126,
         columnNumber: 5
     }, this);
 }
-_s(Sidebar, "CXjxvwReI2OdXZjv88z3jUIZTow=", false, function() {
+_s(Sidebar, "EAO67SHiVKD3f54b5uS9Ipbzg8M=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"],
         __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"]
     ];
 });
@@ -835,12 +881,25 @@ class ApiClient {
                 // Don't log for endpoints with retry logic - they handle their own errors silently
                 const url = error.config?.url || '';
                 const hasRetryLogic = url.includes('/api/v1/connections/') || url.includes('/api/v1/pipelines/') || url.includes('/api/v1/monitoring/') || url.includes('/api/v1/audit-logs') || url.includes('/api/v1/logs/');
-                // Suppress all timeout logging for endpoints with retry logic
+                // Table discovery endpoints can be slow, don't log timeout errors
+                const isTableDiscovery = url.includes('/tables') && !url.includes('/data');
+                // Suppress all timeout logging for endpoints with retry logic or table discovery
                 // Only log in development for endpoints without retry logic
-                if (!hasRetryLogic && ("TURBOPACK compile-time value", "development") === 'development') {
+                if (!hasRetryLogic && !isTableDiscovery && ("TURBOPACK compile-time value", "development") === 'development') {
                     console.error('Request timeout:', url);
                 }
-                const timeoutError = new Error('Request timeout: The server took too long to respond. Please try again.');
+                // Create a more helpful error message based on the endpoint
+                let errorMessage = 'Request timeout: The server took too long to respond.';
+                if (url.includes('/tables') && !url.includes('/data')) {
+                    errorMessage = 'Request timeout: Table discovery is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and accessible.';
+                } else if (url.includes('/test')) {
+                    errorMessage = 'Request timeout: Connection test is taking longer than expected. This may indicate a database connection issue. Please check if the database is running and the backend is accessible.';
+                } else if (url.includes('/trigger') || url.includes('/start')) {
+                    errorMessage = 'Request timeout: Pipeline start is taking longer than expected. Please check backend logs for details.';
+                } else {
+                    errorMessage = 'Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.';
+                }
+                const timeoutError = new Error(errorMessage);
                 timeoutError.isTimeout = true;
                 timeoutError.code = 'ECONNABORTED';
                 return Promise.reject(timeoutError);
@@ -1105,7 +1164,10 @@ class ApiClient {
         return response.data;
     }
     async getConnectionTables(connectionId) {
-        const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`);
+        // Use longer timeout for table discovery (AS400 can be slow)
+        const response = await this.client.get(`/api/v1/connections/${connectionId}/tables`, {
+            timeout: 60000
+        });
         return response.data;
     }
     async getTableData(connectionId, tableName, schema, limit = 100, retries = 2, isOracleConnection) {
@@ -1296,6 +1358,7 @@ class ApiClient {
             console.error('[API Client] Raw error object:', error);
         }
         // Extract error message - handle different error types
+        // Also sanitize error messages to handle escaped % characters from backend
         let errorMessage = '';
         if (typeof error === 'string') {
             errorMessage = error;
@@ -1310,11 +1373,21 @@ class ApiClient {
         } else {
             errorMessage = 'Unknown error occurred';
         }
+        // Sanitize error message: convert escaped %% back to % for display
+        // Backend escapes % to %% to prevent Python string formatting issues
+        // Frontend should display the original % character
+        if (typeof errorMessage === 'string') {
+            errorMessage = errorMessage.replace(/%%/g, '%');
+        }
         // Check for HTTP status codes FIRST (before network/timeout errors)
         // This ensures we properly handle validation errors, server errors, etc.
         // Check for validation errors (422) - these are NOT network errors
         if (error.response?.status === 422) {
-            const validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+            let validationError = error.response?.data?.detail || errorMessage || 'Validation error';
+            // Sanitize error message: convert escaped %% back to % for display
+            if (typeof validationError === 'string') {
+                validationError = validationError.replace(/%%/g, '%');
+            }
             // Check if it's a list of validation errors (Pydantic format)
             if (Array.isArray(validationError)) {
                 const errorDetails = validationError.map((err)=>{
@@ -1339,11 +1412,27 @@ class ApiClient {
             if (typeof errorDetail === 'object') {
                 errorDetail = errorDetail.message || errorDetail.error || JSON.stringify(errorDetail);
             }
-            // Check if this is an Oracle-related error
-            const isOracleError = typeof errorDetail === 'string' && (errorDetail.toLowerCase().includes('oracle') || errorDetail.toLowerCase().includes('ora-') || errorDetail.toLowerCase().includes('service name') || errorDetail.toLowerCase().includes('listener'));
+            // Sanitize error message: convert escaped %% back to % for display
+            // Backend escapes % to %% to prevent Python string formatting issues
+            // Frontend should display the original % character
+            if (typeof errorDetail === 'string') {
+                errorDetail = errorDetail.replace(/%%/g, '%');
+            }
+            // Check if this is an Oracle-related error (but exclude other database types)
+            // Only treat as Oracle error if it's clearly an Oracle error, not S3, Snowflake, etc.
+            const errorDetailLower = typeof errorDetail === 'string' ? errorDetail.toLowerCase() : '';
+            const isOracleError = typeof errorDetail === 'string' && !errorDetailLower.includes('aws_s3') && !errorDetailLower.includes('s3') && !errorDetailLower.includes('snowflake') && !errorDetailLower.includes('object storage') && !errorDetailLower.includes('table comparison is not supported') && (errorDetailLower.includes('ora-') || errorDetailLower.includes('oracle') && (errorDetailLower.includes('listener') || errorDetailLower.includes('service name') || errorDetailLower.includes('tns') || errorDetailLower.includes('does not exist') || errorDetailLower.includes('connection')));
             if (isOracleError) {
                 throw new Error(`Oracle Database Error:\n\n${errorDetail}\n\n` + `Troubleshooting Steps:\n` + `1. Verify Oracle server is running and accessible\n` + `2. Check Oracle listener: Run 'lsnrctl status' on Oracle server\n` + `3. Test network connectivity: ping the Oracle host and telnet to the Oracle port\n` + `4. Verify service name: Should be XE, ORCL, PDB1, etc. (NOT your username)\n` + `5. Check firewall: Ensure Oracle port (usually 1521) is not blocked\n` + `6. Verify credentials: Username and password are correct\n\n` + `Please check the backend terminal logs for more details.`);
             }
+            // Check if this is an S3/object storage error
+            const isS3Error = typeof errorDetail === 'string' && (errorDetailLower.includes('aws_s3') || errorDetailLower.includes('s3') && errorDetailLower.includes('object storage') || errorDetailLower.includes('table comparison is not supported') && errorDetailLower.includes('s3'));
+            // For S3 errors, use the backend message as-is (it's already clear and informative)
+            // Don't add generic "Server Error" prefix
+            if (isS3Error) {
+                throw new Error(errorDetail);
+            }
+            // For other errors, include status code for debugging
             throw new Error(`Server Error (${error.response.status}): ${errorDetail}\n\nPlease check the backend terminal logs for more details.`);
         }
         // Check for gateway timeout (504)
@@ -1409,7 +1498,7 @@ class ApiClient {
     // Pipeline endpoints
     async getPipelines(skip, limit, retries) {
         const skipValue = skip ?? 0;
-        const limitValue = limit ?? 100;
+        const limitValue = limit ?? 10000; // Increased default limit to fetch all pipelines
         const retriesValue = retries ?? 1;
         const requestKey = `pipelines-${skipValue}-${limitValue}`;
         return this.retryRequest(()=>this.client.get('/api/v1/pipelines/', {
@@ -1421,8 +1510,37 @@ class ApiClient {
             }).then((res)=>res.data), 'pipelines', retriesValue, 10000, requestKey);
     }
     async getPipeline(pipelineId) {
-        const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`);
-        return response.data;
+        try {
+            const response = await this.client.get(`/api/v1/pipelines/${pipelineId}`, {
+                timeout: 15000 // 15 seconds timeout (increased from 5s to handle slow backend responses)
+            });
+            return response.data;
+        } catch (error) {
+            // Handle all errors gracefully - return basic pipeline info to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('took too long');
+            const isServerError = error.response?.status >= 500;
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+            if (isTimeout || isServerError || isNetworkError) {
+                // Return minimal pipeline info to prevent UI breakage
+                console.warn(`Pipeline ${pipelineId} endpoint timeout or error, returning minimal info`);
+                return {
+                    id: String(pipelineId),
+                    name: `Pipeline ${pipelineId}`,
+                    status: 'UNKNOWN',
+                    full_load_status: 'NOT_STARTED',
+                    cdc_status: 'NOT_STARTED',
+                    error: 'Endpoint timeout or unavailable'
+                };
+            }
+            // For other errors (like 404), also return minimal info
+            return {
+                id: String(pipelineId),
+                name: `Pipeline ${pipelineId}`,
+                status: 'NOT_FOUND',
+                full_load_status: 'NOT_STARTED',
+                cdc_status: 'NOT_STARTED'
+            };
+        }
     }
     async fixOrphanedConnections() {
         const response = await this.client.post('/api/v1/pipelines/fix-orphaned-connections');
@@ -1488,11 +1606,25 @@ class ApiClient {
     // Checkpoint management
     async getPipelineCheckpoints(pipelineId) {
         // LSN metrics router is under /monitoring prefix, but endpoints start with /pipelines
-        // Increase timeout as this endpoint may query multiple collections and potentially connect to source DB
-        const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
-            timeout: 20000 // 20 seconds timeout
-        });
-        return response.data;
+        // Use shorter timeout and handle errors gracefully
+        try {
+            const response = await this.client.get(`/api/v1/monitoring/pipelines/${String(pipelineId)}/checkpoints`, {
+                timeout: 5000 // 5 seconds timeout - backend should respond quickly
+            });
+            return response.data;
+        } catch (error) {
+            // Handle all errors gracefully - return empty checkpoints to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('took too long');
+            const isServerError = error.response?.status >= 500;
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error');
+            // Always return empty checkpoints for any error - prevents UI breakage
+            // This includes timeouts, network errors, server errors, and 404s
+            return {
+                checkpoints: [],
+                pipeline_id: String(pipelineId),
+                count: 0
+            };
+        }
     }
     async getPipelineCheckpoint(pipelineId, tableName, schemaName) {
         const params = schemaName ? {
@@ -1522,8 +1654,12 @@ class ApiClient {
         return response.data;
     }
     async triggerPipeline(pipelineId, runType = 'full_load') {
+        // Pipeline start can take time (schema creation, connector setup, etc.)
+        // Increase timeout to 120 seconds to allow for full initialization and connector setup
         const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/trigger`, {
             run_type: runType
+        }, {
+            timeout: 180000 // 180 seconds (3 minutes) timeout for pipeline start (increased from 120s)
         });
         return response.data;
     }
@@ -1534,17 +1670,40 @@ class ApiClient {
     async getPipelineProgress(pipelineId) {
         // Progress endpoint is optimized to return immediately from memory (no DB queries)
         // Using shorter timeout since endpoint should respond instantly
-        const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
-            timeout: 3000 // 3 seconds timeout (endpoint should respond in <100ms)
-        });
-        return response.data;
+        try {
+            const response = await this.client.get(`/api/v1/pipelines/${String(pipelineId)}/progress`, {
+                timeout: 10000 // 10 seconds timeout (increased from 3s to handle slow backend responses)
+            });
+            return response.data;
+        } catch (error) {
+            // Handle timeout/errors gracefully - return empty progress
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            if (isTimeout || error.response?.status >= 500) {
+                console.warn(`Pipeline progress endpoint timeout for ${pipelineId}, returning empty progress`);
+                return {
+                    pipeline_id: String(pipelineId),
+                    progress: 0,
+                    status: 'UNKNOWN',
+                    message: 'Progress unavailable'
+                };
+            }
+            // For other errors, return empty progress
+            return {
+                pipeline_id: String(pipelineId),
+                progress: 0,
+                status: 'UNKNOWN'
+            };
+        }
     }
     async pausePipeline(pipelineId) {
         const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/pause`);
         return response.data;
     }
     async stopPipeline(pipelineId) {
-        const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`);
+        // Increase timeout for stop pipeline as it may take time to stop connectors
+        const response = await this.client.post(`/api/v1/pipelines/${String(pipelineId)}/stop`, {}, {
+            timeout: 35000
+        });
         return response.data;
     }
     async getPipelineRuns(pipelineId, skip = 0, limit = 100) {
@@ -1591,15 +1750,61 @@ class ApiClient {
                     end_date: endDateParam
                 },
                 timeout: 10000
-            }).then((res)=>res.data), 'replication events', retries, 10000, requestKey);
+            }).then((res)=>{
+                // CRITICAL: Log API response for debugging
+                const eventsData = res.data;
+                const eventsArray = Array.isArray(eventsData) ? eventsData : [];
+                console.log('[API] getReplicationEvents response:', {
+                    pipelineId: pipelineIdParam || 'all',
+                    receivedCount: eventsArray.length,
+                    limit,
+                    isArray: Array.isArray(eventsData),
+                    sampleEvent: eventsArray.length > 0 ? {
+                        id: eventsArray[0].id,
+                        pipeline_id: eventsArray[0].pipeline_id,
+                        event_type: eventsArray[0].event_type
+                    } : null
+                });
+                return eventsData;
+            }), 'replication events', retries, 10000, requestKey);
     }
     async getDashboardStats() {
         try {
-            const response = await this.client.get('/api/v1/monitoring/dashboard');
+            const response = await this.client.get('/api/v1/monitoring/dashboard', {
+                timeout: 5000 // 5 second timeout
+            });
             return response.data;
         } catch (error) {
-            console.error('Error fetching dashboard stats:', error);
-            throw error;
+            // Handle all errors gracefully - return empty dashboard data
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK';
+            const isServerError = error.response?.status >= 500;
+            if (isTimeout || isNetworkError || isServerError) {
+                // Return empty dashboard data on errors
+                return {
+                    total_pipelines: 0,
+                    active_pipelines: 0,
+                    stopped_pipelines: 0,
+                    error_pipelines: 0,
+                    total_events: 0,
+                    failed_events: 0,
+                    success_events: 0,
+                    recent_metrics: [],
+                    timestamp: new Date().toISOString()
+                };
+            }
+            // For other errors, also return empty dashboard
+            return {
+                total_pipelines: 0,
+                active_pipelines: 0,
+                stopped_pipelines: 0,
+                error_pipelines: 0,
+                total_events: 0,
+                failed_events: 0,
+                success_events: 0,
+                recent_metrics: [],
+                timestamp: new Date().toISOString()
+            };
         }
     }
     async getMonitoringMetrics(pipelineId, startTime, endTime, retries = 1) {
@@ -1615,9 +1820,9 @@ class ApiClient {
         const requestKey = `metrics-${pipelineIdStr}-${formattedStartTime || ''}-${formattedEndTime || ''}`;
         return this.retryRequest(()=>this.client.get('/api/v1/monitoring/metrics', {
                 params: {
-                    pipeline_id: pipelineIdStr,
-                    start_time: formattedStartTime,
-                    end_time: formattedEndTime
+                    pipelineId: pipelineIdStr,
+                    startTime: formattedStartTime,
+                    endTime: formattedEndTime
                 },
                 timeout: 10000
             }).then((res)=>res.data), 'monitoring metrics', retries, 10000, requestKey);
@@ -1661,13 +1866,33 @@ class ApiClient {
             if (search) params.search = search;
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
+            // Reduced timeout and limit for faster response
             const response = await this.client.get('/api/v1/logs/application-logs', {
-                params
+                params,
+                timeout: 5000 // 5 second timeout
             });
             return response.data;
         } catch (error) {
-            console.error('Error fetching application logs:', error);
-            throw error;
+            // Handle all errors gracefully - return empty logs to prevent UI breakage
+            const isTimeout = error.isTimeout || error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+            const isNetworkError = error.code === 'ECONNREFUSED' || error.message?.includes('Network Error') || error.code === 'ERR_NETWORK';
+            const isServerError = error.response?.status >= 500;
+            if (isTimeout || isNetworkError || isServerError) {
+                // Silently return empty logs - don't log as error to avoid noise
+                return {
+                    logs: [],
+                    total: 0,
+                    skip,
+                    limit
+                };
+            }
+            // For other errors (like 404), also return empty logs
+            return {
+                logs: [],
+                total: 0,
+                skip,
+                limit
+            };
         }
     }
     async getLogLevels() {
@@ -1704,6 +1929,32 @@ class ApiClient {
                 ...params
             }
         });
+        return response.data;
+    }
+    async getAuditLogs(skip = 0, limit = 20, action, resourceType, startDate, endDate) {
+        const params = {
+            skip,
+            limit
+        };
+        if (action) params.action = action;
+        if (resourceType) params.resource_type = resourceType;
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+        const response = await this.client.get('/api/v1/audit-logs', {
+            params
+        });
+        return response.data;
+    }
+    async getAuditLogFilters() {
+        const response = await this.client.get('/api/v1/audit-logs/filters');
+        return response.data;
+    }
+    async getEventLoggerStatus() {
+        const response = await this.client.get('/api/v1/monitoring/event-logger-status');
+        return response.data;
+    }
+    async getSystemHealth() {
+        const response = await this.client.get('/api/monitoring/health');
         return response.data;
     }
 }
@@ -1775,32 +2026,38 @@ const login = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2
         }
         // Step 2: Set token in API client and localStorage
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].setToken(data.access_token);
-        // Step 3: Wait a bit to ensure token is set, then get user info
-        // Small delay to ensure localStorage is updated
-        await new Promise((resolve)=>setTimeout(resolve, 100));
-        // Step 4: Get current user info
-        try {
-            const user = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getCurrentUser();
+        // Step 3: Use user from login response (it already has all the data we need)
+        // The login response includes the user object with is_superuser and role_name
+        // IMPORTANT: Always use the user from login response, don't call getCurrentUser()
+        if (data.user) {
+            // Normalize user data - ensure is_superuser is boolean
+            const user = {
+                ...data.user
+            }; // Create a copy to avoid mutating the original
+            // Ensure is_superuser is a boolean
+            if (typeof user.is_superuser !== 'boolean') {
+                // Infer from role_name if available
+                user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || false;
+            }
+            // Ensure role_name is set
+            if (!user.role_name && user.is_superuser) {
+                user.role_name = 'super_admin';
+            }
+            console.log('[Auth] Login response user (BEFORE normalization):', data.user);
+            console.log('[Auth] Login response user (AFTER normalization):', {
+                email: user.email,
+                is_superuser: user.is_superuser,
+                role_name: user.role_name,
+                full_user: user
+            });
             return {
                 token: data.access_token,
                 user
             };
-        } catch (userError) {
-            // If getting user fails, still return the token
-            // User info can be fetched later
-            console.warn('Failed to fetch user info after login:', userError);
-            return {
-                token: data.access_token,
-                user: {
-                    email,
-                    id: 0,
-                    full_name: email,
-                    is_active: true,
-                    is_superuser: false,
-                    roles: []
-                }
-            };
         }
+        // This should never happen if backend is working correctly
+        console.error('[Auth] Login response missing user object!', data);
+        throw new Error('Login response missing user object');
     } catch (error) {
         const errorMessage = error.response?.data?.detail || error.message || 'Login failed';
         return rejectWithValue(errorMessage);
@@ -1812,23 +2069,35 @@ const logout = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$
 const getCurrentUser = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('auth/getCurrentUser', async (_, { rejectWithValue })=>{
     try {
         const user = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getCurrentUser();
-        console.log('[Auth] getCurrentUser response:', {
-            email: user?.email,
-            is_superuser: user?.is_superuser,
-            full_user: user
-        });
-        // Validate that is_superuser is a boolean
-        if (user && typeof user.is_superuser !== 'boolean') {
-            console.warn('[Auth] is_superuser is not a boolean, defaulting to false. User data:', user);
-            user.is_superuser = false;
+        console.log('[Auth] getCurrentUser RAW response:', user);
+        // Normalize user data - ensure is_superuser is boolean
+        if (user) {
+            // Ensure is_superuser is a boolean
+            if (typeof user.is_superuser !== 'boolean') {
+                // Infer from role_name if available
+                user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || String(user.is_superuser).toLowerCase() === 'true' || false;
+            }
+            // Ensure role_name is set
+            if (!user.role_name && user.is_superuser) {
+                user.role_name = 'super_admin';
+            }
+            console.log('[Auth] getCurrentUser NORMALIZED response:', {
+                email: user.email,
+                is_superuser: user.is_superuser,
+                role_name: user.role_name,
+                full_user: user
+            });
         }
-        if ("TURBOPACK compile-time truthy", 1) {
+        if (("TURBOPACK compile-time value", "object") !== 'undefined' && user) {
             localStorage.setItem('user', JSON.stringify(user));
         }
         return user;
     } catch (error) {
         console.error('[Auth] Failed to fetch current user:', error);
-        if ("TURBOPACK compile-time truthy", 1) {
+        // Don't clear auth state on error - keep cached user if available
+        // Only clear if it's an authentication error
+        const isAuthError = error?.response?.status === 401 || error?.response?.status === 403;
+        if (isAuthError && ("TURBOPACK compile-time value", "object") !== 'undefined') {
             localStorage.removeItem('user');
             localStorage.removeItem('access_token');
         }
@@ -1859,10 +2128,33 @@ const authSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modul
         }).addCase(login.fulfilled, (state, action)=>{
             state.isLoading = false;
             state.token = action.payload.token;
-            state.user = action.payload.user;
+            // Normalize user data - ensure is_superuser is boolean
+            const user = action.payload.user;
+            if (user) {
+                // Ensure is_superuser is a boolean
+                if (typeof user.is_superuser !== 'boolean') {
+                    // Infer from role_name if available
+                    user.is_superuser = user.role_name === 'super_admin' || user.role_name === 'admin' || user.is_superuser === true || user.is_superuser === 'true' || false;
+                }
+                // Ensure role_name is set
+                if (!user.role_name && user.is_superuser) {
+                    user.role_name = 'super_admin';
+                }
+                // Log for debugging
+                console.log('[Auth] Setting user after login:', {
+                    email: user.email,
+                    is_superuser: user.is_superuser,
+                    role_name: user.role_name,
+                    full_user: user
+                });
+                state.user = user;
+            } else {
+                state.user = null;
+            }
             state.isAuthenticated = true;
-            if ("TURBOPACK compile-time truthy", 1) {
-                localStorage.setItem('user', JSON.stringify(action.payload.user));
+            state.error = null;
+            if (("TURBOPACK compile-time value", "object") !== 'undefined' && user) {
+                localStorage.setItem('user', JSON.stringify(user));
             }
         }).addCase(login.rejected, (state, action)=>{
             state.isLoading = false;
@@ -2185,7 +2477,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$moon$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Moon$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/moon.js [app-client] (ecmascript) <export default as Moon>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sun$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Sun$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/sun.js [app-client] (ecmascript) <export default as Sun>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$log$2d$out$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LogOut$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/log-out.js [app-client] (ecmascript) <export default as LogOut>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/menu.js [app-client] (ecmascript) <export default as Menu>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-left.js [app-client] (ecmascript) <export default as ChevronLeft>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$theme$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/contexts/theme-context.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/contexts/sidebar-context.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/hooks.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$authSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/slices/authSlice.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/dropdown-menu.tsx [app-client] (ecmascript)");
@@ -2199,9 +2494,11 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
 function TopNav() {
     _s();
     const { theme, toggleTheme } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$theme$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTheme"])();
+    const { isCollapsed, toggleCollapse } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"])();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     const dispatch = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppDispatch"])();
     const { user } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"])({
@@ -2230,30 +2527,35 @@ function TopNav() {
     const userName = user?.full_name || "User";
     const userEmail = user?.email || "";
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "h-16 border-b border-border bg-sidebar flex items-center justify-between px-6",
+        className: "h-16 border-b border-border bg-sidebar flex items-center justify-between px-4 shrink-0",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                        className: "text-xl font-semibold text-foreground",
-                        children: "Change Data Capture Platform"
+                className: "flex items-center gap-4",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    onClick: toggleCollapse,
+                    className: "p-2 hover:bg-surface-hover rounded-lg transition-colors text-foreground-muted hover:text-primary",
+                    title: isCollapsed ? "Expand Sidebar" : "Collapse Sidebar",
+                    children: isCollapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__["Menu"], {
+                        className: "w-5 h-5"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 48,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-sm text-foreground-muted",
-                        children: "Real-time Replication & Monitoring"
+                        lineNumber: 56,
+                        columnNumber: 26
+                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__["ChevronLeft"], {
+                        className: "w-5 h-5"
                     }, void 0, false, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 49,
-                        columnNumber: 9
+                        lineNumber: 56,
+                        columnNumber: 57
                     }, this)
-                ]
-            }, void 0, true, {
+                }, void 0, false, {
+                    fileName: "[project]/components/layout/top-nav.tsx",
+                    lineNumber: 51,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
                 fileName: "[project]/components/layout/top-nav.tsx",
-                lineNumber: 47,
+                lineNumber: 49,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2268,7 +2570,7 @@ function TopNav() {
                                 className: "w-5 h-5 text-foreground-muted hover:text-primary transition-colors"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 58,
+                                lineNumber: 67,
                                 columnNumber: 11
                             }, this),
                             mounted && unreadCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2276,28 +2578,29 @@ function TopNav() {
                                 children: unreadCount > 9 ? '9+' : unreadCount
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 60,
+                                lineNumber: 69,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 53,
+                        lineNumber: 62,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: ()=>router.push("/settings"),
                         className: "p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary",
                         "aria-label": "Settings",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$settings$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Settings$3e$__["Settings"], {
                             className: "w-5 h-5 text-foreground-muted hover:text-primary transition-colors"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/top-nav.tsx",
-                            lineNumber: 66,
+                            lineNumber: 79,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 65,
+                        lineNumber: 74,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2310,27 +2613,27 @@ function TopNav() {
                                 className: `w-5 h-5 text-foreground-muted ${mounted && theme === "dark" ? "block" : "hidden"}`
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 74,
+                                lineNumber: 87,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$moon$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Moon$3e$__["Moon"], {
                                 className: `w-5 h-5 text-foreground-muted ${mounted && theme === "light" ? "block" : "hidden"}`
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 75,
+                                lineNumber: 88,
                                 columnNumber: 11
                             }, this),
                             !mounted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$moon$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Moon$3e$__["Moon"], {
                                 className: "w-5 h-5 text-foreground-muted"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 76,
+                                lineNumber: 89,
                                 columnNumber: 24
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 68,
+                        lineNumber: 81,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2340,23 +2643,63 @@ function TopNav() {
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuTrigger"], {
                                     asChild: true,
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                        className: "p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary",
+                                        className: "relative outline-none group",
                                         "aria-label": "User menu",
-                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__["User"], {
-                                            className: "w-5 h-5 text-foreground-muted hover:text-primary transition-colors"
-                                        }, void 0, false, {
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "relative flex items-center justify-center",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-cyan-500 rounded-full blur-[2px] opacity-20 group-hover:opacity-40 transition duration-500"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/components/layout/top-nav.tsx",
+                                                    lineNumber: 100,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "relative w-9 h-9 border-2 border-border/50 bg-card rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:border-primary/50 transition-all duration-300",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/layout/top-nav.tsx",
+                                                            lineNumber: 102,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "w-full h-full flex items-center justify-center font-bold text-xs text-primary group-hover:bg-primary/10 transition-colors",
+                                                            children: userName.charAt(0).toUpperCase()
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/layout/top-nav.tsx",
+                                                            lineNumber: 103,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-background rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/layout/top-nav.tsx",
+                                                            lineNumber: 107,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/components/layout/top-nav.tsx",
+                                                    lineNumber: 101,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 85,
+                                            lineNumber: 99,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/top-nav.tsx",
-                                        lineNumber: 84,
+                                        lineNumber: 97,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/top-nav.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 96,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuContent"], {
@@ -2372,7 +2715,7 @@ function TopNav() {
                                                         children: userName
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/layout/top-nav.tsx",
-                                                        lineNumber: 91,
+                                                        lineNumber: 115,
                                                         columnNumber: 21
                                                     }, this),
                                                     userEmail && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2380,23 +2723,23 @@ function TopNav() {
                                                         children: userEmail
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/layout/top-nav.tsx",
-                                                        lineNumber: 92,
+                                                        lineNumber: 116,
                                                         columnNumber: 35
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                                lineNumber: 90,
+                                                lineNumber: 114,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 89,
+                                            lineNumber: 113,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {}, void 0, false, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 95,
+                                            lineNumber: 119,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -2407,19 +2750,19 @@ function TopNav() {
                                                     className: "w-4 h-4 mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/layout/top-nav.tsx",
-                                                    lineNumber: 97,
+                                                    lineNumber: 121,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Settings"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 96,
+                                            lineNumber: 120,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuSeparator"], {}, void 0, false, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 100,
+                                            lineNumber: 124,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dropdown$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DropdownMenuItem"], {
@@ -2430,64 +2773,63 @@ function TopNav() {
                                                     className: "w-4 h-4 mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/layout/top-nav.tsx",
-                                                    lineNumber: 102,
+                                                    lineNumber: 126,
                                                     columnNumber: 19
                                                 }, this),
                                                 "Logout"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/layout/top-nav.tsx",
-                                            lineNumber: 101,
+                                            lineNumber: 125,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/layout/top-nav.tsx",
-                                    lineNumber: 88,
+                                    lineNumber: 112,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/layout/top-nav.tsx",
-                            lineNumber: 82,
+                            lineNumber: 95,
                             columnNumber: 13
-                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                            className: "p-2 hover:bg-surface-hover rounded-lg transition-colors hover:text-primary",
-                            "aria-label": "User menu",
-                            disabled: true,
+                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "relative w-9 h-9 border-2 border-border/20 bg-muted/30 rounded-full flex items-center justify-center opacity-50 grayscale animate-pulse",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__User$3e$__["User"], {
-                                className: "w-5 h-5 text-foreground-muted hover:text-primary transition-colors"
+                                className: "w-4 h-4 text-muted-foreground"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/top-nav.tsx",
-                                lineNumber: 109,
+                                lineNumber: 133,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/components/layout/top-nav.tsx",
-                            lineNumber: 108,
+                            lineNumber: 132,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/layout/top-nav.tsx",
-                        lineNumber: 80,
+                        lineNumber: 93,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/layout/top-nav.tsx",
-                lineNumber: 52,
+                lineNumber: 61,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/layout/top-nav.tsx",
-        lineNumber: 46,
+        lineNumber: 48,
         columnNumber: 5
     }, this);
 }
-_s(TopNav, "hocZX7YsXYlurkESbMMcqopamJA=", false, function() {
+_s(TopNav, "L6YAlN2V4pSw/kRcKEQEZ4tKVsQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$theme$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTheme"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$contexts$2f$sidebar$2d$context$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSidebar"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppDispatch"],
         __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAppSelector"],
@@ -2733,8 +3075,8 @@ function AlertSync() {
                             type: 'error',
                             source: 'replication',
                             sourceId: event.pipeline_id,
-                            message: `Replication failed: ${event.event_type} on ${event.table_name}`,
-                            details: `Status: ${event.status}`,
+                            message: `Replication failed: ${event.event_type || 'unknown'}${event.table_name ? ` on ${event.table_name}` : ''}`,
+                            details: `Status: ${event.status}${event.error_message ? ` - ${event.error_message}` : ''}`,
                             timestamp: event.created_at || new Date().toISOString(),
                             status: 'unresolved',
                             severity: event.latency_ms && event.latency_ms > 10000 ? 'critical' : 'high',
@@ -3271,7 +3613,7 @@ const fetchConnections = (0, __TURBOPACK__imported__module__$5b$project$5d2f$nod
     } catch (error) {
         // Provide more helpful error messages for timeouts
         if (error.isTimeout) {
-            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
         }
         if (error.isNetworkError) {
             return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');
@@ -3373,9 +3715,65 @@ const connectionSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
         }).addCase(deleteConnection.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = ensureStringError(action.payload || 'Failed to delete connection');
+        }).addCase(testConnection.pending, (state)=>{
+            state.isLoading = true;
+            state.error = null;
+        }).addCase(testConnection.fulfilled, (state, action)=>{
+            state.isLoading = false;
+            // Update the connection's test status in the list
+            const connectionId = action.meta.arg;
+            // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+            const connectionIdStr = String(connectionId);
+            const index = state.connections.findIndex((c)=>String(c.id) === connectionIdStr);
+            if (index !== -1) {
+                const result = action.payload;
+                // Determine status: check result.success first, then result.status
+                let testStatus = 'failed';
+                if (result.success === true || result.success === 'true') {
+                    testStatus = 'success';
+                } else if (result.status === 'SUCCESS' || result.status === 'success') {
+                    testStatus = 'success';
+                } else if (result.success === false || result.status === 'FAILED' || result.status === 'failed') {
+                    testStatus = 'failed';
+                }
+                console.log('[testConnection.fulfilled] Updating connection status:', {
+                    connectionId,
+                    connectionIdStr,
+                    index,
+                    result,
+                    testStatus,
+                    currentStatus: state.connections[index].last_test_status
+                });
+                state.connections[index] = {
+                    ...state.connections[index],
+                    last_test_status: testStatus,
+                    last_tested_at: result.tested_at || new Date().toISOString()
+                };
+            } else {
+                console.warn('[testConnection.fulfilled] Connection not found in state:', {
+                    connectionId,
+                    connectionIdStr,
+                    availableIds: state.connections.map((c)=>({
+                            id: c.id,
+                            idType: typeof c.id
+                        }))
+                });
+            }
         }).addCase(testConnection.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = ensureStringError(action.payload || 'Connection test failed');
+            // Update the connection's test status even on failure
+            const connectionId = action.meta.arg;
+            // Convert to string for comparison (backend uses string UUIDs, frontend might use numbers)
+            const connectionIdStr = String(connectionId);
+            const index = state.connections.findIndex((c)=>String(c.id) === connectionIdStr);
+            if (index !== -1) {
+                state.connections[index] = {
+                    ...state.connections[index],
+                    last_test_status: 'failed',
+                    last_tested_at: new Date().toISOString()
+                };
+            }
         }).addCase(fetchConnection.fulfilled, (state, action)=>{
             state.selectedConnection = action.payload;
         }).addCase(createConnection.fulfilled, (state, action)=>{
@@ -3449,7 +3847,7 @@ const fetchPipelines = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
     } catch (error) {
         // Provide more helpful error messages for timeouts
         if (error.isTimeout) {
-            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if MongoDB is running.');
+            return rejectWithValue('Request timeout: The server took too long to respond. This may indicate a database connection issue. Please check if PostgreSQL is running and the backend is accessible.');
         }
         if (error.isNetworkError) {
             return rejectWithValue('Network error: Cannot connect to the backend server. Please ensure it is running on http://localhost:8000');
@@ -3533,11 +3931,53 @@ const deletePipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
 const triggerPipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('pipelines/trigger', async ({ id, runType }, { rejectWithValue, dispatch })=>{
     try {
         const result = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].triggerPipeline(String(id), runType);
+        // Wait longer before refreshing to allow backend to fully update status
+        await new Promise((resolve)=>setTimeout(resolve, 2000));
         // Refresh pipelines to get updated status
         dispatch(fetchPipelines());
+        // Refresh again after a longer delay to ensure status is persisted
+        setTimeout(()=>{
+            dispatch(fetchPipelines());
+        }, 4000);
         return result;
     } catch (error) {
-        return rejectWithValue(error.response?.data?.detail || 'Failed to trigger pipeline');
+        // Extract detailed error message
+        let errorMessage = 'Failed to trigger pipeline';
+        if (error?.response?.data?.detail) {
+            errorMessage = error.response.data.detail;
+        } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error?.message) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+        // Remove redundant wrapping if present
+        if (errorMessage.includes("Failed to trigger pipeline") && errorMessage.length > 25) {
+            // Keep the actual error, remove the wrapper
+            const parts = errorMessage.split("Failed to trigger pipeline");
+            if (parts.length > 1) {
+                errorMessage = parts[parts.length - 1].trim();
+                if (errorMessage.startsWith(":")) {
+                    errorMessage = errorMessage.substring(1).trim();
+                }
+            }
+        }
+        // Remove HTTP error wrapper if present
+        if (errorMessage.includes("400 Client Error") || errorMessage.includes("Bad Request")) {
+            // Extract the actual error message
+            if (errorMessage.includes("for url:")) {
+                const parts = errorMessage.split("for url:");
+                if (parts.length > 0) {
+                    errorMessage = parts[0].replace("400 Client Error:", "").replace("Bad Request", "").trim();
+                }
+            }
+            // Also check if there's a detail in the response
+            if (error?.response?.data?.detail) {
+                errorMessage = error.response.data.detail;
+            }
+        }
+        return rejectWithValue(errorMessage);
     }
 });
 const pausePipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$reduxjs$2f$toolkit$2f$dist$2f$redux$2d$toolkit$2e$modern$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["createAsyncThunk"])('pipelines/pause', async (id, { rejectWithValue, dispatch })=>{
@@ -3559,10 +3999,12 @@ const stopPipeline = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
     } catch (error) {
         // Provide more detailed error message
         const errorMessage = error.response?.data?.detail || error.message || error.response?.data?.message || 'Failed to stop pipeline';
+        const errorData = error.response?.data;
         console.error('[PipelineSlice] Stop pipeline error:', {
-            error,
-            response: error.response?.data,
-            message: errorMessage
+            status: error.response?.status,
+            data: errorData,
+            message: errorMessage,
+            stack: error.stack
         });
         return rejectWithValue(errorMessage);
     }
@@ -3583,11 +4025,48 @@ const pipelineSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_m
     },
     extraReducers: (builder)=>{
         builder.addCase(fetchPipelines.pending, (state)=>{
-            state.isLoading = true;
+            if (state.pipelines.length === 0) {
+                state.isLoading = true;
+            }
             state.error = null;
         }).addCase(fetchPipelines.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.pipelines = action.payload;
+            // Merge with existing pipelines to preserve optimistic updates
+            // Only update if the backend status is more recent or different
+            const newPipelines = action.payload;
+            if (Array.isArray(newPipelines)) {
+                // Create a map of new pipelines by ID
+                const newPipelinesMap = new Map(newPipelines.map((p)=>[
+                        String(p.id),
+                        p
+                    ]));
+                // Update existing pipelines, but preserve optimistic 'active' status if backend hasn't caught up
+                state.pipelines = state.pipelines.map((existingPipeline)=>{
+                    const newPipeline = newPipelinesMap.get(String(existingPipeline.id));
+                    if (newPipeline) {
+                        // If we optimistically set it to active and backend still shows stopped/starting,
+                        // keep it as active for a bit longer (backend might be slow to update)
+                        if (existingPipeline.status === 'active' && newPipeline.status !== 'active' && newPipeline.status !== 'running') {
+                            // Keep optimistic status for now, but update other fields
+                            return {
+                                ...newPipeline,
+                                status: 'active'
+                            };
+                        }
+                        return newPipeline;
+                    }
+                    return existingPipeline;
+                });
+                // Add any new pipelines that weren't in the existing list
+                newPipelines.forEach((newPipeline)=>{
+                    const exists = state.pipelines.some((p)=>String(p.id) === String(newPipeline.id));
+                    if (!exists) {
+                        state.pipelines.push(newPipeline);
+                    }
+                });
+            } else {
+                state.pipelines = newPipelines;
+            }
         }).addCase(fetchPipelines.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch pipelines';
@@ -3608,34 +4087,55 @@ const pipelineSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_m
             if (state.selectedPipeline?.id === action.payload) {
                 state.selectedPipeline = null;
             }
-        }).addCase(triggerPipeline.fulfilled, (state, action)=>{
-            // Update pipeline status to active
-            // The response has 'id' field, not 'pipeline_id'
-            const pipelineId = action.payload.id || action.payload.pipeline_id;
-            const pipeline = state.pipelines.find((p)=>p.id === pipelineId);
+        }).addCase(triggerPipeline.pending, (state, action)=>{
+            // Optimistically update status to active immediately
+            const pipelineId = action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
             if (pipeline) {
                 pipeline.status = 'active';
             }
-            if (state.selectedPipeline && state.selectedPipeline.id === pipelineId) {
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
                 state.selectedPipeline.status = 'active';
+            }
+        }).addCase(triggerPipeline.fulfilled, (state, action)=>{
+            // Update pipeline status to active (in case pending didn't catch it)
+            // The response might have 'id' field or 'pipeline_id'
+            const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
+            if (pipeline) {
+                pipeline.status = 'active';
+            }
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
+                state.selectedPipeline.status = 'active';
+            }
+        }).addCase(triggerPipeline.rejected, (state, action)=>{
+            // Revert optimistic update on error
+            const pipelineId = action.meta.arg.id;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
+            if (pipeline && pipeline.status === 'active') {
+                // Only revert if we optimistically set it - check if it was actually started
+                // Don't revert if backend says it's active but request failed
+                pipeline.status = 'stopped';
             }
         }).addCase(pausePipeline.fulfilled, (state, action)=>{
             // Update pipeline status to paused
-            const pipeline = state.pipelines.find((p)=>p.id === action.payload.id);
+            const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
             if (pipeline) {
                 pipeline.status = 'paused';
             }
-            if (state.selectedPipeline && state.selectedPipeline.id === action.payload.id) {
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
                 state.selectedPipeline.status = 'paused';
             }
         }).addCase(stopPipeline.fulfilled, (state, action)=>{
-            // Update pipeline status to paused (stopped)
-            const pipeline = state.pipelines.find((p)=>p.id === action.payload.id);
+            // Update pipeline status to stopped
+            const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg;
+            const pipeline = state.pipelines.find((p)=>String(p.id) === String(pipelineId));
             if (pipeline) {
-                pipeline.status = 'paused';
+                pipeline.status = 'stopped';
             }
-            if (state.selectedPipeline && state.selectedPipeline.id === action.payload.id) {
-                state.selectedPipeline.status = 'paused';
+            if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
+                state.selectedPipeline.status = 'stopped';
             }
         });
     }
@@ -3732,22 +4232,46 @@ const monitoringSlice = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node
     },
     extraReducers: (builder)=>{
         builder.addCase(fetchReplicationEvents.pending, (state)=>{
-            state.isLoading = true;
+            if (state.events.length === 0) {
+                state.isLoading = true;
+            }
             state.error = null;
         }).addCase(fetchReplicationEvents.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.events = action.payload;
+            // CRITICAL FIX: Ensure events is always an array and log what we received
+            const eventsArray = Array.isArray(action.payload) ? action.payload : [];
+            console.log('[Redux] fetchReplicationEvents.fulfilled - Received', eventsArray.length, 'events');
+            if (eventsArray.length > 0) {
+                console.log('[Redux] Sample event:', {
+                    id: eventsArray[0].id,
+                    pipeline_id: eventsArray[0].pipeline_id,
+                    event_type: eventsArray[0].event_type,
+                    status: eventsArray[0].status
+                });
+            }
+            state.events = eventsArray;
         }).addCase(fetchReplicationEvents.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch events';
+            // Ensure events remains an array even on error
+            if (!Array.isArray(state.events)) {
+                state.events = [];
+            }
         }).addCase(fetchMonitoringMetrics.pending, (state)=>{
-            state.isLoading = true;
+            if (state.metrics.length === 0) {
+                state.isLoading = true;
+            }
         }).addCase(fetchMonitoringMetrics.fulfilled, (state, action)=>{
             state.isLoading = false;
-            state.metrics = action.payload;
+            // Ensure metrics is always an array
+            state.metrics = Array.isArray(action.payload) ? action.payload : [];
         }).addCase(fetchMonitoringMetrics.rejected, (state, action)=>{
             state.isLoading = false;
             state.error = action.error.message || 'Failed to fetch metrics';
+            // Ensure metrics remains an array even on error
+            if (!Array.isArray(state.metrics)) {
+                state.metrics = [];
+            }
         });
     }
 });
@@ -3908,37 +4432,65 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$mo
 ;
 ;
 const WS_URL = ("TURBOPACK compile-time value", "http://localhost:8000") || 'http://localhost:8000';
+const WS_ENABLED = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_WS_ENABLED !== 'false'; // Default to true unless explicitly disabled
 class WebSocketClient {
     socket = null;
     subscribedPipelines = new Set();
     isConnecting = false;
     connectionFailed = false;
+    errorCount = 0;
+    maxErrorCount = 3;
+    statusListeners = new Set();
     connect() {
+        // Check if WebSocket is enabled
+        if (!WS_ENABLED) {
+            console.log('[WebSocket] WebSocket is disabled via configuration');
+            this.connectionFailed = true;
+            return;
+        }
+        // If connection has permanently failed, don't retry automatically
+        // User can still manually retry via retryConnection()
+        if (this.connectionFailed && this.errorCount >= 5) {
+            console.log('[WebSocket] Connection permanently failed. Use retryConnection() to manually retry.');
+            return;
+        }
         // Prevent multiple connection attempts
         if (this.socket?.connected) {
+            console.log('[WebSocket] Already connected');
             return;
         }
         if (this.isConnecting) {
+            console.log('[WebSocket] Connection already in progress');
             return;
         }
-        // If connection has previously failed, don't retry (backend may not have Socket.IO)
-        if (this.connectionFailed) {
-            return;
+        // Reset failed state to allow retry (if error count is low)
+        if (this.connectionFailed && this.errorCount < 5) {
+            console.log('[WebSocket] Resetting failed state and attempting reconnection');
+            this.connectionFailed = false;
+            // Clean up old socket if exists
+            if (this.socket) {
+                this.socket.removeAllListeners();
+                this.socket.disconnect();
+                this.socket = null;
+            }
         }
         this.isConnecting = true;
+        console.log('[WebSocket] Attempting to connect to:', WS_URL);
         this.socket = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$socket$2e$io$2d$client$2f$build$2f$esm$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["io"])(WS_URL, {
             path: '/socket.io',
             transports: [
-                'websocket',
-                'polling'
+                'polling',
+                'websocket'
             ],
-            reconnection: false,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: 0,
-            timeout: 5000,
+            reconnection: this.errorCount < 3,
+            reconnectionDelay: 2000,
+            reconnectionDelayMax: 10000,
+            reconnectionAttempts: 2,
+            timeout: 10000,
             forceNew: false,
-            autoConnect: true
+            autoConnect: true,
+            // Suppress default error logging
+            withCredentials: false
         });
         this.socket.on('connect', ()=>{
             console.log('========================================');
@@ -3948,6 +4500,9 @@ class WebSocketClient {
             console.log('[Frontend] Previously subscribed pipelines:', Array.from(this.subscribedPipelines));
             this.isConnecting = false;
             this.connectionFailed = false; // Reset failure flag on successful connection
+            this.errorCount = 0; // Reset error count on successful connection
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
             // Re-subscribe to previously subscribed pipelines
             this.subscribedPipelines.forEach((pipelineId)=>{
                 if (this.socket?.connected) {
@@ -3962,24 +4517,68 @@ class WebSocketClient {
         this.socket.on('disconnect', (reason)=>{
             console.log('WebSocket disconnected:', reason);
             this.isConnecting = false;
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
             if (reason === 'io server disconnect') {
                 // Server disconnected, try to reconnect manually
                 this.socket?.connect();
             }
         });
         this.socket.on('connect_error', (error)=>{
-            // Suppress WebSocket connection errors - backend may not have Socket.IO configured
-            // This is not critical for the application to function
+            this.errorCount++;
             this.isConnecting = false;
-            this.connectionFailed = true; // Mark as failed to prevent future attempts
-            // Disable reconnection to prevent spam
+            // Only log first few errors to avoid console spam
+            if (this.errorCount <= this.maxErrorCount) {
+                console.warn(`[WebSocket] Connection error (${this.errorCount}/${this.maxErrorCount}):`, error.message);
+                if (this.errorCount === this.maxErrorCount) {
+                    console.warn('[WebSocket] Suppressing further connection errors. Backend may not have Socket.IO configured.');
+                }
+            }
+            // If we've had multiple errors quickly, mark as failed to stop retries
+            // This prevents infinite retry loops when backend doesn't support WebSocket
+            if (this.errorCount >= 3) {
+                this.connectionFailed = true;
+                if (this.socket) {
+                    this.socket.io.reconnecting = false;
+                    this.socket.disconnect();
+                    this.socket = null; // Clean up socket to prevent further attempts
+                }
+                console.warn('[WebSocket] Stopped connection attempts. Backend does not appear to support WebSocket. Using polling mode.');
+            }
+        });
+        this.socket.on('reconnect_attempt', (attemptNumber)=>{
+            // Only log first few attempts to avoid spam
+            if (attemptNumber <= 2) {
+                console.log(`[WebSocket] Reconnection attempt ${attemptNumber}`);
+            }
+        });
+        this.socket.on('reconnect_failed', ()=>{
+            if (this.errorCount <= this.maxErrorCount) {
+                console.warn('[WebSocket] All reconnection attempts failed. WebSocket unavailable. Using polling mode.');
+            }
+            this.connectionFailed = true;
+            this.isConnecting = false;
+            // Stop reconnection attempts
             if (this.socket) {
                 this.socket.io.reconnecting = false;
-                // Disconnect to clean up
-                this.socket.disconnect();
             }
-        // Silently fail - WebSocket is optional for real-time updates
-        // Don't log to console to avoid cluttering logs
+        });
+        this.socket.on('reconnect', (attemptNumber)=>{
+            console.log(`[WebSocket] Successfully reconnected after ${attemptNumber} attempts`);
+            this.connectionFailed = false;
+            this.isConnecting = false;
+            this.errorCount = 0; // Reset error count on reconnect
+            // Notify all listeners about status change
+            this.notifyStatusListeners();
+            // Re-subscribe to all previously subscribed pipelines
+            this.subscribedPipelines.forEach((pipelineId)=>{
+                if (this.socket?.connected) {
+                    console.log(`[WebSocket] Re-subscribing to pipeline: ${pipelineId}`);
+                    this.socket.emit('subscribe_pipeline', {
+                        pipeline_id: pipelineId
+                    });
+                }
+            });
         });
         this.socket.on('error', (error)=>{
             // Suppress WebSocket errors - backend may not have Socket.IO configured
@@ -4112,7 +4711,86 @@ class WebSocketClient {
         }
     }
     isConnected() {
-        return this.socket?.connected || false;
+        // Check actual connection state - if socket is connected, always return true
+        return this.socket?.connected === true;
+    }
+    isAvailable() {
+        // WebSocket is available if:
+        // 1. It's connected (always available if connected, regardless of connectionFailed flag)
+        // 2. It's still trying to connect (isConnecting)
+        // 3. Socket exists and hasn't permanently failed (for initial connection attempts)
+        // Priority: connected > connecting > not failed
+        if (this.socket?.connected === true) {
+            return true; // Always available if connected
+        }
+        if (this.isConnecting) {
+            return true; // Available if connecting
+        }
+        // If not connected and not connecting, only available if not permanently failed
+        return !this.connectionFailed && this.socket !== null;
+    }
+    reset() {
+        // Reset connection state to allow retry
+        console.log('[WebSocket] Resetting connection state');
+        this.connectionFailed = false;
+        this.isConnecting = false;
+        this.errorCount = 0; // Reset error count
+        if (this.socket) {
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+    retryConnection() {
+        // Manually trigger reconnection
+        console.log('[WebSocket] Manual reconnection requested');
+        this.reset();
+        // Check if WebSocket is enabled
+        if (!WS_ENABLED) {
+            console.warn('[WebSocket] WebSocket is disabled via configuration. Enable it in environment variables.');
+            this.connectionFailed = true;
+            return;
+        }
+        this.connect();
+    }
+    disable() {
+        // Manually disable WebSocket (useful for testing or when backend doesn't support it)
+        console.log('[WebSocket] Manually disabling WebSocket');
+        this.connectionFailed = true;
+        this.isConnecting = false;
+        if (this.socket) {
+            this.socket.io.reconnecting = false;
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+    isDisabled() {
+        // Check if WebSocket is disabled or permanently failed
+        return !WS_ENABLED || this.connectionFailed && this.errorCount >= 3;
+    }
+    hasFailed() {
+        // Check if WebSocket connection has permanently failed (backend doesn't support Socket.IO)
+        return this.connectionFailed;
+    }
+    // Status change notification system
+    onStatusChange(callback) {
+        // Add listener
+        this.statusListeners.add(callback);
+        // Return unsubscribe function
+        return ()=>{
+            this.statusListeners.delete(callback);
+        };
+    }
+    notifyStatusListeners() {
+        // Notify all listeners about status change
+        this.statusListeners.forEach((listener)=>{
+            try {
+                listener();
+            } catch (error) {
+                console.error('Error in status listener:', error);
+            }
+        });
     }
 }
 const wsClient = new WebSocketClient();

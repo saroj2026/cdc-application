@@ -5,9 +5,9 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '@/lib/api/client';
 
 interface ReplicationEvent {
-  id: string;  // MongoDB ObjectId as string
-  pipeline_id: string;  // MongoDB ObjectId as string
-  pipeline_run_id?: string;  // MongoDB ObjectId as string (optional)
+  id: string;  // Database ID as string
+  pipeline_id: string;  // Database ID as string
+  pipeline_run_id?: string;  // Database ID as string (optional)
   event_type: 'insert' | 'update' | 'delete';
   table_name: string;
   schema_name?: string;
@@ -29,8 +29,8 @@ interface ReplicationEvent {
 }
 
 interface MonitoringMetric {
-  id: string;  // MongoDB ObjectId as string
-  pipeline_id: string;  // MongoDB ObjectId as string
+  id: string;  // Database ID as string
+  pipeline_id: string;  // Database ID as string
   timestamp: string;
   events_per_second: number;
   avg_latency_ms: number;
@@ -93,14 +93,14 @@ export const fetchReplicationEvents = createAsyncThunk(
 
 export const fetchMonitoringMetrics = createAsyncThunk(
   'monitoring/fetchMetrics',
-  async ({ 
-    pipelineId, 
-    startTime, 
-    endTime 
-  }: { 
-    pipelineId: number | string; 
-    startTime?: string | Date; 
-    endTime?: string | Date; 
+  async ({
+    pipelineId,
+    startTime,
+    endTime
+  }: {
+    pipelineId: number | string;
+    startTime?: string | Date;
+    endTime?: string | Date;
   }) => {
     // Convert to string if it's a number, or use as-is if it's already a string
     const id = typeof pipelineId === 'number' && !isNaN(pipelineId) ? pipelineId : String(pipelineId)
@@ -149,28 +149,54 @@ const monitoringSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
       .addCase(fetchReplicationEvents.pending, (state) => {
-        state.isLoading = true;
+        if (state.events.length === 0) {
+          state.isLoading = true;
+        }
         state.error = null;
       })
       .addCase(fetchReplicationEvents.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.events = action.payload;
+        // CRITICAL FIX: Ensure events is always an array and log what we received
+        const eventsArray = Array.isArray(action.payload) ? action.payload : [];
+        console.log('[Redux] fetchReplicationEvents.fulfilled - Received', eventsArray.length, 'events');
+        if (eventsArray.length > 0) {
+          console.log('[Redux] Sample event:', {
+            id: eventsArray[0].id,
+            pipeline_id: eventsArray[0].pipeline_id,
+            event_type: eventsArray[0].event_type,
+            status: eventsArray[0].status
+          });
+        }
+        state.events = eventsArray;
       })
       .addCase(fetchReplicationEvents.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch events';
+        // Ensure events remains an array even on error
+        if (!Array.isArray(state.events)) {
+          state.events = [];
+        }
       })
+
       .addCase(fetchMonitoringMetrics.pending, (state) => {
-        state.isLoading = true;
+        if (state.metrics.length === 0) {
+          state.isLoading = true;
+        }
       })
       .addCase(fetchMonitoringMetrics.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.metrics = action.payload;
+        // Ensure metrics is always an array
+        state.metrics = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMonitoringMetrics.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch metrics';
+        // Ensure metrics remains an array even on error
+        if (!Array.isArray(state.metrics)) {
+          state.metrics = [];
+        }
       });
   },
 });

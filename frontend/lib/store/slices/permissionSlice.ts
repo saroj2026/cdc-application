@@ -94,8 +94,19 @@ export const canAccessPage = (path: string) => (state: any) => {
   const user = state.auth?.user
   if (!user) return false
   
-  // Super admin has access to all pages
-  if (user.is_superuser || user.role_name === 'super_admin') {
+  // Super admin has access to all pages - check multiple ways
+  const isSuperAdmin = user.is_superuser === true || 
+                      user.is_superuser === 'true' ||
+                      String(user.is_superuser).toLowerCase() === 'true' ||
+                      user.role_name === 'super_admin' ||
+                      user.role_name === 'admin'
+  
+  if (isSuperAdmin) {
+    return true
+  }
+  
+  // Dashboard is accessible to all authenticated users
+  if (path === '/dashboard') {
     return true
   }
   

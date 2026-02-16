@@ -102,12 +102,12 @@ function SignupContent() {
 
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/users/`;
-      
+
       if (!formData.role) {
         setError("Please select a role")
         return
       }
-      
+
       const payload = {
         full_name: formData.fullName,
         email: formData.email,
@@ -122,7 +122,7 @@ function SignupContent() {
       try {
         response = await fetch(apiUrl, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
@@ -143,7 +143,7 @@ function SignupContent() {
 
       const contentType = response.headers.get('content-type');
       let data;
-      
+
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
       } else {
@@ -159,13 +159,13 @@ function SignupContent() {
       router.push("/auth/login?registered=true")
     } catch (err: any) {
       let errorMessage = err.message || "Failed to create account. Please try again.";
-      
+
       if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
         errorMessage = `Cannot connect to backend server. Please ensure the backend is running on http://localhost:8000`;
       } else if (err.message?.includes('timeout')) {
         errorMessage = `Request timed out. The backend server may be slow or unresponsive.`;
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false)
@@ -196,132 +196,132 @@ function SignupContent() {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-     const nodes = featuredDatabases.map((db, idx) => ({
-       x: (db.x / 100) * canvas.width,
-       y: (db.y / 100) * canvas.height,
-       side: db.side,
-       idx
-     }))
+    const nodes = featuredDatabases.map((db, idx) => ({
+      x: (db.x / 100) * canvas.width,
+      y: (db.y / 100) * canvas.height,
+      side: db.side,
+      idx
+    }))
 
     let animationFrame: number
     let time = 0
 
-     const draw = () => {
-       ctx.clearRect(0, 0, canvas.width, canvas.height)
-       time += 0.01
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      time += 0.01
 
-       // Connect left side databases to right side databases
-       const leftNodes = nodes.filter(node => node.side === "left")
-       const rightNodes = nodes.filter(node => node.side === "right")
-       
-       // Draw connection lines (spider web pattern)
-       ctx.strokeStyle = `rgba(20, 184, 166, ${0.3 + Math.sin(time) * 0.15})`
-       ctx.lineWidth = 2
-       ctx.setLineDash([8, 4])
-       
-       const connections: Array<{from: typeof rightNodes[0], to: typeof leftNodes[0], idx: number}> = []
-       
-       leftNodes.forEach((leftNode, leftIdx) => {
-         rightNodes.forEach((rightNode, rightIdx) => {
-           // Draw connection line
-           ctx.beginPath()
-           ctx.moveTo(rightNode.x, rightNode.y)
-           ctx.lineTo(leftNode.x, leftNode.y)
-           ctx.stroke()
-           
-           connections.push({ from: rightNode, to: leftNode, idx: leftIdx * rightNodes.length + rightIdx })
-         })
-       })
+      // Connect left side databases to right side databases
+      const leftNodes = nodes.filter(node => node.side === "left")
+      const rightNodes = nodes.filter(node => node.side === "right")
 
-       ctx.setLineDash([])
+      // Draw connection lines (spider web pattern)
+      ctx.strokeStyle = `rgba(20, 184, 166, ${0.3 + Math.sin(time) * 0.15})`
+      ctx.lineWidth = 2
+      ctx.setLineDash([8, 4])
 
-       // Draw data replication packets moving from RIGHT to LEFT
-       connections.forEach((conn, connIdx) => {
-         // Multiple data packets per connection for continuous flow
-         for (let packetNum = 0; packetNum < 3; packetNum++) {
-           const baseProgress = (time * 0.5 + connIdx * 0.1 + packetNum * 0.33) % 1
-           const progress = baseProgress // Data flows from right (0) to left (1)
-           
-           // Calculate position along the line
-           const x = conn.from.x + (conn.to.x - conn.from.x) * progress
-           const y = conn.from.y + (conn.to.y - conn.from.y) * progress
-           
-           // Draw data packet with glow effect
-           const packetSize = 6 + Math.sin(time * 3 + connIdx) * 2
-           const opacity = 0.9 - progress * 0.3
-           
-           // Outer glow
-           const gradient = ctx.createRadialGradient(x, y, 0, x, y, packetSize * 2)
-           gradient.addColorStop(0, `rgba(20, 184, 166, ${opacity * 0.6})`)
-           gradient.addColorStop(0.5, `rgba(20, 184, 166, ${opacity * 0.3})`)
-           gradient.addColorStop(1, `rgba(20, 184, 166, 0)`)
-           ctx.fillStyle = gradient
-           ctx.beginPath()
-           ctx.arc(x, y, packetSize * 2, 0, Math.PI * 2)
-           ctx.fill()
-           
-           // Main packet (data icon representation)
-           ctx.fillStyle = `rgba(20, 184, 166, ${opacity})`
-           ctx.beginPath()
-           ctx.arc(x, y, packetSize, 0, Math.PI * 2)
-           ctx.fill()
-           
-           // Inner highlight
-           ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.5})`
-           ctx.beginPath()
-           ctx.arc(x - packetSize * 0.3, y - packetSize * 0.3, packetSize * 0.4, 0, Math.PI * 2)
-           ctx.fill()
-           
-           // Draw trail behind packet
-           for (let i = 1; i <= 5; i++) {
-             const trailProgress = progress - i * 0.05
-             if (trailProgress > 0) {
-               const trailX = conn.from.x + (conn.to.x - conn.from.x) * trailProgress
-               const trailY = conn.from.y + (conn.to.y - conn.from.y) * trailProgress
-               ctx.fillStyle = `rgba(20, 184, 166, ${opacity * (0.2 - i * 0.03)})`
-               ctx.beginPath()
-               ctx.arc(trailX, trailY, packetSize * (1 - i * 0.15), 0, Math.PI * 2)
-               ctx.fill()
-             }
-           }
-         }
-       })
+      const connections: Array<{ from: typeof rightNodes[0], to: typeof leftNodes[0], idx: number }> = []
 
-       // Draw pulsing nodes at database positions
-       nodes.forEach((node, idx) => {
-         const pulse = Math.sin(time * 2 + idx) * 0.2 + 1
-         
-         // Outer pulse ring
-         ctx.fillStyle = `rgba(20, 184, 166, ${0.2 * pulse})`
-         ctx.beginPath()
-         ctx.arc(node.x, node.y, 14 * pulse, 0, Math.PI * 2)
-         ctx.fill()
-         
-         // Inner node
-         ctx.fillStyle = node.side === "right" ? 'rgba(20, 184, 166, 0.9)' : 'rgba(34, 197, 94, 0.9)'
-         ctx.beginPath()
-         ctx.arc(node.x, node.y, 7, 0, Math.PI * 2)
-         ctx.fill()
-         
-         // Center highlight
-         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
-         ctx.beginPath()
-         ctx.arc(node.x - 2, node.y - 2, 2, 0, Math.PI * 2)
-         ctx.fill()
-       })
-       
-       // Draw "receiving" effect at left databases when data arrives
-       leftNodes.forEach((leftNode, leftIdx) => {
-         const receiveTime = (time * 0.5 + leftIdx * 0.2) % 1
-         if (receiveTime < 0.1) {
-           const pulseSize = receiveTime * 50
-           ctx.strokeStyle = `rgba(34, 197, 94, ${1 - receiveTime * 10})`
-           ctx.lineWidth = 3
-           ctx.beginPath()
-           ctx.arc(leftNode.x, leftNode.y, 20 + pulseSize, 0, Math.PI * 2)
-           ctx.stroke()
-         }
-       })
+      leftNodes.forEach((leftNode, leftIdx) => {
+        rightNodes.forEach((rightNode, rightIdx) => {
+          // Draw connection line
+          ctx.beginPath()
+          ctx.moveTo(rightNode.x, rightNode.y)
+          ctx.lineTo(leftNode.x, leftNode.y)
+          ctx.stroke()
+
+          connections.push({ from: rightNode, to: leftNode, idx: leftIdx * rightNodes.length + rightIdx })
+        })
+      })
+
+      ctx.setLineDash([])
+
+      // Draw data replication packets moving from RIGHT to LEFT
+      connections.forEach((conn, connIdx) => {
+        // Multiple data packets per connection for continuous flow
+        for (let packetNum = 0; packetNum < 3; packetNum++) {
+          const baseProgress = (time * 0.5 + connIdx * 0.1 + packetNum * 0.33) % 1
+          const progress = baseProgress // Data flows from right (0) to left (1)
+
+          // Calculate position along the line
+          const x = conn.from.x + (conn.to.x - conn.from.x) * progress
+          const y = conn.from.y + (conn.to.y - conn.from.y) * progress
+
+          // Draw data packet with glow effect
+          const packetSize = 6 + Math.sin(time * 3 + connIdx) * 2
+          const opacity = 0.9 - progress * 0.3
+
+          // Outer glow
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, packetSize * 2)
+          gradient.addColorStop(0, `rgba(20, 184, 166, ${opacity * 0.6})`)
+          gradient.addColorStop(0.5, `rgba(20, 184, 166, ${opacity * 0.3})`)
+          gradient.addColorStop(1, `rgba(20, 184, 166, 0)`)
+          ctx.fillStyle = gradient
+          ctx.beginPath()
+          ctx.arc(x, y, packetSize * 2, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Main packet (data icon representation)
+          ctx.fillStyle = `rgba(20, 184, 166, ${opacity})`
+          ctx.beginPath()
+          ctx.arc(x, y, packetSize, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Inner highlight
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.5})`
+          ctx.beginPath()
+          ctx.arc(x - packetSize * 0.3, y - packetSize * 0.3, packetSize * 0.4, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Draw trail behind packet
+          for (let i = 1; i <= 5; i++) {
+            const trailProgress = progress - i * 0.05
+            if (trailProgress > 0) {
+              const trailX = conn.from.x + (conn.to.x - conn.from.x) * trailProgress
+              const trailY = conn.from.y + (conn.to.y - conn.from.y) * trailProgress
+              ctx.fillStyle = `rgba(20, 184, 166, ${opacity * (0.2 - i * 0.03)})`
+              ctx.beginPath()
+              ctx.arc(trailX, trailY, packetSize * (1 - i * 0.15), 0, Math.PI * 2)
+              ctx.fill()
+            }
+          }
+        }
+      })
+
+      // Draw pulsing nodes at database positions
+      nodes.forEach((node, idx) => {
+        const pulse = Math.sin(time * 2 + idx) * 0.2 + 1
+
+        // Outer pulse ring
+        ctx.fillStyle = `rgba(20, 184, 166, ${0.2 * pulse})`
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, 14 * pulse, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Inner node
+        ctx.fillStyle = node.side === "right" ? 'rgba(20, 184, 166, 0.9)' : 'rgba(34, 197, 94, 0.9)'
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, 7, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Center highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+        ctx.beginPath()
+        ctx.arc(node.x - 2, node.y - 2, 2, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      // Draw "receiving" effect at left databases when data arrives
+      leftNodes.forEach((leftNode, leftIdx) => {
+        const receiveTime = (time * 0.5 + leftIdx * 0.2) % 1
+        if (receiveTime < 0.1) {
+          const pulseSize = receiveTime * 50
+          ctx.strokeStyle = `rgba(34, 197, 94, ${1 - receiveTime * 10})`
+          ctx.lineWidth = 3
+          ctx.beginPath()
+          ctx.arc(leftNode.x, leftNode.y, 20 + pulseSize, 0, Math.PI * 2)
+          ctx.stroke()
+        }
+      })
 
       animationFrame = requestAnimationFrame(draw)
     }
@@ -360,7 +360,7 @@ function SignupContent() {
             <div className="flex flex-col items-center group cursor-default">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 database-glow" />
-                
+
                 <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-surface/90 via-surface/80 to-surface/70 backdrop-blur-md border-2 border-primary/30 flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:shadow-primary/40 group-hover:scale-110 group-hover:border-primary/60 transition-all duration-500 database-card">
                   <DatabaseLogo
                     connectionType={db.connectionType}
@@ -369,12 +369,12 @@ function SignupContent() {
                     size={40}
                     className="w-10 h-10"
                   />
-                  
+
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-surface animate-ping-slow" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-surface" />
                 </div>
               </div>
-              
+
               <div className="mt-3 px-3 py-1.5 bg-surface/80 backdrop-blur-sm rounded-lg border border-primary/20 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                 <span className="text-xs font-semibold text-primary whitespace-nowrap">
                   {db.displayName}
@@ -388,7 +388,7 @@ function SignupContent() {
       {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" style={{ zIndex: 1 }} />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(20,184,166,0.15),transparent_70%)]" style={{ zIndex: 1 }} />
-      
+
       {/* Theme Toggle */}
       <div className="absolute top-6 right-6 z-20" suppressHydrationWarning>
         <button
@@ -410,7 +410,7 @@ function SignupContent() {
         <Card className="bg-surface/80 backdrop-blur-xl border-primary/30 shadow-2xl shadow-primary/20 relative overflow-hidden signup-card">
           {/* Animated border glow */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 animate-shimmer opacity-60" />
-          
+
           <div className="relative z-10 flex flex-col lg:flex-row">
             {/* Logo Section - Left Side */}
             <div className="flex-shrink-0 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex flex-col items-center justify-center min-w-[220px] logo-section">
@@ -418,7 +418,7 @@ function SignupContent() {
                 <div className="w-20 h-20 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/40 animate-pulse-slow relative z-10">
                   <Sparkles className="w-10 h-10 text-white" />
                 </div>
-                
+
                 <div className="absolute inset-0 animate-orbit" style={{ animationDuration: '15s' }}>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full -mt-3">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 backdrop-blur-sm border border-primary/30 flex items-center justify-center">
@@ -441,16 +441,16 @@ function SignupContent() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="absolute inset-0 rounded-2xl border-2 border-primary/40 animate-ping-slow" />
                 <div className="absolute inset-0 rounded-2xl border-2 border-primary/20 animate-ping-slow" style={{ animationDelay: '0.5s' }} />
               </div>
-              
+
               <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary via-primary/90 to-primary bg-clip-text text-transparent text-center">
-                CDC Admin
+                CDC Nexus
               </h1>
               <p className="text-primary/80 text-sm font-medium text-center mb-3">Create Your Account</p>
-              
+
               <div className="flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
@@ -465,7 +465,7 @@ function SignupContent() {
             <div className="flex-1 p-6 lg:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-foreground mb-2">Create Account</h2>
-                <p className="text-sm text-foreground-muted">Sign up to start using CDC Admin</p>
+                <p className="text-sm text-foreground-muted">Sign up to start using CDC Nexus</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -535,15 +535,14 @@ function SignupContent() {
                           {[1, 2, 3].map((level) => (
                             <div
                               key={level}
-                              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                                level <= strength.strength
+                              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${level <= strength.strength
                                   ? level === 1
                                     ? "bg-error"
                                     : level === 2
-                                    ? "bg-warning"
-                                    : "bg-success"
+                                      ? "bg-warning"
+                                      : "bg-success"
                                   : "bg-muted"
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>
@@ -590,9 +589,9 @@ function SignupContent() {
                   <label className="block text-sm font-semibold text-foreground">Role</label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/60 z-10 pointer-events-none" />
-                    <Select 
-                      value={formData.role} 
-                      onValueChange={handleRoleChange} 
+                    <Select
+                      value={formData.role}
+                      onValueChange={handleRoleChange}
                       disabled={isLoading}
                     >
                       <SelectTrigger className="w-full pl-10 h-12 text-sm bg-input/50 border-border focus:ring-2 focus:ring-primary/30">

@@ -14,6 +14,7 @@ interface ConfirmDialogProps {
     confirmText?: string
     cancelText?: string
     variant?: "danger" | "warning" | "info" | "success"
+    hideCancel?: boolean
 }
 
 export function ConfirmDialog({
@@ -24,7 +25,8 @@ export function ConfirmDialog({
     message,
     confirmText = "Confirm",
     cancelText = "Cancel",
-    variant = "warning"
+    variant = "warning",
+    hideCancel = false
 }: ConfirmDialogProps) {
     const [mounted, setMounted] = useState(false)
 
@@ -69,7 +71,7 @@ export function ConfirmDialog({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <Card 
+            <Card
                 className={`max-w-md w-full bg-gradient-to-br ${style.gradient} border-2 ${style.border} shadow-2xl`}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -91,13 +93,15 @@ export function ConfirmDialog({
 
                     {/* Actions */}
                     <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                            className="flex-1 bg-transparent border-border hover:bg-surface-hover"
-                        >
-                            {cancelText}
-                        </Button>
+                        {!hideCancel && (
+                            <Button
+                                variant="outline"
+                                onClick={onClose}
+                                className="flex-1 bg-transparent border-border hover:bg-surface-hover"
+                            >
+                                {cancelText}
+                            </Button>
+                        )}
                         <Button
                             onClick={() => {
                                 onConfirm()
@@ -120,7 +124,8 @@ export function useConfirmDialog() {
     const [config, setConfig] = useState<Omit<ConfirmDialogProps, "isOpen" | "onClose" | "onConfirm">>({
         title: "",
         message: "",
-        variant: "warning"
+        variant: "warning",
+        hideCancel: false
     })
     const [onConfirmCallback, setOnConfirmCallback] = useState<(() => void) | null>(null)
 
@@ -130,9 +135,10 @@ export function useConfirmDialog() {
         onConfirm: () => void,
         variant: "danger" | "warning" | "info" | "success" = "warning",
         confirmText?: string,
-        cancelText?: string
+        cancelText?: string,
+        hideCancel: boolean = false
     ) => {
-        setConfig({ title, message, variant, confirmText, cancelText })
+        setConfig({ title, message, variant, confirmText, cancelText, hideCancel })
         setOnConfirmCallback(() => onConfirm)
         setIsOpen(true)
     }

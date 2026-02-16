@@ -14,8 +14,9 @@ interface ProtectedPageProps {
 
 export function ProtectedPage({ children, requiredPermission, path }: ProtectedPageProps) {
   const router = useRouter()
-  const state = useAppSelector((state) => state)
+  // Use specific selectors instead of entire state to avoid unnecessary rerenders
   const { user, isAuthenticated } = useAppSelector((state) => state.auth)
+  const permissions = useAppSelector((state) => state.permissions)
   const [mounted, setMounted] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
@@ -36,14 +37,28 @@ export function ProtectedPage({ children, requiredPermission, path }: ProtectedP
     // If not authenticated, redirect to login
     if (!isAuthenticated || !user) {
       setHasAccess(false)
-      router.push("/login")
+      router.push("/auth/login")
       return
     }
 
-    // Check page access
+    // Super admin bypass - check first before any permission checks
+    if (user?.is_superuser === true) {
+      setHasAccess(true)
+      return
+    }
+
+    // Check page access - create a minimal state object for permission checks
     let access = true
     if (path) {
-      access = canAccessPage(path)(state)
+      // Dashboard is accessible to all authenticated users
+      if (path === "/dashboard") {
+        setHasAccess(true)
+        return
+      }
+      
+      // Create a minimal state object with only what permission functions need
+      const minimalState = { auth: { user, isAuthenticated }, permissions }
+      access = canAccessPage(path)(minimalState)
       if (!access) {
         setHasAccess(false)
         router.push("/dashboard") // Redirect to dashboard if no access
@@ -53,7 +68,9 @@ export function ProtectedPage({ children, requiredPermission, path }: ProtectedP
 
     // Check specific permission if provided
     if (requiredPermission) {
-      access = hasPermission(requiredPermission)(state)
+      // Create a minimal state object with only what permission functions need
+      const minimalState = { auth: { user, isAuthenticated }, permissions }
+      access = hasPermission(requiredPermission)(minimalState)
       if (!access) {
         setHasAccess(false)
         router.push("/dashboard") // Redirect to dashboard if no access
@@ -62,7 +79,7 @@ export function ProtectedPage({ children, requiredPermission, path }: ProtectedP
     }
 
     setHasAccess(access)
-  }, [mounted, isAuthenticated, user, path, requiredPermission, router, state])
+  }, [mounted, isAuthenticated, user, path, requiredPermission, router, permissions])
 
   // Show loading while checking auth (client-side only to prevent hydration mismatch)
   if (!mounted || isAuthenticated === undefined || hasAccess === null) {

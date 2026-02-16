@@ -78,22 +78,23 @@ export function CheckpointManager({ pipelineId, sourceConnectionType, tableMappi
         setCheckpoints([])
       }
     } catch (err: any) {
-      console.error("Failed to fetch checkpoints:", err)
-      // Handle timeout errors gracefully - don't show error for first timeout
-      if (err?.isTimeout || err?.code === 'ECONNABORTED') {
-        if (retryCount < 1) {
-          // Retry once after a short delay
-          console.log('[CheckpointManager] Timeout, retrying...')
-          setTimeout(() => fetchCheckpoints(retryCount + 1), 2000)
-          return
-        } else {
-          // After retry, show a non-blocking message
-          setError("Checkpoints loading slowly - this is normal. They will appear when ready.")
-        }
-      } else {
-        setError(err?.message || "Failed to fetch checkpoints")
+      // Check if error is a timeout - but getPipelineCheckpoints should handle this now
+      const isTimeout = err?.isTimeout || err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')
+      
+      // If getPipelineCheckpoints handled it, data should be returned, so this shouldn't happen
+      // But if it does, just set empty checkpoints
+      if (isTimeout && retryCount < 1) {
+        // Retry once after a short delay
+        console.log('[CheckpointManager] Timeout, retrying...')
+        setTimeout(() => fetchCheckpoints(retryCount + 1), 1000)
+        return
       }
-      setCheckpoints([]) // Ensure checkpoints is always an array
+      
+      // After retry or if not timeout, just set empty checkpoints
+      // Don't show error to user - empty checkpoints are acceptable
+      console.warn('[CheckpointManager] Error fetching checkpoints, using empty list:', err?.message || err)
+      setCheckpoints([])
+      setError(null) // Don't show error to user
     } finally {
       setLoading(false)
     }
