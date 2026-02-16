@@ -1,19 +1,22 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts"
 import { Card } from "@/components/ui/card"
-import { Activity, Database, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import { Activity, Database, AlertCircle, CheckCircle, Loader2, TrendingUp, TrendingDown, ArrowRight, Layers, BarChart3, Shield, Globe } from "lucide-react"
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks"
-import { fetchReplicationEvents, fetchMonitoringMetrics, addReplicationEvent, addMonitoringMetric } from "@/lib/store/slices/monitoringSlice"
+import { fetchReplicationEvents } from "@/lib/store/slices/monitoringSlice"
 import { fetchPipelines } from "@/lib/store/slices/pipelineSlice"
 import { wsClient } from "@/lib/websocket/client"
 import { formatDistanceToNow } from "date-fns"
 import { ApplicationLogs } from "./application-logs"
 
+import { useRouter } from "next/navigation"
+
 export function DashboardOverview() {
+  const router = useRouter()
   const dispatch = useAppDispatch()
-  const { events, metrics, isLoading } = useAppSelector((state) => state.monitoring)
+  const { events, metrics } = useAppSelector((state) => state.monitoring)
   const { pipelines } = useAppSelector((state) => state.pipelines)
 
   const [chartData, setChartData] = useState<any[]>([])
@@ -42,12 +45,12 @@ export function DashboardOverview() {
     // Fetch 7 days of events for the charts
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    dispatch(fetchReplicationEvents({ 
-      limit: 10000, 
+    dispatch(fetchReplicationEvents({
+      limit: 10000,
       todayOnly: false,
       startDate: sevenDaysAgo.toISOString()
     }))
-    
+
     // Fetch dashboard stats from backend
     import("@/lib/api/client").then(({ apiClient }) => {
       apiClient.getDashboardStats()
@@ -65,7 +68,7 @@ export function DashboardOverview() {
     const interval = setInterval(() => {
       dispatch(fetchPipelines())
     }, 10000) // Refresh every 10 seconds
-    
+
     return () => clearInterval(interval)
   }, [dispatch])
 
@@ -74,8 +77,8 @@ export function DashboardOverview() {
     const interval = setInterval(() => {
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      dispatch(fetchReplicationEvents({ 
-        limit: 10000, 
+      dispatch(fetchReplicationEvents({
+        limit: 10000,
         todayOnly: false,
         startDate: sevenDaysAgo.toISOString()
       }))
@@ -146,14 +149,13 @@ export function DashboardOverview() {
         })
       }
     }
-  }, [pipelines]) // Keep pipelines dependency but use ref to prevent loops
+  }, [pipelines])
 
   // Calculate dashboard metrics - memoized to prevent infinite loops
-  // Always use pipelines array for active pipeline count (more reliable and real-time)
   const dashboardMetricsMemo = useMemo(() => {
     const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
     const eventsArray = Array.isArray(events) ? events : []
-    
+
     // Always calculate active pipelines from pipelines array (more reliable)
     // Check for both 'active' and 'running' status, and also 'starting' status
     const activePipelines = pipelinesArray.filter(p => {
@@ -163,7 +165,7 @@ export function DashboardOverview() {
 
     // Calculate total tables
     const totalTables = pipelinesArray.reduce((sum, p) => {
-      const sourceTables = Array.isArray(p.source_tables) ? p.source_tables.length : 0
+      const sourceTables = Array.isArray(p.table_mappings) ? p.table_mappings.length : 0
       return sum + sourceTables
     }, 0)
 
@@ -171,7 +173,7 @@ export function DashboardOverview() {
     let totalEvents = eventsArray.length
     let failedEvents = eventsArray.filter(e => e.status === 'failed' || e.status === 'error').length
     let successEvents = eventsArray.filter(e => e.status === 'applied' || e.status === 'success').length
-    
+
     if (backendStats) {
       // Use backend stats for more accurate event counts
       totalEvents = backendStats.total_events || totalEvents
@@ -191,19 +193,18 @@ export function DashboardOverview() {
       errorRate,
       dataQuality,
     }
-  }, [pipelines, events, backendStats]) // Include backendStats in dependencies
-  
+  }, [pipelines, events, backendStats])
+
   // Update dashboard metrics only when memoized value changes
   useEffect(() => {
     setDashboardMetrics(dashboardMetricsMemo)
   }, [dashboardMetricsMemo])
 
   // Process metrics for charts (last 7 days, grouped by day)
-  // Memoize chart data calculation to prevent infinite loops
   const chartDataMemo = useMemo(() => {
     const eventsArray = Array.isArray(events) ? events : []
     const metricsArray = Array.isArray(metrics) ? metrics : []
-    
+
     // Always create 7 days of data buckets to ensure all days are represented
     const now = new Date()
     const days = Array.from({ length: 7 }, (_, i) => {
@@ -216,7 +217,7 @@ export function DashboardOverview() {
       // Use metrics data for charts (last 7 days)
       return days.map((day, idx) => {
         const dayDate = day.toISOString().split('T')[0] // YYYY-MM-DD format
-        
+
         // Find metrics for this day
         const dayMetrics = metricsArray.filter(m => {
           try {
@@ -270,19 +271,19 @@ export function DashboardOverview() {
         // Format date as "Mon DD" or "Today"
         const dayStr = idx === 6 ? 'Today' : day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })
 
-        return { 
-          time: dayStr, 
-          replicated, 
-          synced, 
-          errors, 
+        return {
+          time: dayStr,
+          replicated,
+          synced,
+          errors,
           date: day.toISOString().split('T')[0],
           dateObj: day // Keep for sorting
         }
       }).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
         .map(({ dateObj, ...rest }) => rest) // Remove dateObj before returning
     }
-  }, [metrics.length, events.length]) // Use lengths instead of full arrays
-  
+  }, [metrics.length, events.length])
+
   // Update chart data only when memoized value changes
   useEffect(() => {
     setChartData(chartDataMemo)
@@ -292,11 +293,11 @@ export function DashboardOverview() {
   const recentActivity = useMemo(() => {
     const eventsArray = Array.isArray(events) ? events : []
     const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
-    
+
     if (eventsArray.length === 0) {
       return []
     }
-    
+
     // Sort events by created_at (most recent first) and take the most recent ones
     const sortedEvents = [...eventsArray]
       .filter(e => e && (e.created_at || e.source_commit_time)) // Only events with dates
@@ -309,68 +310,59 @@ export function DashboardOverview() {
           return 0
         }
       })
-    
+
     if (sortedEvents.length === 0) {
       return []
     }
-    
+
     const recentEvents = sortedEvents.slice(0, 30) // Get more events to ensure we have unique pipelines
     const activityMap = new Map()
 
     recentEvents.forEach(event => {
       if (!event) return
-      
+
       // Get pipeline ID - try multiple fields
-      const pipelineId = event.pipeline_id || event.pipelineId || null
+      const pipelineId = event.pipeline_id || null
       if (!pipelineId) {
-        // Skip events without pipeline_id
         return
       }
-      
-      // Try to find pipeline by matching ID (handle both string and number)
+
+      // Try to find pipeline by matching ID
       let pipeline = null
       let pipelineKey = String(pipelineId)
-      
+
       if (pipelinesArray.length > 0) {
         pipeline = pipelinesArray.find(p => {
           const pId = String(p.id)
           const eId = String(pipelineId)
-          // Try exact match
           if (pId === eId) return true
-          // Try numeric conversion
           const pNum = Number(pId)
           const eNum = Number(eId)
           if (!isNaN(pNum) && !isNaN(eNum) && pNum === eNum) return true
-          // Try UUID comparison
           return false
         })
-        
+
         if (pipeline) {
           pipelineKey = String(pipeline.id)
         }
       }
-      
-      // Only add if we haven't seen this pipeline yet, or if this event is more recent
+
       if (!activityMap.has(pipelineKey)) {
         try {
           const eventDate = new Date(event.created_at || event.source_commit_time || Date.now())
           const isValidDate = !isNaN(eventDate.getTime())
-          
-          if (!isValidDate) {
-            console.warn('Skipping event with invalid date:', event)
-            return
-          }
-          
-          // Determine status
+
+          if (!isValidDate) return
+
           const status = event.status === 'applied' || event.status === 'success' ? 'success' :
-            event.status === 'failed' || event.status === 'error' ? 'error' : 
-            event.status === 'captured' || event.status === 'pending' ? 'warning' : 'warning'
-          
+            event.status === 'failed' || event.status === 'error' ? 'error' :
+              event.status === 'captured' || event.status === 'pending' ? 'warning' : 'warning'
+
           activityMap.set(pipelineKey, {
             pipeline: pipeline ? (pipeline.name || `Pipeline ${pipelineKey}`) : `Pipeline ${pipelineKey}`,
             status: status,
             time: formatDistanceToNow(eventDate, { addSuffix: true }),
-            timestamp: eventDate.getTime(), // Store timestamp for sorting
+            timestamp: eventDate.getTime(),
           })
         } catch (err) {
           console.warn('Error processing event for activity:', err, event)
@@ -378,17 +370,13 @@ export function DashboardOverview() {
       }
     })
 
-    // Convert to array, sort by timestamp (most recent first), and take top 5
-    const activities = Array.from(activityMap.values())
-      .filter(a => a && a.timestamp) // Only valid activities
+    return Array.from(activityMap.values())
+      .filter(a => a && a.timestamp)
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
       .slice(0, 5)
-      .map(({ timestamp, ...rest }) => rest) // Remove timestamp before returning
-    
-    return activities
+      .map(({ timestamp, ...rest }) => rest)
   }, [events, pipelines])
 
-  // Ensure pipelines is an array for metricsDisplay
   const pipelinesArrayForMetrics = Array.isArray(pipelines) ? pipelines : []
 
   const metricsDisplay = [
@@ -398,261 +386,267 @@ export function DashboardOverview() {
       change: `${pipelinesArrayForMetrics.filter(p => {
         const status = p.status?.toLowerCase() || ''
         return status === 'active' || status === 'running' || status === 'starting'
-      }).length} active`,
+      }).length} running`,
       icon: Activity,
-      gradient: "from-cyan-500/10 to-blue-600/5",
-      borderColor: "border-cyan-500/20",
-      iconBg: "bg-cyan-500/20",
-      iconColor: "text-cyan-400",
-      textGradient: "from-cyan-400 to-blue-500",
+      color: "text-primary",
+      bg: "bg-primary/10",
+      trend: "up"
     },
     {
       label: "Total Tables",
       value: dashboardMetrics.totalTables.toString(),
       change: backendStats ? `${backendStats.total_connections || 0} connections` : `${events.length} events today`,
       icon: Database,
-      gradient: "from-emerald-500/10 to-green-600/5",
-      borderColor: "border-emerald-500/20",
-      iconBg: "bg-emerald-500/20",
-      iconColor: "text-emerald-400",
-      textGradient: "from-emerald-400 to-green-500",
+      color: "text-info",
+      bg: "bg-info/10",
+      trend: "neutral"
     },
     {
       label: "Error Rate",
       value: dashboardMetrics.errorRate.toFixed(1) + "%",
       change: `${events.filter(e => e.status === 'failed').length} errors`,
       icon: AlertCircle,
-      gradient: "from-amber-500/10 to-orange-600/5",
-      borderColor: "border-amber-500/20",
-      iconBg: "bg-amber-500/20",
-      iconColor: "text-amber-400",
-      textGradient: "from-amber-400 to-orange-500",
+      color: "text-error",
+      bg: "bg-error/10",
+      trend: dashboardMetrics.errorRate > 0 ? "down" : "neutral"
     },
     {
       label: "Data Quality",
-      value: (dashboardMetrics.dataQuality % 1 === 0 
-        ? dashboardMetrics.dataQuality.toFixed(0) 
+      value: (dashboardMetrics.dataQuality % 1 === 0
+        ? dashboardMetrics.dataQuality.toFixed(0)
         : dashboardMetrics.dataQuality.toFixed(1)) + "%",
       change: `${events.filter(e => e.status === 'applied').length} successful`,
       icon: CheckCircle,
-      gradient: "from-green-500/10 to-emerald-600/5",
-      borderColor: "border-green-500/20",
-      iconBg: "bg-green-500/20",
-      iconColor: "text-green-400",
-      textGradient: "from-green-400 to-emerald-500",
+      color: "text-success",
+      bg: "bg-success/10",
+      trend: "up"
     },
   ]
 
   return (
     <div className="space-y-6">
-      {/* Metrics Grid - Enhanced with gradients and animations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metricsDisplay.map((metric) => {
           const Icon = metric.icon
+          // improved styling to match monitoring page
+          let gradientClass = ""
+          let iconColorClass = ""
+          let accentColorClass = ""
+
+          if (metric.label.includes("Active")) {
+            gradientClass = "from-blue-500/10 to-blue-600/5 border-blue-500/20"
+            iconColorClass = "text-blue-500"
+            accentColorClass = "bg-blue-500/20"
+          } else if (metric.label.includes("Total")) {
+            gradientClass = "from-amber-500/10 to-amber-600/5 border-amber-500/20"
+            iconColorClass = "text-amber-500"
+            accentColorClass = "bg-amber-500/20"
+          } else if (metric.label.includes("Error")) {
+            gradientClass = "from-red-500/10 to-red-600/5 border-red-500/20"
+            iconColorClass = "text-red-500"
+            accentColorClass = "bg-red-500/20"
+          } else {
+            gradientClass = "from-green-500/10 to-green-600/5 border-green-500/20"
+            iconColorClass = "text-green-500"
+            accentColorClass = "bg-green-500/20"
+          }
+
           return (
             <Card
               key={metric.label}
-              className={`p-6 bg-gradient-to-br ${metric.gradient} ${metric.borderColor} shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 group`}
+              className={`p-5 bg-gradient-to-br ${gradientClass} shadow-lg hover:shadow-xl transition-all duration-300 group border-l-4 ${metric.label.includes("Active") ? "border-l-blue-500" : metric.label.includes("Total") ? "border-l-amber-500" : metric.label.includes("Error") ? "border-l-red-500" : "border-l-green-500"} relative overflow-hidden`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">{metric.label}</p>
-                  <p className={`text-4xl font-extrabold bg-gradient-to-r ${metric.textGradient} bg-clip-text text-transparent mb-1`}>
-                    {metric.value}
-                  </p>
-                  <p className="text-xs font-medium text-foreground-muted/80">{metric.change}</p>
+              {/* Background Icon */}
+              <div className="absolute -right-4 -bottom-4 opacity-[0.08] group-hover:opacity-[0.12] group-hover:scale-110 transition-all duration-500 pointer-events-none">
+                {metric.label.includes("Active") ? (
+                  <Layers className="w-32 h-32" />
+                ) : metric.label.includes("Total") ? (
+                  <BarChart3 className="w-32 h-32" />
+                ) : metric.label.includes("Error") ? (
+                  <Shield className="w-32 h-32" />
+                ) : (
+                  <Globe className="w-32 h-32" />
+                )}
+              </div>
+
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className={`p-2 rounded-lg ${accentColorClass} group-hover:scale-110 transition-transform duration-200`}>
+                  <Icon className={`w-5 h-5 ${iconColorClass}`} />
                 </div>
-                <div className={`p-4 ${metric.iconBg} rounded-xl group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`w-8 h-8 ${metric.iconColor}`} />
+                <div className={`flex items-center text-xs font-medium ${metric.trend === 'up' ? 'text-green-500' :
+                  metric.trend === 'down' ? 'text-red-500' : 'text-foreground-muted'
+                  }`}>
+                  {metric.trend === 'up' && <TrendingUp className="w-3 h-3 mr-1" />}
+                  {metric.trend === 'down' && <TrendingDown className="w-3 h-3 mr-1" />}
+                  {metric.change}
                 </div>
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-3xl font-bold text-foreground mb-1 tracking-tight">{metric.value}</h3>
+                <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide">{metric.label}</p>
               </div>
             </Card>
           )
         })}
       </div>
 
-      {/* Charts - Enhanced visibility and styling */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 bg-surface border-border shadow-xl">
-          <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Activity className="w-6 h-6 text-cyan-400" />
-            Replication Events (7d)
-          </h3>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart 
-                data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 116, 139, 0.15)" />
-                <XAxis
-                  dataKey="time"
-                  stroke="rgb(148, 163, 184)"
-                  tick={{ fill: 'rgb(148, 163, 184)', fontSize: 12, fontWeight: '600' }}
-                  label={{ value: 'Time', position: 'insideBottom', offset: -5, fill: 'rgb(148, 163, 184)', fontSize: 13, fontWeight: '600' }}
-                />
-                <YAxis
-                  stroke="rgb(148, 163, 184)"
-                  tick={{ fill: 'rgb(148, 163, 184)', fontSize: 12, fontWeight: '600' }}
-                  label={{ value: 'Events', angle: -90, position: 'insideLeft', fill: 'rgb(148, 163, 184)', fontSize: 13, fontWeight: '600' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    border: "1px solid rgb(6, 182, 212)",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-                    padding: "12px"
-                  }}
-                  labelStyle={{ color: 'rgb(6, 182, 212)', fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}
-                  itemStyle={{ color: 'rgb(148, 163, 184)', fontSize: '13px', padding: '4px 0' }}
-                  formatter={(value: any, name: string) => [value, name]}
-                />
-                <Legend 
-                  wrapperStyle={{ paddingTop: "20px" }}
-                  iconType="line"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="replicated"
-                  stroke="rgb(6, 182, 212)"
-                  strokeWidth={3}
-                  dot={{ fill: "rgb(6, 182, 212)", r: 5, strokeWidth: 2, stroke: "rgb(8, 145, 178)" }}
-                  activeDot={{ r: 7, fill: "rgb(14, 165, 233)" }}
-                  name="Replicated"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="synced"
-                  stroke="rgb(34, 211, 238)"
-                  strokeWidth={3}
-                  dot={{ fill: "rgb(34, 211, 238)", r: 5, strokeWidth: 2, stroke: "rgb(6, 182, 212)" }}
-                  activeDot={{ r: 7, fill: "rgb(103, 232, 249)" }}
-                  name="Synced"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[320px] flex flex-col items-center justify-center text-foreground-muted">
-              <Activity className="w-16 h-16 mb-4 opacity-20" />
-              <p className="text-base font-medium">No data available</p>
-              <p className="text-sm mt-2">Events will appear here as they are captured</p>
+      {/* Main Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 p-6 border-border shadow-sm bg-card">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                Replication Volume
+              </h3>
+              <p className="text-xs text-foreground-muted mt-1">Daily event processing volume (7 days)</p>
             </div>
-          )}
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-xs text-foreground-muted">
+                <span className="w-2.5 h-2.5 rounded-sm bg-primary/80"></span> Replicated
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-foreground-muted">
+                <span className="w-2.5 h-2.5 rounded-sm bg-info/80"></span> Synced
+              </span>
+            </div>
+          </div>
+
+          <div className="h-[300px]">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorReplicated" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorSynced" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--info)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--info)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.4} />
+                  <XAxis
+                    dataKey="time"
+                    stroke="var(--foreground-muted)"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: 'var(--foreground-muted)' }}
+                    dy={10}
+                  />
+                  <YAxis
+                    stroke="var(--foreground-muted)"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: 'var(--foreground-muted)' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--popover)",
+                      borderColor: "var(--border)",
+                      borderRadius: "0.5rem",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      fontSize: "12px",
+                      padding: "8px 12px"
+                    }}
+                    cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="replicated"
+                    stroke="var(--primary)"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorReplicated)"
+                    name="Replicated"
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="synced"
+                    stroke="var(--info)"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorSynced)"
+                    name="Synced"
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-foreground-muted">
+                <Activity className="w-10 h-10 mb-3 opacity-20" />
+                <p className="text-sm">No data available</p>
+              </div>
+            )}
+          </div>
         </Card>
 
-        <Card className="p-6 bg-surface border-border shadow-xl">
-          <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <AlertCircle className="w-6 h-6 text-red-400" />
-            Error Distribution
-          </h3>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart 
-                data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <defs>
-                  <linearGradient id="errorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgb(239, 68, 68)" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="rgb(220, 38, 38)" stopOpacity={0.7} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 116, 139, 0.15)" />
-                <XAxis
-                  dataKey="time"
-                  stroke="rgb(148, 163, 184)"
-                  tick={{ fill: 'rgb(148, 163, 184)', fontSize: 12, fontWeight: '600' }}
-                  label={{ value: 'Time', position: 'insideBottom', offset: -5, fill: 'rgb(148, 163, 184)', fontSize: 13, fontWeight: '600' }}
-                />
-                <YAxis
-                  stroke="rgb(148, 163, 184)"
-                  tick={{ fill: 'rgb(148, 163, 184)', fontSize: 12, fontWeight: '600' }}
-                  label={{ value: 'Errors', angle: -90, position: 'insideLeft', fill: 'rgb(148, 163, 184)', fontSize: 13, fontWeight: '600' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    border: "1px solid rgb(239, 68, 68)",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-                    padding: "12px"
-                  }}
-                  labelStyle={{ color: 'rgb(239, 68, 68)', fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}
-                  itemStyle={{ color: 'rgb(148, 163, 184)', fontSize: '13px', padding: '4px 0' }}
-                  formatter={(value: any, name: string) => [value, name || 'Errors']}
-                />
-                <Bar
-                  dataKey="errors"
-                  fill="url(#errorGradient)"
-                  radius={[10, 10, 0, 0]}
-                  name="Errors"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[320px] flex flex-col items-center justify-center text-foreground-muted">
-              <AlertCircle className="w-16 h-16 mb-4 opacity-20" />
-              <p className="text-base font-medium">No error data available</p>
-              <p className="text-sm mt-2">Errors will appear here when they occur</p>
+        {/* Recent Activity Feed */}
+        <Card className="p-0 border-border shadow-sm bg-card flex flex-col overflow-hidden h-full">
+          <div className="p-4 border-b border-border bg-muted/30 flex justify-between items-center">
+            <div>
+              <h3 className="text-base font-bold text-foreground">Recent Activity</h3>
+              <p className="text-xs text-foreground-muted mt-0.5">Latest status updates</p>
             </div>
-          )}
+            <Activity className="w-4 h-4 text-foreground-muted" />
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent min-h-[300px]">
+            {recentActivity.length > 0 ? (
+              <div className="divide-y divide-border/50">
+                {recentActivity.map((activity, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 hover:bg-surface-hover transition-colors flex items-start gap-3 group cursor-default"
+                  >
+                    <div className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${activity.status === "success" ? "bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]" :
+                      activity.status === "error" ? "bg-error shadow-[0_0_8px_rgba(239,68,68,0.4)]" :
+                        "bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                      }`} />
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                          {activity.pipeline}
+                        </p>
+                        <span className="text-[10px] text-foreground-muted whitespace-nowrap ml-2">
+                          {activity.time}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className={`text-xs font-medium ${activity.status === "success" ? "text-success" :
+                          activity.status === "error" ? "text-error" :
+                            "text-warning"
+                          }`}>
+                          {activity.status === "success" ? "Replication Success" :
+                            activity.status === "error" ? "Replication Error" : "Processing"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-foreground-muted p-8">
+                <Database className="w-8 h-8 mb-3 opacity-20" />
+                <p className="text-sm">No recent activity</p>
+              </div>
+            )}
+          </div>
+          <div className="p-3 border-t border-border bg-muted/10 text-center">
+            <button
+              onClick={() => router.push('/monitoring')}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1 mx-auto"
+            >
+              View All Activity <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </Card>
       </div>
-
-      {/* Recent Activity - Enhanced */}
-      <Card className="p-6 bg-surface border-border shadow-xl">
-        <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-          <Database className="w-6 h-6 text-emerald-400" />
-          Recent Pipeline Activity
-        </h3>
-        {isLoading && events.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-            <span className="ml-3 text-foreground-muted font-medium">Loading activity...</span>
-          </div>
-        ) : recentActivity.length > 0 ? (
-          <div className="space-y-3">
-            {recentActivity.map((activity, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between py-3 px-4 rounded-lg border border-border/50 hover:bg-surface-hover/30 hover:border-border transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-3 h-3 rounded-full shadow-lg ${activity.status === "success" ? "bg-green-400 shadow-green-400/50" :
-                        activity.status === "error" ? "bg-red-400 shadow-red-400/50" :
-                          "bg-amber-400 shadow-amber-400/50"
-                      } group-hover:scale-125 transition-transform duration-200`}
-                  />
-                  <span className="font-semibold text-foreground text-base">{activity.pipeline}</span>
-                </div>
-                <span className="text-sm font-medium text-foreground-muted">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-        ) : events.length > 0 ? (
-          <div className="text-center py-12 text-foreground-muted">
-            <Database className="w-16 h-16 mx-auto mb-4 opacity-20" />
-            <p className="text-base font-medium">No pipeline activity found</p>
-            <p className="text-sm mt-2">
-              Found {events.length} event{events.length !== 1 ? 's' : ''} but unable to match with pipelines.
-            </p>
-            <p className="text-xs mt-2 text-foreground-muted/70">
-              Make sure events have valid pipeline_id and created_at fields.
-            </p>
-          </div>
-        ) : (
-          <div className="text-center py-12 text-foreground-muted">
-            <Database className="w-16 h-16 mx-auto mb-4 opacity-20" />
-            <p className="text-base font-medium">No recent activity</p>
-            <p className="text-sm mt-2">Events will appear here as pipelines process data.</p>
-            <p className="text-xs mt-2 text-foreground-muted/70">
-              Make sure pipelines are running and generating events.
-            </p>
-          </div>
-        )}
-      </Card>
 
       {/* Application Logs Section */}
       <ApplicationLogs />

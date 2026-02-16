@@ -1,11 +1,24 @@
-"""Monitoring and metrics for CDC pipelines."""
 
-from __future__ import annotations
-
+import os
 import logging
 import time
+import socket
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+# Monkey patch getaddrinfo for Kafka hostname resolution
+_orig_getaddrinfo = socket.getaddrinfo
+def _patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if host == 'kafka':
+        return _orig_getaddrinfo('72.61.233.209', port, family, type, proto, flags)
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+socket.getaddrinfo = _patched_getaddrinfo
+
+try:
+    from kafka import KafkaAdminClient, KafkaConsumer, TopicPartition
+    KAFKA_PYTHON_AVAILABLE = True
+except ImportError:
+    KAFKA_PYTHON_AVAILABLE = False
 
 from ingestion.kafka_connect_client import KafkaConnectClient
 from ingestion.models import Pipeline
@@ -23,6 +36,108 @@ class CDCMonitor:
             kafka_connect_client: Kafka Connect client instance
         """
         self.kafka_client = kafka_connect_client
+        self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "72.61.233.209:9092")
+
+    def get_consumer_lag(self, pipeline: Pipeline) -> Dict[str, Any]:
+        """Get consumer lag for pipeline topics.
+        
+        Args:
+            pipeline: Pipeline object
+            
+        Returns:
+            Dictionary with lag metrics per consumer group/topic
+        """
+        if not KAFKA_PYTHON_AVAILABLE:
+            return {"error": "kafka-python not installed"}
+            
+        # Initialize clients lazily or per request to avoid connection issues on init
+        admin_client = None
+        consumer = None
+        
+        try:
+            admin_client = KafkaAdminClient(bootstrap_servers=self.bootstrap_servers)
+            consumer = KafkaConsumer(bootstrap_servers=self.bootstrap_servers)
+            
+            # Identify relevant consumer groups
+            # 1. CDC Event Logger (global but we filter by pipeline topics)
+            # 2. Sink Connector (specific to pipeline)
+            relevant_groups = []
+            
+            # Add event logger group
+            relevant_groups.append("cdc-event-logger")
+
+            # Add sink connector group name directly
+            # Sink connector group usually follows pattern: connect-{connector-name}
+            if pipeline.sink_connector_name:
+                relevant_groups.append(f"connect-{pipeline.sink_connector_name}")
+            
+            results = {}
+            pipeline_topics = set(pipeline.kafka_topics) if pipeline.kafka_topics else set()
+            
+            # If no topics, return empty
+            if not pipeline_topics:
+                return {}
+            
+            for group_id in relevant_groups:
+                try:
+                    # List consumer group offsets
+                    try:
+                        group_offsets = admin_client.list_consumer_group_offsets(group_id)
+                    except Exception as e:
+                        logger.debug(f"Group {group_id} not found or error: {e}")
+                        continue
+                        
+                    total_lag = 0
+                    has_lag = False
+                    
+                    for tp, offset_meta in group_offsets.items():
+                        if not offset_meta:
+                            continue
+                            
+                        # Filter by pipeline topics
+                        if tp.topic not in pipeline_topics:
+                            continue
+                            
+                        committed_offset = offset_meta.offset
+                        
+                        try:
+                            end_offsets = consumer.end_offsets([tp])
+                            end_offset = end_offsets.get(tp, 0)
+                            lag = max(0, end_offset - committed_offset)
+                        except:
+                            lag = 0
+                        
+                        total_lag += lag
+                        
+                        # Store detailed lag if significant
+                        if lag > 0:
+                            has_lag = True
+                            if "details" not in results:
+                                results["details"] = []
+                            results["details"].append({
+                                "group": group_id,
+                                "topic": tp.topic,
+                                "partition": tp.partition,
+                                "lag": lag
+                            })
+                            
+                    results[group_id] = total_lag
+                    
+                except Exception as e:
+                    logger.debug(f"Could not check group {group_id}: {e}")
+                    results[group_id] = -1 # Indicates error/unknown
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Failed to check consumer lag: {e}")
+            return {"error": str(e)}
+        finally:
+            try:
+                if admin_client: admin_client.close()
+                if consumer: consumer.close()
+            except:
+                pass
     
     def check_connector_health(
         self,
@@ -162,6 +277,14 @@ class CDCMonitor:
                     metrics["debezium_connector_state"] = dbz_status.get("connector", {}).get("state")
             except Exception:
                 pass
+        
+        # Check consumer lag
+        try:
+             consumer_lag = self.get_consumer_lag(pipeline)
+             metrics["consumer_lag"] = consumer_lag
+        except Exception as e:
+             logger.debug(f"Failed to get consumer lag: {e}")
+
         
         if pipeline.sink_connector_name:
             try:

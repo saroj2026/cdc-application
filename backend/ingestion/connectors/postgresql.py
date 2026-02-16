@@ -603,6 +603,41 @@ class PostgreSQLConnector(BaseConnector):
                     ]
             except Exception as e:
                 logger.debug(f"Could not get replication slots: {e}")
+            
+            # Get replication stats (active connections)
+            try:
+                cursor.execute("""
+                    SELECT 
+                        pid, usename, application_name, client_addr, state,
+                        write_lag, flush_lag, replay_lag
+                    FROM pg_stat_replication
+                """)
+                replication_stats = cursor.fetchall()
+                if replication_stats:
+                    metadata["replication_stats"] = []
+                    for row in replication_stats:
+                        # Convert intervals to seconds if present
+                        write_lag = row.get("write_lag")
+                        flush_lag = row.get("flush_lag")
+                        replay_lag = row.get("replay_lag")
+                        
+                        stat = {
+                            "pid": row.get("pid"),
+                            "application_name": row.get("application_name"),
+                            "state": row.get("state"),
+                            "client_addr": row.get("client_addr")
+                        }
+                        
+                        if write_lag:
+                            stat["write_lag_seconds"] = write_lag.total_seconds()
+                        if flush_lag:
+                            stat["flush_lag_seconds"] = flush_lag.total_seconds()
+                        if replay_lag:
+                            stat["replay_lag_seconds"] = replay_lag.total_seconds()
+                            
+                        metadata["replication_stats"].append(stat)
+            except Exception as e:
+                logger.debug(f"Could not get replication stats: {e}")
 
             # Get PostgreSQL version
             try:

@@ -22,7 +22,7 @@ interface Pipeline {
     target_table: string;
   }>;
   airflow_dag_id?: string;
-  status: 'draft' | 'active' | 'paused' | 'error' | 'deleted';
+  status: 'draft' | 'active' | 'paused' | 'error' | 'deleted' | 'running' | 'failed' | 'stopped' | 'starting';
   created_at: string;
   updated_at?: string;
 }
@@ -72,7 +72,7 @@ export const createPipeline = createAsyncThunk(
     } catch (error: any) {
       // Extract error message from various possible locations
       let errorMessage = 'Failed to create pipeline';
-      
+
       if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail;
       } else if (error.response?.data?.message) {
@@ -82,7 +82,7 @@ export const createPipeline = createAsyncThunk(
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      
+
       // Include full error info for debugging
       const errorInfo = {
         message: errorMessage,
@@ -92,7 +92,7 @@ export const createPipeline = createAsyncThunk(
         isTimeout: error.isTimeout,
         isNetworkError: error.isNetworkError,
       };
-      
+
       console.error('[Redux] createPipeline error:', errorInfo);
       return rejectWithValue(errorMessage);
     }
@@ -107,7 +107,7 @@ export const updatePipeline = createAsyncThunk(
     } catch (error: any) {
       // Extract error message properly
       let errorMessage = 'Failed to update pipeline';
-      
+
       if (error?.response?.data?.detail) {
         const detail = error.response.data.detail;
         if (Array.isArray(detail)) {
@@ -133,7 +133,7 @@ export const updatePipeline = createAsyncThunk(
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       return rejectWithValue(errorMessage);
     }
   }
@@ -168,7 +168,7 @@ export const triggerPipeline = createAsyncThunk(
     } catch (error: any) {
       // Extract detailed error message
       let errorMessage = 'Failed to trigger pipeline'
-      
+
       if (error?.response?.data?.detail) {
         errorMessage = error.response.data.detail
       } else if (error?.response?.data?.message) {
@@ -178,7 +178,7 @@ export const triggerPipeline = createAsyncThunk(
       } else if (typeof error === 'string') {
         errorMessage = error
       }
-      
+
       // Remove redundant wrapping if present
       if (errorMessage.includes("Failed to trigger pipeline") && errorMessage.length > 25) {
         // Keep the actual error, remove the wrapper
@@ -190,7 +190,7 @@ export const triggerPipeline = createAsyncThunk(
           }
         }
       }
-      
+
       // Remove HTTP error wrapper if present
       if (errorMessage.includes("400 Client Error") || errorMessage.includes("Bad Request")) {
         // Extract the actual error message
@@ -205,7 +205,7 @@ export const triggerPipeline = createAsyncThunk(
           errorMessage = error.response.data.detail
         }
       }
-      
+
       return rejectWithValue(errorMessage);
     }
   }
@@ -235,14 +235,16 @@ export const stopPipeline = createAsyncThunk(
       return result;
     } catch (error: any) {
       // Provide more detailed error message
-      const errorMessage = error.response?.data?.detail || 
-                          error.message || 
-                          error.response?.data?.message ||
-                          'Failed to stop pipeline';
+      const errorMessage = error.response?.data?.detail ||
+        error.message ||
+        error.response?.data?.message ||
+        'Failed to stop pipeline';
+      const errorData = error.response?.data;
       console.error('[PipelineSlice] Stop pipeline error:', {
-        error,
-        response: error.response?.data,
-        message: errorMessage
+        status: error.response?.status,
+        data: errorData,
+        message: errorMessage,
+        stack: error.stack
       });
       return rejectWithValue(errorMessage);
     }
@@ -251,7 +253,7 @@ export const stopPipeline = createAsyncThunk(
 
 export const fetchPipelineStatus = createAsyncThunk(
   'pipelines/fetchStatus',
-  async (id: number) => {
+  async (id: string | number) => {
     return await apiClient.getPipelineStatus(id);
   }
 );
@@ -269,8 +271,11 @@ const pipelineSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
       .addCase(fetchPipelines.pending, (state) => {
-        state.isLoading = true;
+        if (state.pipelines.length === 0) {
+          state.isLoading = true;
+        }
         state.error = null;
       })
       .addCase(fetchPipelines.fulfilled, (state, action) => {
@@ -281,16 +286,16 @@ const pipelineSlice = createSlice({
         if (Array.isArray(newPipelines)) {
           // Create a map of new pipelines by ID
           const newPipelinesMap = new Map(newPipelines.map(p => [String(p.id), p]));
-          
+
           // Update existing pipelines, but preserve optimistic 'active' status if backend hasn't caught up
           state.pipelines = state.pipelines.map(existingPipeline => {
             const newPipeline = newPipelinesMap.get(String(existingPipeline.id));
             if (newPipeline) {
               // If we optimistically set it to active and backend still shows stopped/starting,
               // keep it as active for a bit longer (backend might be slow to update)
-              if (existingPipeline.status === 'active' && 
-                  newPipeline.status !== 'active' && 
-                  newPipeline.status !== 'running') {
+              if (existingPipeline.status === 'active' &&
+                newPipeline.status !== 'active' &&
+                newPipeline.status !== 'running') {
                 // Keep optimistic status for now, but update other fields
                 return { ...newPipeline, status: 'active' };
               }
@@ -298,7 +303,7 @@ const pipelineSlice = createSlice({
             }
             return existingPipeline;
           });
-          
+
           // Add any new pipelines that weren't in the existing list
           newPipelines.forEach(newPipeline => {
             const exists = state.pipelines.some(p => String(p.id) === String(newPipeline.id));
@@ -370,22 +375,24 @@ const pipelineSlice = createSlice({
       })
       .addCase(pausePipeline.fulfilled, (state, action) => {
         // Update pipeline status to paused
-        const pipeline = state.pipelines.find((p) => p.id === action.payload.id);
+        const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg;
+        const pipeline = state.pipelines.find((p) => String(p.id) === String(pipelineId));
         if (pipeline) {
           pipeline.status = 'paused';
         }
-        if (state.selectedPipeline && state.selectedPipeline.id === action.payload.id) {
+        if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
           state.selectedPipeline.status = 'paused';
         }
       })
       .addCase(stopPipeline.fulfilled, (state, action) => {
-        // Update pipeline status to paused (stopped)
-        const pipeline = state.pipelines.find((p) => p.id === action.payload.id);
+        // Update pipeline status to stopped
+        const pipelineId = action.payload?.id || action.payload?.pipeline_id || action.meta.arg;
+        const pipeline = state.pipelines.find((p) => String(p.id) === String(pipelineId));
         if (pipeline) {
-          pipeline.status = 'paused';
+          pipeline.status = 'stopped';
         }
-        if (state.selectedPipeline && state.selectedPipeline.id === action.payload.id) {
-          state.selectedPipeline.status = 'paused';
+        if (state.selectedPipeline && String(state.selectedPipeline.id) === String(pipelineId)) {
+          state.selectedPipeline.status = 'stopped';
         }
       });
   },

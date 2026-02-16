@@ -12,11 +12,13 @@ import { fetchReplicationEvents, fetchMonitoringMetrics, setSelectedPipeline } f
 import { fetchPipelines } from "@/lib/store/slices/pipelineSlice"
 import { wsClient } from "@/lib/websocket/client"
 import { formatDistanceToNow } from "date-fns"
-import { Loader2, Activity, Database, AlertCircle, CheckCircle, RefreshCw, Eye, RotateCw } from "lucide-react"
+import { Loader2, Activity, Database, AlertCircle, CheckCircle, RefreshCw, Eye, RotateCw, ArrowRight, Zap, Clock, Trash2, Calendar, FileText } from "lucide-react"
 import { apiClient } from "@/lib/api/client"
 import { PageHeader } from "@/components/ui/page-header"
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 export default function MonitoringPage() {
   const router = useRouter()
@@ -31,6 +33,7 @@ export default function MonitoringPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
   const [wsAvailable, setWsAvailable] = useState(true) // Default to true to show status
+  const [searchTerm, setSearchTerm] = useState("")
 
   // Handle client-side mounting
   useEffect(() => {
@@ -43,999 +46,705 @@ export default function MonitoringPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
-  // Fetch data on mount - fetch all events by default (todayOnly: false to show all events including test records)
+  // Track if user has explicitly selected "All Pipelines" to prevent auto-selection
+  const userSelectedAllRef = useRef(false)
+
+  // Auto-select first pipeline when pipelines load and selectedPipelineId is null
+  useEffect(() => {
+    if (isAuthenticated && pipelines.length > 0 && !selectedPipelineId && !userSelectedAllRef.current) {
+      const firstPipeline = pipelines[0]
+      if (firstPipeline && firstPipeline.id) {
+        const pipelineId = !isNaN(Number(firstPipeline.id)) ? Number(firstPipeline.id) : String(firstPipeline.id)
+        dispatch(setSelectedPipeline(pipelineId))
+      }
+    }
+  }, [dispatch, isAuthenticated, pipelines, selectedPipelineId])
+
+  // Fetch data on mount
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchPipelines())
-      dispatch(fetchReplicationEvents({ limit: 500, todayOnly: false }))
-      
-      // Connect WebSocket for real-time updates
+      dispatch(fetchReplicationEvents({ limit: 100000, todayOnly: false }))
+
       wsClient.connect()
-      
-      // Update WebSocket status immediately
       setWsConnected(wsClient.isConnected())
       setWsAvailable(wsClient.isAvailable())
     }
   }, [dispatch, isAuthenticated])
 
-  // Check WebSocket connection status periodically and on changes
+  // Check WebSocket connection status
   useEffect(() => {
     if (!isAuthenticated) return
-    
-    // Update WebSocket status function
+
     const updateWsStatus = () => {
       const connected = wsClient.isConnected()
       const available = wsClient.isAvailable()
       setWsConnected(connected)
       setWsAvailable(available)
-      // Debug logging
-      if (connected) {
-        console.log('[Monitoring] WebSocket is connected - updating status')
-      }
     }
 
-    // Check periodically (every 2 seconds)
     const wsStatusInterval = setInterval(updateWsStatus, 2000)
-
-    // Also listen for real-time status changes
     const unsubscribeStatus = wsClient.onStatusChange(updateWsStatus)
-
-    // Update immediately
     updateWsStatus()
 
     return () => {
       clearInterval(wsStatusInterval)
-      unsubscribeStatus() // Remove status listener
+      unsubscribeStatus()
     }
   }, [isAuthenticated])
 
   // Track last fetched pipeline ID to prevent unnecessary refetches
   const lastFetchedPipelineIdRef = useRef<string | number | null>(null)
   const isInitialMountRef = useRef(true)
-  
-  // Stabilize selectedPipelineId to prevent unnecessary re-renders
+
   const stableSelectedPipelineId = useMemo(() => {
     if (!selectedPipelineId) return null
-    // Normalize to string to ensure consistent comparison
     return String(selectedPipelineId)
   }, [selectedPipelineId])
-  
+
   // Fetch events and metrics when pipeline is selected
   useEffect(() => {
     if (!isAuthenticated) return
-    
-    // Normalize pipeline ID for comparison
+
     const normalizedId = stableSelectedPipelineId ? stableSelectedPipelineId : null
-    
-    // On initial mount, skip the ref check to allow first fetch
+
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false
     } else {
-      // Skip if we've already fetched for this pipeline ID
-      if (lastFetchedPipelineIdRef.current === normalizedId) {
+      if (lastFetchedPipelineIdRef.current === normalizedId && normalizedId !== null) {
         return
       }
     }
-    
+
     lastFetchedPipelineIdRef.current = normalizedId
-    
+
     if (normalizedId) {
-      // Fetch events and metrics for selected pipeline
       const pipelineId = !isNaN(Number(normalizedId)) ? Number(normalizedId) : normalizedId
       if (pipelineId && pipelineId !== 'null' && pipelineId !== 'undefined') {
-        dispatch(fetchReplicationEvents({ pipelineId, limit: 500, todayOnly: false }))
+        dispatch(fetchReplicationEvents({ pipelineId, limit: 100000, todayOnly: false }))
         dispatch(fetchMonitoringMetrics({ pipelineId })).catch(err => {
           console.error("Error fetching metrics:", err)
         })
       }
     } else {
-      // Fetch all events when "All Pipelines" is selected
-      dispatch(fetchReplicationEvents({ limit: 500, todayOnly: false }))
+      dispatch(fetchReplicationEvents({ limit: 100000, todayOnly: false }))
     }
-  }, [dispatch, isAuthenticated, stableSelectedPipelineId]) // Use stable memoized value
+  }, [dispatch, isAuthenticated, stableSelectedPipelineId])
 
-  // Auto-refresh events every 5 seconds to catch new events
-  // Use ref to store the latest selectedPipelineId to avoid recreating interval
+  // Auto-refresh events
   const selectedPipelineIdRef = useRef<string | number | null>(null)
-  
-  // Update ref in useEffect to prevent render-time side effects
+
   useEffect(() => {
     selectedPipelineIdRef.current = stableSelectedPipelineId
   }, [stableSelectedPipelineId])
-  
+
   useEffect(() => {
     if (!isAuthenticated) return
 
     const interval = setInterval(() => {
-      // Always fetch all events (not just today) to ensure we see recent updates
       const currentPipelineId = selectedPipelineIdRef.current
       if (currentPipelineId) {
         const pipelineId = !isNaN(Number(currentPipelineId)) ? Number(currentPipelineId) : String(currentPipelineId)
         if (pipelineId && pipelineId !== 'null' && pipelineId !== 'undefined') {
           dispatch(fetchReplicationEvents({ pipelineId, limit: 1000, todayOnly: false }))
-          dispatch(fetchMonitoringMetrics({ pipelineId })).catch(err => {
-            console.error("Error fetching metrics:", err)
-          })
+          dispatch(fetchMonitoringMetrics({ pipelineId }))
         }
       } else {
         dispatch(fetchReplicationEvents({ limit: 1000, todayOnly: false }))
       }
-    }, 5000) // Refresh every 5 seconds
+    }, 5000)
 
     return () => clearInterval(interval)
-  }, [dispatch, isAuthenticated]) // Remove selectedPipelineId from deps, use ref instead
+  }, [dispatch, isAuthenticated])
 
-  // Track previous pipeline IDs to prevent unnecessary re-subscriptions
-  const prevPipelineIdsRef = useRef<string>('')
-
-  // Subscribe to pipelines only when pipeline IDs actually change
-  // Use a stable pipeline IDs string to prevent infinite loops
-  // Calculate IDs string - will be compared in useEffect to detect actual changes
-  const stablePipelineIds = useMemo(() => {
-    const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
-    if (pipelinesArray.length === 0) return ''
-    return pipelinesArray
-      .filter(p => p.id)
-      .map(p => String(p.id))
-      .sort()
-      .join(',')
-  }, [pipelines]) // Depend on pipelines array - string comparison in useEffect prevents unnecessary subscriptions
-  
+  // Subscribe to pipeline room
   useEffect(() => {
-    const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
-    if (!isAuthenticated || pipelinesArray.length === 0) {
-      return
-    }
+    if (!isAuthenticated || !wsClient.isConnected()) return
 
-    // Only subscribe if pipeline IDs have changed
-    if (stablePipelineIds !== prevPipelineIdsRef.current) {
-      const pipelineIds = pipelinesArray
-        .filter(p => p.id)
-        .map(p => {
-          // Handle both numeric IDs and MongoDB ObjectId strings
-          const id = !isNaN(Number(p.id)) ? Number(p.id) : String(p.id)
-          return id
-        })
+    if (selectedPipelineId) {
+      const pipelineId = !isNaN(Number(selectedPipelineId)) ? Number(selectedPipelineId) : String(selectedPipelineId)
+      wsClient.subscribePipeline(pipelineId)
+      return () => wsClient.unsubscribePipeline(pipelineId)
+    } else {
+      const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
+      if (pipelinesArray.length > 0) {
+        const pipelineIds = pipelinesArray
+          .filter(p => p.id)
+          .map(p => !isNaN(Number(p.id)) ? Number(p.id) : String(p.id))
 
-      // Unsubscribe from old pipelines
-      if (prevPipelineIdsRef.current) {
-        const prevIds = prevPipelineIdsRef.current.split(',').filter(Boolean)
-        prevIds.forEach(id => {
-          const pipelineId = !isNaN(Number(id)) ? Number(id) : id
-          if (!pipelineIds.includes(pipelineId)) {
-            wsClient.unsubscribePipeline(pipelineId)
-          }
-        })
-      }
-
-      // Subscribe to new pipelines
-      pipelineIds.forEach(pipelineId => {
-        wsClient.subscribePipeline(pipelineId)
-      })
-
-      prevPipelineIdsRef.current = stablePipelineIds
-    }
-
-    return () => {
-      // Cleanup subscriptions on unmount
-      if (prevPipelineIdsRef.current) {
-        const pipelineIds = prevPipelineIdsRef.current.split(',').filter(Boolean)
-        pipelineIds.forEach(id => {
-          const pipelineId = !isNaN(Number(id)) ? Number(id) : id
-          wsClient.unsubscribePipeline(pipelineId)
-        })
+        pipelineIds.forEach(id => wsClient.subscribePipeline(id))
+        return () => pipelineIds.forEach(id => wsClient.unsubscribePipeline(id))
       }
     }
-  }, [isAuthenticated, stablePipelineIds]) // Use stablePipelineIds instead of pipelines array
+  }, [isAuthenticated, selectedPipelineId, pipelines, wsClient])
 
-  // Filter events by selected pipeline - memoized to prevent unnecessary recalculations
   const filteredEvents = useMemo(() => {
-    return selectedPipelineId
-      ? events.filter(e => String(e.pipeline_id) === String(selectedPipelineId))
-      : events
-  }, [events, selectedPipelineId])
+    const eventsArray = Array.isArray(events) ? events : []
+    let filtered = eventsArray
 
-  // Debug logging (only in development) - throttled to prevent excessive logging
-  const debugLogTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      // Throttle debug logging to prevent excessive console output
-      if (debugLogTimeoutRef.current) {
-        clearTimeout(debugLogTimeoutRef.current)
-      }
-      
-      debugLogTimeoutRef.current = setTimeout(() => {
-        // Calculate filtered events count inline to avoid dependency on filteredEvents
-        const filteredCount = selectedPipelineId 
-          ? events.filter(e => String(e.pipeline_id) === String(selectedPipelineId)).length
-          : events.length
-        
-        console.log('[Monitoring Page] Events in Redux:', events.length)
-        console.log('[Monitoring Page] Filtered events:', filteredCount)
-        console.log('[Monitoring Page] Selected pipeline ID:', selectedPipelineId)
-        if (events.length > 0) {
-          console.log('[Monitoring Page] First event pipeline_id:', events[0].pipeline_id)
-          console.log('[Monitoring Page] First event status:', events[0].status)
-          
-          // Show status breakdown
-          const statusBreakdown = events.reduce((acc, e) => {
-            acc[e.status] = (acc[e.status] || 0) + 1
-            return acc
-          }, {} as Record<string, number>)
-          console.log('[Monitoring Page] Status breakdown:', statusBreakdown)
-        }
-      }, 1000) // Throttle to once per second
-      
-      return () => {
-        if (debugLogTimeoutRef.current) {
-          clearTimeout(debugLogTimeoutRef.current)
-        }
-      }
+    if (selectedPipelineId) {
+      filtered = filtered.filter(e => String(e.pipeline_id) === String(selectedPipelineId))
     }
-    // Only depend on events and selectedPipelineId, not filteredEvents to avoid infinite loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events.length, selectedPipelineId])
 
-  // Calculate metrics from events
-  const eventStats = useMemo(() => {
-    // Calculate average latency only from events that have been applied (have latency_ms)
-    const eventsWithLatency = filteredEvents.filter(e => e.latency_ms != null && e.latency_ms !== undefined && e.latency_ms > 0)
-    const avgLatency = eventsWithLatency.length > 0
-      ? eventsWithLatency.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsWithLatency.length
-      : null // Use null to indicate no latency data available
-    
-    // Improved status detection - check error_message and status together
-    const isSuccess = (e: any) => {
-      // Must be applied/success AND have no error_message
-      // Also check that error_message is not just whitespace or common null values
-      const hasError = e.error_message && 
-        String(e.error_message).trim() !== '' && 
-        String(e.error_message).toLowerCase() !== 'none' &&
-        String(e.error_message).toLowerCase() !== 'null'
-      return (e.status === 'applied' || e.status === 'success') && !hasError
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(e =>
+        (e.table_name || "").toLowerCase().includes(term) ||
+        (e.event_type || "").toLowerCase().includes(term) ||
+        (e.status || "").toLowerCase().includes(term)
+      )
     }
-    
-    const isFailed = (e: any) => {
-      // Failed if status is failed/error OR has error_message
-      // Also check that error_message is a valid error (not empty/null)
-      const hasError = e.error_message && 
-        String(e.error_message).trim() !== '' && 
-        String(e.error_message).toLowerCase() !== 'none' &&
-        String(e.error_message).toLowerCase() !== 'null'
-      return e.status === 'failed' || e.status === 'error' || !!hasError
-    }
-    
-    const stats = {
-      total: filteredEvents.length,
-      insert: filteredEvents.filter(e => e.event_type === 'insert' || e.event_type === 'INSERT').length,
-      update: filteredEvents.filter(e => e.event_type === 'update' || e.event_type === 'UPDATE').length,
-      delete: filteredEvents.filter(e => e.event_type === 'delete' || e.event_type === 'DELETE').length,
-      success: filteredEvents.filter(isSuccess).length,
-      failed: filteredEvents.filter(isFailed).length,
-      captured: filteredEvents.filter(e => e.status === 'captured' && !e.error_message).length,
-      pending: filteredEvents.filter(e => (e.status === 'captured' || e.status === 'pending') && !e.error_message).length,
-      avgLatency: avgLatency, // null if no events have latency data
-    }
-    
-    // Debug logging (only in development)
-    if (process.env.NODE_ENV === 'development' && filteredEvents.length > 0) {
-      const statusCounts = filteredEvents.reduce((acc, e) => {
-        acc[e.status] = (acc[e.status] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-      
-      // Check for events with error_message
-      const eventsWithErrors = filteredEvents.filter(e => !!e.error_message)
-      const eventsWithAppliedStatus = filteredEvents.filter(e => e.status === 'applied' || e.status === 'success')
-      const appliedWithErrors = filteredEvents.filter(e => (e.status === 'applied' || e.status === 'success') && !!e.error_message)
-      
-      console.log('[Monitoring] Event status breakdown:', statusCounts)
-      console.log('[Monitoring] Success count:', stats.success, 'Failed count:', stats.failed, 'Captured/Pending:', stats.captured)
-      console.log('[Monitoring] Events with error_message:', eventsWithErrors.length)
-      console.log('[Monitoring] Events with applied/success status:', eventsWithAppliedStatus.length)
-      console.log('[Monitoring] Events with applied/success status BUT have error_message:', appliedWithErrors.length)
-      console.log('[Monitoring] Sample event details:', filteredEvents.slice(0, 5).map(e => ({ 
-        id: e.id, 
-        status: e.status, 
-        hasError: !!e.error_message,
-        errorMessage: e.error_message ? e.error_message.substring(0, 50) : null
-      })))
-    }
-    
-    return stats
-  }, [filteredEvents])
 
-  // Pagination for Recent CDC Events - MEMOIZED to prevent unnecessary recalculations
-  const totalPages = useMemo(() => Math.ceil(filteredEvents.length / rowsPerPage), [filteredEvents.length, rowsPerPage])
-  const paginatedEvents = useMemo(() => {
-    return filteredEvents.slice(
-      (currentPage - 1) * rowsPerPage,
-      currentPage * rowsPerPage
-    )
-  }, [filteredEvents, currentPage, rowsPerPage])
+    return filtered
+  }, [events, selectedPipelineId, searchTerm])
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [selectedPipelineId])
-
-  // Prepare chart data from metrics or events - MEMOIZED to prevent infinite loops
-  // Filter events inline to avoid dependency on filteredEvents (breaks circular dependency)
   const chartData = useMemo(() => {
     const eventsArray = Array.isArray(events) ? events : []
-    const metricsArray = Array.isArray(metrics) ? metrics : []
-    
-    if (metricsArray.length > 0) {
-      // Use metrics data - get last 24 hours
-      const now = new Date()
-      const last24Hours = metricsArray
-        .filter(m => {
-          try {
-            const metricTime = new Date(m.timestamp)
-            const hoursDiff = (now.getTime() - metricTime.getTime()) / (1000 * 60 * 60)
-            return hoursDiff <= 24
-          } catch (err) {
-            return false
-          }
-        })
-        .slice(-24)
-      
-      if (last24Hours.length > 0) {
-        return last24Hours.map(m => ({
-          time: new Date(m.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-          events: m.total_events || 0,
-          latency: m.avg_latency_ms || 0,
-          errors: m.error_count || 0,
-        }))
-      }
-    }
-    
-    // Use events data - create 24 hour buckets
-    const eventsToUse = selectedPipelineId
-      ? eventsArray.filter(e => String(e.pipeline_id) === String(selectedPipelineId))
-      : eventsArray
-    
+    const _metricsArray = Array.isArray(metrics) ? metrics : []
+
     const now = new Date()
-    return Array.from({ length: 24 }, (_, i) => {
-      const hourStart = new Date(now.getTime() - (23 - i) * 60 * 60 * 1000)
-      const hourEnd = new Date(now.getTime() - (22 - i) * 60 * 60 * 1000)
-      
-      const hourEvents = eventsToUse.filter(e => {
+    // Create 12 buckets of 5 minutes for the last hour
+    const buckets = Array.from({ length: 12 }, (_, i) => {
+      const bucketTime = new Date(now.getTime() - (11 - i) * 5 * 60 * 1000)
+      return bucketTime
+    })
+
+    return buckets.map(bucket => {
+      const bucketStart = new Date(bucket)
+      const bucketEnd = new Date(bucket.getTime() + 5 * 60 * 1000)
+
+      const bucketEvents = eventsArray.filter(e => {
         try {
-          const eventTime = new Date(e.created_at)
-          return eventTime >= hourStart && eventTime < hourEnd
-        } catch (err) {
-          return false
-        }
+          const eventTime = new Date(e.created_at || e.source_commit_time || Date.now())
+          return eventTime >= bucketStart && eventTime < bucketEnd
+        } catch { return false }
       })
-      
-      const eventsCount = hourEvents.length
-      // Calculate average latency from events that have latency_ms > 0
-      const eventsWithLatency = hourEvents.filter(e => e.latency_ms != null && e.latency_ms !== undefined && e.latency_ms > 0)
-      const latency = eventsWithLatency.length > 0
-        ? eventsWithLatency.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsWithLatency.length
-        : 0
-      const errorsCount = hourEvents.filter(e => e.status === 'failed' || e.status === 'error').length
-      
+
       return {
-        time: hourStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
-        events: eventsCount,
-        latency: Math.round(latency) || 0,  // Ensure we always have a number, not NaN
-        errors: errorsCount,
+        time: bucket.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        events: bucketEvents.length,
+        latency: bucketEvents.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / (bucketEvents.length || 1)
       }
     })
-  }, [metrics, events, selectedPipelineId]) // Use full arrays for proper updates
+  }, [events, metrics])
 
-  if (authLoading || !mounted) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
-      </div>
-    )
+  const stats = useMemo(() => {
+    const totalEvents = filteredEvents.length
+    const appliedEvents = filteredEvents.filter(e => e.status === 'applied' || e.status === 'success').length
+    const pendingEvents = filteredEvents.filter(e => e.status === 'captured' || e.status === 'pending').length
+    const failedEvents = filteredEvents.filter(e => e.status === 'failed' || e.status === 'error').length
+
+    // Calculate average latency
+    const eventsWithLatency = filteredEvents.filter(e => typeof e.latency_ms === 'number')
+    const avgLatency = eventsWithLatency.length > 0
+      ? Math.round(eventsWithLatency.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsWithLatency.length)
+      : 0
+
+    return { totalEvents, appliedEvents, pendingEvents, failedEvents, avgLatency }
+  }, [filteredEvents])
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    const pipelineId = selectedPipelineId
+      ? (!isNaN(Number(selectedPipelineId)) ? Number(selectedPipelineId) : String(selectedPipelineId))
+      : undefined
+
+    Promise.all([
+      dispatch(fetchReplicationEvents({
+        pipelineId,
+        limit: 100000,
+        todayOnly: false
+      })),
+      pipelineId ? dispatch(fetchMonitoringMetrics({ pipelineId })) : Promise.resolve()
+    ]).finally(() => {
+      setTimeout(() => setIsRefreshing(false), 500)
+    })
   }
 
-  if (!isAuthenticated) {
-    return null
+  const handleDownloadCSV = () => {
+    const headers = ["Timestamp", "Operation", "Table", "LSN", "Latency (ms)", "Status"]
+    const rows = filteredEvents.map(e => [
+      e.created_at ? new Date(e.created_at).toISOString() : "",
+      e.event_type || "UNKNOWN",
+      e.table_name || "N/A",
+      e.source_lsn || "-",
+      e.latency_ms || 0,
+      e.status
+    ])
+
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.body.appendChild(document.createElement("a"))
+    link.href = url
+    link.download = `cdc_events_${new Date().toISOString()}.csv`
+    link.click()
+    document.body.removeChild(link)
   }
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredEvents.length / rowsPerPage)
+  const currentEvents = filteredEvents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+
+  if (!mounted) return null
 
   return (
-    <ProtectedPage path="/monitoring" requiredPermission="view_metrics">
-      <div className="p-6 space-y-6" suppressHydrationWarning>
+    <ProtectedPage path="/monitoring" requiredPermission="view_monitoring">
+      <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
         <PageHeader
-          title="Real-Time Monitoring"
-        subtitle="Live CDC event capture and replication metrics"
-        icon={Eye}
-        action={
-          <div className="flex items-center gap-3">
-            {/* WebSocket Connection Status */}
-            <Badge 
-              className={
-                wsConnected 
-                  ? "bg-success/20 text-success border border-success/30 shadow-sm cursor-pointer hover:bg-success/30" 
-                  : wsAvailable 
-                    ? "bg-warning/20 text-warning border border-warning/30 shadow-sm cursor-pointer hover:bg-warning/30" 
-                    : "bg-blue-500/15 text-blue-400 border border-blue-400/40 shadow-sm font-semibold cursor-pointer hover:bg-blue-500/25"
-              }
-              onClick={() => {
-                if (!wsConnected && !wsAvailable) {
-                  // Retry connection if unavailable
-                  wsClient.retryConnection();
-                  setWsAvailable(true);
-                  setWsConnected(false);
-                }
-              }}
-              title={!wsConnected && !wsAvailable ? "Click to retry WebSocket connection" : undefined}
-            >
-              {wsConnected ? (
-                <>
-                  <Activity className="w-3 h-3 mr-1.5 animate-pulse" />
-                  <span className="font-medium">WebSocket Connected</span>
-                </>
-              ) : wsAvailable ? (
-                <>
-                  <RotateCw className="w-3 h-3 mr-1.5 animate-spin" />
-                  <span className="font-medium">Connecting WebSocket...</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
-                  <span className="font-semibold">WebSocket Unavailable (Click to Retry)</span>
-                </>
-              )}
-            </Badge>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-md">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-              <span className="text-xs font-medium text-cyan-400">Auto Sync: ON</span>
-            </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                setIsRefreshing(true)
-                try {
-                  // Refresh pipelines first
-                  await dispatch(fetchPipelines())
-                  
-                  // Then refresh events and metrics
-                  if (selectedPipelineId) {
-                    const pipelineId = !isNaN(Number(selectedPipelineId)) ? Number(selectedPipelineId) : String(selectedPipelineId)
-                    await Promise.all([
-                      dispatch(fetchReplicationEvents({ pipelineId, limit: 500, todayOnly: false })),
-                      dispatch(fetchMonitoringMetrics({ pipelineId }))
-                    ])
+          title="Real-time Monitoring"
+          subtitle="Live CDC event stream and performance metrics"
+          icon={Activity}
+          action={
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-md shadow-sm">
+                <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-success animate-pulse' : 'bg-error'}`} />
+                <span className="text-xs font-medium text-foreground-muted">
+                  {wsConnected ? 'Live Updates' : 'Disconnected'}
+                </span>
+              </div>
+              <Select
+                value={selectedPipelineId ? String(selectedPipelineId) : "all"}
+                onValueChange={(value) => {
+                  if (value === "all") {
+                    userSelectedAllRef.current = true
+                    dispatch(setSelectedPipeline(null))
                   } else {
-                    await dispatch(fetchReplicationEvents({ limit: 500, todayOnly: false }))
+                    userSelectedAllRef.current = false
+                    const id = !isNaN(Number(value)) ? Number(value) : value
+                    dispatch(setSelectedPipeline(id))
                   }
-                } catch (error) {
-                  console.error("Failed to refresh data:", error)
-                } finally {
-                  // Keep animation for at least 500ms for better UX
-                  setTimeout(() => setIsRefreshing(false), 500)
-                }
-              }}
-              disabled={isRefreshing}
-              className="bg-teal-500/10 border-teal-500/30 text-teal-400 hover:bg-teal-500/30 hover:border-teal-500/70 hover:text-teal-300 gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <RefreshCw className={`w-4 h-4 transition-transform ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
-            <Select
-              value={selectedPipelineId ? String(selectedPipelineId) : 'all'}
-              onValueChange={(value) => {
-                if (value === 'all') {
-                  dispatch(setSelectedPipeline(null))
-                } else {
-                  // Handle both numeric IDs and string IDs
-                  const pipelineId = !isNaN(Number(value)) ? Number(value) : value
-                  dispatch(setSelectedPipeline(pipelineId))
-                }
-              }}
-            >
-              <SelectTrigger className="w-48 bg-surface border-border">
-                <SelectValue placeholder="All Pipelines" />
-              </SelectTrigger>
-              <SelectContent className="bg-surface border-border">
-                <SelectItem value="all">All Pipelines</SelectItem>
-                {Array.isArray(pipelines) ? pipelines.map(p => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.name}
-                  </SelectItem>
-                )) : null}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      }
-      />
+                }}
+              >
+                <SelectTrigger className="w-[200px] h-9 text-xs">
+                  <SelectValue placeholder="All Pipelines" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Pipelines</SelectItem>
+                  {pipelines.map(p => (
+                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm" // Use small button
+                className="h-9 gap-2" // Adjust height
+                onClick={handleRefresh}
+                disabled={isRefreshing || isLoading}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+          }
+        />
 
-      {/* Stats Cards - Enhanced with Gradients */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Total Events</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">{eventStats.total}</p>
+        {/* Stats Grid - Premium & Deep */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {/* Total Events */}
+          <Card className="relative overflow-hidden p-6 border-none bg-primary/5 shadow-[0_20px_40px_-10px_rgba(59,130,246,0.2)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-4px] hover:bg-primary/10">
+            <div className="absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.15] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <Database className="w-32 h-32 text-primary" />
             </div>
-            <Activity className="w-10 h-10 text-blue-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-green-500/10 to-emerald-600/5 border-green-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Successfully Applied</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{eventStats.success}</p>
-              <p className="text-xs text-foreground-muted mt-1">
-                {eventStats.total > 0 ? ((eventStats.success / eventStats.total) * 100).toFixed(1) : 0}% success rate
-              </p>
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="p-2.5 bg-primary/10 rounded-xl group-hover:rotate-6 transition-transform">
+                <Database className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-[10px] font-black text-primary/80 uppercase tracking-[0.2em]">Total Events</span>
             </div>
-            <CheckCircle className="w-10 h-10 text-green-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Captured/Pending</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">{eventStats.captured}</p>
-              <p className="text-xs text-foreground-muted mt-1">Awaiting application</p>
-            </div>
-            <Activity className="w-10 h-10 text-cyan-400 animate-pulse" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Avg Latency</p>
-              {eventStats.avgLatency != null ? (
-                <p className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">{Math.round(eventStats.avgLatency)}ms</p>
-              ) : (
-                <p className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">0ms</p>
+            <div className="flex items-end justify-between relative z-10">
+              <span className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{stats.totalEvents.toLocaleString()}</span>
+              {wsConnected && (
+                <div className="relative flex h-3 w-3 mb-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                </div>
               )}
-              <p className="text-xs text-foreground-muted mt-1">
-                {eventStats.avgLatency != null 
-                  ? `${filteredEvents.filter(e => e.latency_ms != null && e.latency_ms > 0).length} events with latency`
-                  : 'No events applied yet'}
-              </p>
             </div>
-            <Database className="w-10 h-10 text-purple-400" />
-          </div>
-        </Card>
-        <Card className="p-5 bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Failed Events</p>
-              <p className="text-3xl font-extrabold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">{eventStats.failed}</p>
-            </div>
-            <AlertCircle className="w-10 h-10 text-red-400" />
-          </div>
-        </Card>
-      </div>
+          </Card>
 
-      {/* Event Type Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="card-heartbeat bg-surface border-border p-4">
-          <p className="text-sm text-foreground-muted mb-2">Event Types</p>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-foreground">Insert</span>
-              <Badge variant="outline" className="bg-info/20 text-info">{eventStats.insert}</Badge>
+          {/* Applied */}
+          <Card className="relative overflow-hidden p-6 border-none bg-emerald-500/5 shadow-[0_20px_40px_-10px_rgba(16,185,129,0.2)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-4px] hover:bg-emerald-500/10">
+            <div className="absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.15] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <CheckCircle className="w-32 h-32 text-emerald-500" />
             </div>
-            <div className="flex justify-between">
-              <span className="text-foreground">Update</span>
-              <Badge variant="outline" className="bg-warning/20 text-warning">{eventStats.update}</Badge>
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="p-2.5 bg-emerald-500/10 rounded-xl group-hover:rotate-6 transition-transform">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+              </div>
+              <span className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">Applied</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-foreground">Delete</span>
-              <Badge variant="outline" className="bg-error/20 text-error">{eventStats.delete}</Badge>
-            </div>
-          </div>
-        </Card>
-        <Card className="card-heartbeat bg-surface border-border p-4">
-          <p className="text-sm text-foreground-muted mb-2">Status</p>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-foreground">Success</span>
-              <Badge variant="outline" className="bg-success/20 text-success">{eventStats.success}</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-foreground">Failed</span>
-              <Badge variant="outline" className="bg-error/20 text-error">{eventStats.failed}</Badge>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-foreground">Pending</span>
-              <Badge variant="outline" className="bg-warning/20 text-warning">
-                {eventStats.total - eventStats.success - eventStats.failed}
+            <div className="flex items-end justify-between relative z-10">
+              <span className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{stats.appliedEvents.toLocaleString()}</span>
+              <Badge className="bg-emerald-500 text-white border-0 text-[10px] font-black tracking-tighter px-1.5 h-5 mb-1">
+                {stats.totalEvents > 0 ? Math.round((stats.appliedEvents / stats.totalEvents) * 100) : 0}%
               </Badge>
             </div>
-          </div>
-        </Card>
-        <Card className="card-heartbeat bg-surface border-border p-4">
-          <p className="text-sm text-foreground-muted mb-2">WebSocket Status</p>
-          <div className="flex items-center gap-2" suppressHydrationWarning>
-            {mounted && (
-              <>
-                <div className={`w-2 h-2 rounded-full ${wsClient.isConnected() ? 'bg-success' : 'bg-error'}`} />
-                <span className="text-foreground">
-                  {wsClient.isConnected() ? 'Connected' : 'Disconnected'}
-                </span>
-              </>
-            )}
-            {!mounted && (
-              <>
-                <div className="w-2 h-2 rounded-full bg-foreground-muted" />
-                <span className="text-foreground-muted">Loading...</span>
-              </>
-            )}
-          </div>
-        </Card>
-      </div>
+          </Card>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="card-heartbeat bg-surface border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Events Over Time (24h)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3448" />
-              <XAxis dataKey="time" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1a1f3a",
-                  border: "1px solid #2d3448",
-                  borderRadius: "0.5rem",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="events"
-                stroke="#0ea5e9"
-                strokeWidth={2}
-                dot={{ fill: "#0ea5e9", r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+          {/* Pending */}
+          <Card className="relative overflow-hidden p-6 border-none bg-amber-500/5 shadow-[0_20px_40px_-10px_rgba(245,158,11,0.2)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-4px] hover:bg-amber-500/10">
+            <div className="absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.15] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <RotateCw className="w-32 h-32 text-amber-500" />
+            </div>
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="p-2.5 bg-amber-500/10 rounded-xl group-hover:rotate-6 transition-transform">
+                <RotateCw className="w-5 h-5 text-amber-500" />
+              </div>
+              <span className="text-[10px] font-black text-amber-500/80 uppercase tracking-[0.2em]">Pending</span>
+            </div>
+            <div className="flex items-end relative z-10">
+              <span className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{stats.pendingEvents.toLocaleString()}</span>
+            </div>
+          </Card>
 
-        <Card className="card-heartbeat bg-surface border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Latency & Errors</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3448" />
-              <XAxis dataKey="time" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1a1f3a",
-                  border: "1px solid #2d3448",
-                  borderRadius: "0.5rem",
-                }}
-              />
-              <Bar dataKey="latency" fill="#06b6d4" radius={[8, 8, 0, 0]} />
-              <Bar dataKey="errors" fill="#ef4444" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-      </div>
+          {/* Latency */}
+          <Card className="relative overflow-hidden p-6 border-none bg-info/5 shadow-[0_20px_40px_-10px_rgba(34,211,238,0.2)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-4px] hover:bg-info/10">
+            <div className="absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.15] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <Clock className="w-32 h-32 text-info" />
+            </div>
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="p-2.5 bg-info/10 rounded-xl group-hover:rotate-6 transition-transform">
+                <Clock className="w-5 h-5 text-info" />
+              </div>
+              <span className="text-[10px] font-black text-info/80 uppercase tracking-[0.2em]">Avg Latency</span>
+            </div>
+            <div className="flex items-end relative z-10">
+              <span className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{stats.avgLatency}<span className="text-xl ml-1 opacity-60">ms</span></span>
+            </div>
+          </Card>
 
-      {/* Recent Events Table */}
-      <Card className="card-heartbeat bg-surface border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Recent CDC Events</h3>
-        {isLoading && filteredEvents.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
-            <span className="ml-2 text-foreground-muted">Loading events...</span>
-          </div>
-        ) : filteredEvents.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-hover">
-                <tr>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Time</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Pipeline</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Event Type</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Table</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">LSN/Offset</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Status</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Latency</th>
-                  <th className="px-4 py-3 text-left text-foreground-muted font-medium">Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedEvents.map((event) => {
-                  const pipelinesArray = Array.isArray(pipelines) ? pipelines : []
-                  const pipeline = pipelinesArray.find(p => String(p.id) === String(event.pipeline_id))
-                  
-                  // Improved status detection - check error_message first
-                  const hasError = !!event.error_message
-                  const isFailed = event.status === 'failed' || event.status === 'error' || hasError
-                  const isCaptured = event.status === 'captured' && !hasError
-                  const isApplied = (event.status === 'applied' || event.status === 'success') && !hasError
-                  
-                  return (
-                    <tr 
-                      key={event.id} 
-                      className={`border-b border-border hover:bg-surface-hover transition-colors ${
-                        isFailed ? 'bg-red-500/5 border-red-500/20' : 
-                        isCaptured ? 'bg-blue-500/5 border-blue-500/10' : 
-                        ''
-                      }`}
-                    >
-                      <td className="px-4 py-3 text-foreground text-xs">
-                        <div className="flex items-center gap-2">
-                          {isCaptured && (
-                            <div className="relative">
-                              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-                              <div className="absolute inset-0 w-2 h-2 bg-cyan-400/50 rounded-full animate-ping" />
-                            </div>
-                          )}
-                          {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">
-                        {pipeline?.name || `Pipeline ${event.pipeline_id}`}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            event.event_type === 'insert'
-                              ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                              : event.event_type === 'update'
-                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                                : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                          }
-                        >
-                          {event.event_type.toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs font-medium">{event.table_name}</td>
-                      <td className="px-4 py-3 text-foreground text-xs font-mono">
-                        {(() => {
-                          // Extract LSN/SCN/Offset from various possible locations
-                          let sourceLsn = event.source_lsn || (event as any).lsn
-                          let sourceScn = event.source_scn || (event as any).scn
-                          let binlogFile = event.source_binlog_file || (event as any).binlog_file || (event as any).file
-                          let binlogPos = event.source_binlog_position || (event as any).binlog_position || (event as any).pos || (event as any).position
-                          let sqlServerLsn = event.sql_server_lsn || (event as any).sql_server_lsn
-                          let offsetValue: any = null
-                          
-                          // Also check run_metadata if available
-                          const runMetadata = (event as any).run_metadata
-                          const metadataLsn = runMetadata?.source_lsn || runMetadata?.lsn || runMetadata?.offset
-                          const metadataScn = runMetadata?.source_scn || runMetadata?.scn
-                          const metadataBinlogFile = runMetadata?.source_binlog_file || runMetadata?.binlog_file || runMetadata?.file
-                          const metadataBinlogPos = runMetadata?.source_binlog_position || runMetadata?.binlog_position || runMetadata?.pos || runMetadata?.position
-                          const metadataSqlServerLsn = runMetadata?.sql_server_lsn || runMetadata?.lsn
-                          
-                          // Use metadata values if direct values are not available
-                          const finalLsn = sourceLsn || metadataLsn
-                          const finalScn = sourceScn || metadataScn
-                          const finalBinlogFile = binlogFile || metadataBinlogFile
-                          const finalBinlogPos = binlogPos || metadataBinlogPos
-                          const finalSqlServerLsn = sqlServerLsn || metadataSqlServerLsn
-                          
-                          // Try to extract offset value from metadata if nothing else is available
-                          if (!finalLsn && !finalScn && !finalBinlogFile && !finalSqlServerLsn && runMetadata) {
-                            offsetValue = runMetadata.offset || runMetadata.transaction_id || 
-                                        runMetadata.txId || runMetadata.checkpoint || 
-                                        runMetadata.last_offset || runMetadata.current_offset
-                            
-                            // If offset is nested, try to extract it
-                            if (!offsetValue && runMetadata.offset && typeof runMetadata.offset === 'object') {
-                              offsetValue = JSON.stringify(runMetadata.offset).substring(0, 50)
-                            }
-                          }
-                          
-                          // Display priority: LSN > SCN > Binlog > SQL Server LSN > Offset > N/A
-                          if (finalLsn) {
-                            return (
-                              <span className="text-cyan-400" title="PostgreSQL LSN">
-                                LSN: {String(finalLsn)}
-                              </span>
-                            )
-                          } else if (finalScn) {
-                            return (
-                              <span className="text-blue-400" title="Oracle SCN">
-                                SCN: {String(finalScn)}
-                              </span>
-                            )
-                          } else if (finalBinlogFile) {
-                            return (
-                              <span className="text-green-400" title="MySQL Binlog">
-                                {String(finalBinlogFile)}:{finalBinlogPos || '0'}
-                              </span>
-                            )
-                          } else if (finalSqlServerLsn) {
-                            return (
-                              <span className="text-purple-400" title="SQL Server LSN">
-                                LSN: {String(finalSqlServerLsn)}
-                              </span>
-                            )
-                          } else if (offsetValue) {
-                            const offsetStr = typeof offsetValue === 'object' ? JSON.stringify(offsetValue).substring(0, 50) : String(offsetValue)
-                            return (
-                              <span className="text-yellow-400" title="Offset/Checkpoint Value">
-                                Offset: {offsetStr.length > 50 ? offsetStr + '...' : offsetStr}
-                              </span>
-                            )
-                          } else {
-                            return <span className="text-foreground-muted">N/A</span>
-                          }
-                        })()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={
-                              isApplied
-                                ? 'bg-green-500/20 text-green-400 border-green-500/30 font-semibold'
-                                : isFailed
-                                  ? 'bg-red-500/20 text-red-400 border-red-500/30 font-semibold animate-pulse'
-                                  : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 font-semibold'
-                            }
-                          >
-                            {isApplied && <CheckCircle className="w-3 h-3 mr-1" />}
-                            {isFailed && <AlertCircle className="w-3 h-3 mr-1" />}
-                            {isCaptured && <Activity className="w-3 h-3 mr-1 animate-pulse" />}
-                            {event.status}
-                          </Badge>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-foreground text-xs">
-                        {event.latency_ms ? (
-                          <span className={event.latency_ms > 5000 ? 'text-warning' : 'text-foreground'}>
-                            {Math.round(event.latency_ms)}ms
-                          </span>
-                        ) : 'N/A'}
-                      </td>
-                      <td className="px-4 py-3 text-xs max-w-xs">
-                        {isFailed ? (
-                          event.error_message ? (
-                            <div className="flex items-center gap-2">
-                            <div className="group relative flex-1">
-                              <div className="flex items-center gap-1 text-red-400 cursor-help">
-                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                                <span className="truncate">Error</span>
-                              </div>
-                              <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block">
-                                <div className="bg-red-950/95 border border-red-500/50 rounded-lg p-3 shadow-xl max-w-md">
-                                  <div className="text-red-200 font-semibold mb-1 text-xs">Replication Failed</div>
-                                  <div className="text-red-300 text-xs whitespace-pre-wrap break-words">
-                                    {event.error_message.length > 200 
-                                      ? event.error_message.substring(0, 200) + '...' 
-                                      : event.error_message}
-                                  </div>
-                                  <div className="text-red-400/70 text-xs mt-2">
-                                    Table: {event.table_name} | Type: {event.event_type}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                              onClick={async () => {
-                                if (!event.id) return
-                                setRetryingEventId(event.id)
-                                try {
-                                  await apiClient.retryFailedEvent(event.id)
-                                  // Refresh events
-                                  dispatch(fetchReplicationEvents({ 
-                                    pipeline_id: selectedPipelineId || undefined,
-                                    limit: 1000 
-                                  }))
-                                } catch (error: any) {
-                                  alert(`Failed to retry event: ${error.message || 'Unknown error'}`)
-                                } finally {
-                                  setRetryingEventId(null)
-                                }
-                              }}
-                              disabled={retryingEventId === event.id}
-                              title="Retry this failed event"
-                            >
-                              {retryingEventId === event.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <RotateCw className="w-3 h-3" />
-                              )}
-                            </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-red-400">
-                              <AlertCircle className="w-4 h-4" />
-                              <span>Failed</span>
-                            </div>
-                          )
-                        ) : isApplied && !event.error_message ? (
-                          <div className="flex items-center gap-1 text-green-400">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Success</span>
-                          </div>
-                        ) : isCaptured && !event.error_message ? (
-                          <div className="flex items-center gap-1 text-cyan-400">
-                            <Activity className="w-4 h-4 animate-pulse" />
-                            <span>Captured</span>
-                          </div>
-                        ) : event.error_message ? (
-                          <div className="flex items-center gap-1 text-red-400">
-                            <AlertCircle className="w-4 h-4" />
-                            <span>Error</span>
-                          </div>
-                        ) : (
-                          <span className="text-foreground-muted">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          {/* Failed */}
+          <Card className="relative overflow-hidden p-6 border-none bg-red-500/5 shadow-[0_20px_40px_-10px_rgba(239,68,68,0.2)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-4px] hover:bg-red-500/10">
+            <div className="absolute -right-8 -bottom-8 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.15] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <AlertCircle className="w-32 h-32 text-red-500" />
+            </div>
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="p-2.5 bg-red-500/10 rounded-xl group-hover:rotate-6 transition-transform">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+              </div>
+              <span className="text-[10px] font-black text-red-500/80 uppercase tracking-[0.2em]">Failed</span>
+            </div>
+            <div className="flex items-end justify-between relative z-10">
+              <span className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{stats.failedEvents.toLocaleString()}</span>
+              {stats.failedEvents > 0 && (
+                <Badge variant="destructive" className="animate-pulse font-black text-[10px] px-1.5 h-5 mb-1">CRITICAL</Badge>
+              )}
+            </div>
+          </Card>
+        </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-                <div className="text-sm text-foreground-muted">
-                  Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, filteredEvents.length)} of {filteredEvents.length} events
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="bg-transparent border-border hover:bg-teal-500/10 hover:border-teal-500/50 hover:text-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`min-w-[2.5rem] transition-all duration-200 ${currentPage === pageNum
-                              ? 'bg-teal-500/20 border-teal-500/50 text-teal-400 font-bold'
-                              : 'bg-transparent border-border hover:bg-teal-500/10 hover:border-teal-500/50 hover:text-teal-400'
-                            }`}
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
+        {/* Charts & Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-5 border-border shadow-sm bg-gradient-to-br from-card to-card/50 overflow-hidden relative group">
+            <div className="absolute -right-8 -top-8 p-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none group-hover:scale-110 duration-500">
+              <Zap className="w-32 h-32 text-primary" />
+            </div>
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Event Throughput
+                </h3>
+                <p className="text-xs text-foreground-muted">Events processed per 5 minutes (last hour)</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] font-normal bg-primary/5 text-primary border-primary/20">Real-time Stream</Badge>
+              </div>
+            </div>
+            <div className="h-[250px] relative z-10">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorEvents" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(var(--popover-rgb), 0.9)',
+                      backdropFilter: 'blur(8px)',
+                      borderColor: 'var(--border)',
+                      fontSize: '12px',
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                      padding: '12px'
+                    }}
+                    cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
+                  <XAxis dataKey="time" stroke="var(--foreground-muted)" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--foreground-muted)' }} dy={10} />
+                  <YAxis stroke="var(--foreground-muted)" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--foreground-muted)' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.2} />
+                  <Area
+                    type="monotone"
+                    dataKey="events"
+                    stroke="var(--primary)"
+                    fill="url(#colorEvents)"
+                    strokeWidth={3}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--primary)' }}
+                    animationDuration={1500}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-5 border-border shadow-sm bg-gradient-to-br from-card to-card/50 overflow-hidden relative group">
+            <div className="absolute -right-8 -top-8 p-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none group-hover:scale-110 duration-500">
+              <Clock className="w-32 h-32 text-amber-500" />
+            </div>
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  Processing Latency
+                </h3>
+                <p className="text-xs text-foreground-muted">Average message processing time (ms)</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] font-normal bg-amber-500/5 text-amber-500 border-amber-500/20">System Performance</Badge>
+              </div>
+            </div>
+            <div className="h-[250px] relative z-10">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(var(--popover-rgb), 0.9)',
+                      backdropFilter: 'blur(12px)',
+                      borderColor: 'var(--border)',
+                      fontSize: '12px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
+                      padding: '12px'
+                    }}
+                    cursor={{ stroke: '#f59e0b', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
+                  <XAxis dataKey="time" stroke="var(--foreground-muted)" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--foreground-muted)' }} dy={10} />
+                  <YAxis stroke="var(--foreground-muted)" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: 'var(--foreground-muted)' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.15} />
+                  <Area
+                    type="monotone"
+                    dataKey="latency"
+                    stroke="#f59e0b"
+                    fill="url(#colorLatency)"
+                    strokeWidth={3}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: '#f59e0b' }}
+                    animationDuration={2000}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </div>
+
+        {/* CDC Event Summary & Live Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Event Summary Side Panel */}
+          <Card className="lg:col-span-1 p-0 border-border shadow-md bg-surface h-fit sticky top-6">
+            <div className="p-4 border-b border-border bg-muted/20">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                Event Summary
+              </h3>
+              <p className="text-xs text-foreground-muted mt-1">Breakdown of recent operations</p>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 gap-3">
+                <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                    <span className="text-sm font-medium text-foreground">Inserts</span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="bg-transparent border-border hover:bg-teal-500/10 hover:border-teal-500/50 hover:text-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    Next
-                  </Button>
+                  <span className="text-lg font-bold text-cyan-500">
+                    {events.filter(e => (e.event_type || '').toLowerCase() === 'insert').length}
+                  </span>
+                </div>
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span className="text-sm font-medium text-foreground">Updates</span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-500">
+                    {events.filter(e => (e.event_type || '').toLowerCase() === 'update').length}
+                  </span>
+                </div>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                    <span className="text-sm font-medium text-foreground">Deletes</span>
+                  </div>
+                  <span className="text-lg font-bold text-amber-500">
+                    {events.filter(e => (e.event_type || '').toLowerCase() === 'delete').length}
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-foreground-muted">
-            <p>No events found. Events will appear here as they are captured.</p>
-          </div>
-        )}
-      </Card>
+
+              {/* Recent Activity Mini-List */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <h4 className="text-xs font-bold text-foreground-muted uppercase tracking-wider mb-3">Latest Activity</h4>
+                <div className="space-y-3">
+                  {events.slice(0, 5).map((event, i) => {
+                    const type = (event.event_type || 'unknown').toLowerCase()
+                    return (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <Badge variant="outline" className={`px-1 py-0 text-[10px] h-4 ${type === 'insert' ? 'border-cyan-500/30 text-cyan-500' :
+                          type === 'update' ? 'border-blue-500/30 text-blue-500' :
+                            'border-amber-500/30 text-amber-500'
+                          }`}>
+                          {type ? type.substring(0, 1).toUpperCase() : '?'}
+                        </Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-foreground font-medium">{event.table_name || 'Unknown Table'}</div>
+                          <div className="text-foreground-muted text-[10px]">{event.created_at ? formatDistanceToNow(new Date(event.created_at), { addSuffix: true }) : 'Just now'}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {events.length === 0 && (
+                    <div className="text-center text-foreground-muted text-xs py-2">No recent events</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Main Live Feed Table */}
+          <Card className="lg:col-span-3 p-0 border-border shadow-md bg-surface overflow-hidden flex flex-col h-[600px]">
+            <div className="p-4 border-b border-border bg-muted/20 flex flex-col sm:flex-row items-center justify-between flex-shrink-0 gap-4">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className={`w-2 h-2 rounded-full ${wsConnected ? "bg-success animate-pulse" : "bg-error"}`} />
+                <h3 className="font-bold text-foreground">Live Event Feed</h3>
+                <div className="relative ml-4 flex-1 sm:flex-initial">
+                  <input
+                    type="text"
+                    placeholder="Search events or tables..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-8 w-full sm:w-64 bg-background border border-border rounded-md px-3 text-xs focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between">
+                <div className="flex items-center gap-3 text-xs text-foreground-muted pr-4 border-r border-border h-8">
+                  <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-success"></span> App</div>
+                  <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-warning"></span> Pen</div>
+                  <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-error"></span> Err</div>
+                </div>
+                <Button variant="outline" size="sm" className="h-8 gap-2 border-border hover:bg-surface-hover" onClick={handleDownloadCSV}>
+                  <FileText className="w-3 h-3" />
+                  Export
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto flex-1">
+              <Table>
+                <TableHeader className="bg-muted/10 sticky top-0 z-10 backdrop-blur-sm">
+                  <TableRow className="hover:bg-transparent border-border">
+                    <TableHead className="w-[180px] font-bold text-xs uppercase tracking-wider text-foreground-muted pl-4">Timestamp</TableHead>
+                    <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider text-foreground-muted">Operation</TableHead>
+                    <TableHead className="font-bold text-xs uppercase tracking-wider text-foreground-muted">Table</TableHead>
+                    <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider text-foreground-muted">LSN</TableHead>
+                    <TableHead className="w-[100px] font-bold text-xs uppercase tracking-wider text-foreground-muted">Latency</TableHead>
+                    <TableHead className="w-[120px] font-bold text-xs uppercase tracking-wider text-foreground-muted text-right pr-6">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentEvents.length > 0 ? (
+                    currentEvents.map((event) => {
+                      const type = (event.event_type || 'unknown').toLowerCase()
+                      return (
+                        <TableRow key={event.id} className="hover:bg-muted/5 border-border/50 group transition-colors">
+                          <TableCell className="font-mono text-xs text-foreground-muted whitespace-nowrap pl-4">
+                            {event.created_at ? new Date(event.created_at).toLocaleString() : 'Just now'}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full border ${type === 'insert' ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20' :
+                              type === 'update' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                type === 'delete' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                  'bg-muted text-foreground-muted border-border'
+                              }`}
+                            >
+                              {event.event_type || 'UNKNOWN'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium text-foreground text-sm">
+                            {event.table_name || 'N/A'}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-foreground-muted">
+                            {event.source_lsn || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-medium ${(event.latency_ms || 0) > 1000 ? 'text-warning' : 'text-success'
+                              }`}>
+                              {event.latency_ms != null ? `${event.latency_ms}ms` : '<1ms'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <div className="flex items-center justify-end gap-2">
+                              <span className={`w-1.5 h-1.5 rounded-full ${event.status === 'applied' || event.status === 'success' ? 'bg-success shadow-[0_0_4px_rgba(34,197,94,0.4)]' :
+                                event.status === 'failed' || event.status === 'error' ? 'bg-error shadow-[0_0_4px_rgba(239,68,68,0.4)]' : 'bg-warning'
+                                }`} />
+                              <span className={`text-[10px] uppercase tracking-wider font-semibold ${event.status === 'applied' || event.status === 'success' ? 'text-success' :
+                                event.status === 'failed' || event.status === 'error' ? 'text-error' : 'text-warning'
+                                }`}>{event.status}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-64 text-center text-foreground-muted text-sm">
+                        <div className="flex flex-col items-center justify-center gap-3 opacity-50">
+                          <Activity className="w-10 h-10" />
+                          <p>Waiting for live events...</p>
+                          <span className="text-xs">Action on the source database to see events here</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="p-4 border-t border-border bg-muted/10 flex justify-between items-center text-xs flex-shrink-0">
+              <span className="text-foreground-muted">
+                Page <span className="font-bold text-foreground">{currentPage}</span> of <span className="font-bold text-foreground">{Math.max(1, totalPages)}</span>
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs border-border hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-colors"
+                  onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs border-border hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-colors"
+                  onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </ProtectedPage>
   )

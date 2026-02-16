@@ -136,13 +136,18 @@ class DebeziumConfigGenerator:
         logger.info(f"Generated table.include.list for {pipeline_name}: {table_include_list}")
         
         # Generate replication slot name
-        slot_name = f"{pipeline_name.lower()}_slot"
+        # Sanitize slot name: Postgres slots allow only [a-z0-9_]
+        sanitized_pipeline = pipeline_name.lower().replace('-', '_')
+        import re
+        sanitized_pipeline = re.sub(r'[^a-z0-9_]', '_', sanitized_pipeline)
+        slot_name = f"{sanitized_pipeline}_slot"
         
         # Check if we should use existing publication (e.g., cdc_publication)
         # If publication name is provided in additional_config, use it
         publication_name = connection.additional_config.get("publication_name")
         if not publication_name:
-            publication_name = f"{pipeline_name.lower()}_pub"
+            # Sanitize publication name same as slot
+            publication_name = f"{sanitized_pipeline}_pub"
         
         # Check if we should auto-create publication or use existing
         publication_autocreate = connection.additional_config.get("publication_autocreate", "filtered")

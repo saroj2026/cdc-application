@@ -25,7 +25,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$
 function Card({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         "data-slot": "card",
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm', className),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-4 rounded-xl border shadow-sm', className),
         ...props
     }, void 0, false, {
         fileName: "[project]/components/ui/card.tsx",
@@ -346,15 +346,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 function PageHeader({ title, subtitle, icon: Icon, action }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "flex items-center justify-between",
+        className: "flex items-center justify-between pb-6 border-b border-border mb-6",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex flex-col gap-1",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                        className: "text-3xl font-bold text-foreground mb-2 flex items-center gap-3",
+                        className: "text-2xl font-bold text-foreground flex items-center gap-2 tracking-tight",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                className: "w-8 h-8 text-cyan-400"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "p-1.5 bg-primary/10 rounded-lg",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                    className: "w-5 h-5 text-primary"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/ui/page-header.tsx",
+                                    lineNumber: 19,
+                                    columnNumber: 13
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/ui/page-header.tsx",
                                 lineNumber: 18,
@@ -368,11 +376,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-foreground-muted",
+                        className: "text-sm text-foreground-muted ml-1",
                         children: subtitle
                     }, void 0, false, {
                         fileName: "[project]/components/ui/page-header.tsx",
-                        lineNumber: 21,
+                        lineNumber: 23,
                         columnNumber: 9
                     }, this)
                 ]
@@ -382,10 +390,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                 columnNumber: 7
             }, this),
             action && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex items-center gap-2",
                 children: action
             }, void 0, false, {
                 fileName: "[project]/components/ui/page-header.tsx",
-                lineNumber: 23,
+                lineNumber: 25,
                 columnNumber: 18
             }, this)
         ]
@@ -583,6 +592,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calendar.js [app-ssr] (ecmascript) <export default as Calendar>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$download$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Download$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/download.js [app-ssr] (ecmascript) <export default as Download>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$no$2d$axes$2d$column$2d$increasing$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BarChart$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chart-no-axes-column-increasing.js [app-ssr] (ecmascript) <export default as BarChart>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/activity.js [app-ssr] (ecmascript) <export default as Activity>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-check.js [app-ssr] (ecmascript) <export default as CheckCircle2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/zap.js [app-ssr] (ecmascript) <export default as Zap>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/clock.js [app-ssr] (ecmascript) <export default as Clock>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/database.js [app-ssr] (ecmascript) <export default as Database>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$page$2d$header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/page-header.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/hooks.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$monitoringSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/slices/monitoringSlice.ts [app-ssr] (ecmascript)");
@@ -1067,19 +1081,19 @@ function AnalyticsPage() {
                                 className: "w-4 h-4"
                             }, void 0, false, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 492,
-                                columnNumber: 13
+                                lineNumber: 494,
+                                columnNumber: 15
                             }, void 0),
                             "Export Report"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/analytics/page.tsx",
-                        lineNumber: 491,
-                        columnNumber: 11
+                        lineNumber: 493,
+                        columnNumber: 13
                     }, void 0)
                 }, void 0, false, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 486,
+                    lineNumber: 488,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1098,19 +1112,19 @@ function AnalyticsPage() {
                                                 className: "w-4 h-4 mr-2"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 503,
-                                                columnNumber: 15
+                                                lineNumber: 505,
+                                                columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 504,
-                                                columnNumber: 15
+                                                lineNumber: 506,
+                                                columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 502,
-                                        columnNumber: 13
+                                        lineNumber: 504,
+                                        columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
                                         className: "bg-surface border-border",
@@ -1120,57 +1134,57 @@ function AnalyticsPage() {
                                                 children: "All Time"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 507,
-                                                columnNumber: 15
+                                                lineNumber: 509,
+                                                columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                 value: "24h",
                                                 children: "Last 24 Hours"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 508,
-                                                columnNumber: 15
+                                                lineNumber: 510,
+                                                columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                 value: "7d",
                                                 children: "Last 7 Days"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 509,
-                                                columnNumber: 15
+                                                lineNumber: 511,
+                                                columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                 value: "30d",
                                                 children: "Last 30 Days"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 510,
-                                                columnNumber: 15
+                                                lineNumber: 512,
+                                                columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                 value: "90d",
                                                 children: "Last 90 Days"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 511,
-                                                columnNumber: 15
+                                                lineNumber: 513,
+                                                columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 506,
-                                        columnNumber: 13
+                                        lineNumber: 508,
+                                        columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 501,
-                                columnNumber: 11
+                                lineNumber: 503,
+                                columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 500,
-                            columnNumber: 9
+                            lineNumber: 502,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "w-48",
@@ -1182,13 +1196,13 @@ function AnalyticsPage() {
                                         className: "bg-surface border-border",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 519,
-                                            columnNumber: 15
+                                            lineNumber: 521,
+                                            columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 518,
-                                        columnNumber: 13
+                                        lineNumber: 520,
+                                        columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
                                         className: "bg-surface border-border",
@@ -1198,302 +1212,242 @@ function AnalyticsPage() {
                                                 children: "All Pipelines"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 522,
-                                                columnNumber: 15
+                                                lineNumber: 524,
+                                                columnNumber: 17
                                             }, this),
                                             pipelines.map((pipeline)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                     value: String(pipeline.id),
                                                     children: pipeline.name
                                                 }, pipeline.id, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 524,
-                                                    columnNumber: 17
+                                                    lineNumber: 526,
+                                                    columnNumber: 19
                                                 }, this))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 521,
-                                        columnNumber: 13
+                                        lineNumber: 523,
+                                        columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 517,
-                                columnNumber: 11
+                                lineNumber: 519,
+                                columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 516,
-                            columnNumber: 9
+                            lineNumber: 518,
+                            columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 499,
-                    columnNumber: 7
+                    lineNumber: 501,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "p-5 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105",
+                            className: "p-5 bg-card border-l-4 border-l-cyan-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center justify-between mb-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
-                                            children: "Total Replicated"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 537,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-8 h-8 text-cyan-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 539,
-                                                columnNumber: 15
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 538,
-                                            columnNumber: 13
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-cyan-500/10 group-hover:text-cyan-500/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 536,
-                                    columnNumber: 11
+                                    lineNumber: 538,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between mb-2 relative z-10",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
+                                        children: "Total Replicated"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 540,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 539,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent",
+                                    className: "text-3xl font-extrabold text-cyan-500 relative z-10",
                                     children: kpis.totalReplicated
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
                                     lineNumber: 542,
-                                    columnNumber: 11
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs text-foreground-muted mt-1",
+                                    className: "text-xs text-foreground-muted mt-1 relative z-10",
                                     children: "Events captured"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
                                     lineNumber: 543,
-                                    columnNumber: 11
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 535,
-                            columnNumber: 9
+                            lineNumber: 537,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "p-5 bg-gradient-to-br from-green-500/10 to-emerald-600/5 border-green-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105",
+                            className: "p-5 bg-card border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center justify-between mb-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
-                                            children: "Successfully Synced"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 547,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-8 h-8 text-green-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 549,
-                                                columnNumber: 15
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 548,
-                                            columnNumber: 13
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-green-500/10 group-hover:text-green-500/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
                                     lineNumber: 546,
-                                    columnNumber: 11
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between mb-2 relative z-10",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
+                                        children: "Successfully Synced"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 548,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 547,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-3xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent",
+                                    className: "text-3xl font-extrabold text-green-500 relative z-10",
                                     children: kpis.successfullySynced
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 552,
-                                    columnNumber: 11
+                                    lineNumber: 550,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs text-foreground-muted mt-1",
+                                    className: "text-xs text-foreground-muted mt-1 relative z-10",
                                     children: "Applied to target"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 553,
-                                    columnNumber: 11
+                                    lineNumber: 551,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
                             lineNumber: 545,
-                            columnNumber: 9
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105",
+                            className: "p-5 bg-card border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center justify-between mb-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
-                                            children: "Sync Rate"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 557,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-8 h-8 text-blue-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 559,
-                                                columnNumber: 15
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 558,
-                                            columnNumber: 13
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__["Zap"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-blue-500/10 group-hover:text-blue-500/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 556,
-                                    columnNumber: 11
+                                    lineNumber: 554,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between mb-2 relative z-10",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
+                                        children: "Sync Rate"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 556,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 555,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent",
+                                    className: "text-3xl font-extrabold text-blue-500 relative z-10",
                                     children: kpis.syncRate
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 562,
-                                    columnNumber: 11
+                                    lineNumber: 558,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs text-foreground-muted mt-1",
+                                    className: "text-xs text-foreground-muted mt-1 relative z-10",
                                     children: "Success rate"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 563,
-                                    columnNumber: 11
+                                    lineNumber: 559,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 555,
-                            columnNumber: 9
+                            lineNumber: 553,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105",
+                            className: "p-5 bg-card border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center justify-between mb-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
-                                            children: "Avg Latency"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 567,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-8 h-8 text-purple-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 569,
-                                                columnNumber: 15
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 568,
-                                            columnNumber: 13
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-purple-500/10 group-hover:text-purple-500/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 566,
-                                    columnNumber: 11
+                                    lineNumber: 562,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between mb-2 relative z-10",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide",
+                                        children: "Avg Latency"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 564,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 563,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent",
+                                    className: "text-3xl font-extrabold text-purple-500 relative z-10",
                                     children: kpis.avgLatency
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 572,
-                                    columnNumber: 11
+                                    lineNumber: 566,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs text-foreground-muted mt-1",
+                                    className: "text-xs text-foreground-muted mt-1 relative z-10",
                                     children: "Average replication delay"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 573,
-                                    columnNumber: 11
+                                    lineNumber: 567,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 565,
-                            columnNumber: 9
+                            lineNumber: 561,
+                            columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 534,
-                    columnNumber: 7
+                    lineNumber: 536,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 lg:grid-cols-2 gap-6",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-indigo-500/10 border-blue-500/20 shadow-xl p-6 hover:shadow-2xl transition-all duration-300",
+                            className: "bg-card border-l-4 border-l-blue-500 shadow-sm p-6 hover:shadow-md transition-all",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex items-center justify-between mb-6 flex-wrap gap-4",
@@ -1501,25 +1455,12 @@ function AnalyticsPage() {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                             className: "text-xl font-bold text-foreground flex items-center gap-2",
                                             children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                                    className: "w-6 h-6 text-blue-400",
-                                                    fill: "none",
-                                                    stroke: "currentColor",
-                                                    viewBox: "0 0 24 24",
-                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                        strokeLinecap: "round",
-                                                        strokeLinejoin: "round",
-                                                        strokeWidth: 2,
-                                                        d: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 583,
-                                                        columnNumber: 17
-                                                    }, this)
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$no$2d$axes$2d$column$2d$increasing$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BarChart$3e$__["BarChart"], {
+                                                    className: "w-5 h-5 text-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 582,
-                                                    columnNumber: 15
+                                                    lineNumber: 576,
+                                                    columnNumber: 17
                                                 }, this),
                                                 "Replication Events (",
                                                 timeRange,
@@ -1527,8 +1468,8 @@ function AnalyticsPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 581,
-                                            columnNumber: 13
+                                            lineNumber: 575,
+                                            columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-center gap-4 text-xs text-foreground-muted",
@@ -1540,22 +1481,22 @@ function AnalyticsPage() {
                                                             className: "w-3 h-3 rounded bg-gradient-to-br from-cyan-400 to-cyan-600"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 589,
-                                                            columnNumber: 17
+                                                            lineNumber: 581,
+                                                            columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "font-medium",
                                                             children: "INSERT (Top)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 590,
-                                                            columnNumber: 17
+                                                            lineNumber: 582,
+                                                            columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 588,
-                                                    columnNumber: 15
+                                                    lineNumber: 580,
+                                                    columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex items-center gap-1.5",
@@ -1564,22 +1505,22 @@ function AnalyticsPage() {
                                                             className: "w-3 h-3 rounded bg-gradient-to-br from-blue-500 to-blue-700"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 593,
-                                                            columnNumber: 17
+                                                            lineNumber: 585,
+                                                            columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "font-medium",
                                                             children: "UPDATE (Middle)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 594,
-                                                            columnNumber: 17
+                                                            lineNumber: 586,
+                                                            columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 592,
-                                                    columnNumber: 15
+                                                    lineNumber: 584,
+                                                    columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex items-center gap-1.5",
@@ -1588,34 +1529,34 @@ function AnalyticsPage() {
                                                             className: "w-3 h-3 rounded bg-gradient-to-br from-amber-500 to-amber-700"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 597,
-                                                            columnNumber: 17
+                                                            lineNumber: 589,
+                                                            columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "font-medium",
                                                             children: "DELETE (Bottom)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 598,
-                                                            columnNumber: 17
+                                                            lineNumber: 590,
+                                                            columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 596,
-                                                    columnNumber: 15
+                                                    lineNumber: 588,
+                                                    columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 587,
-                                            columnNumber: 13
+                                            lineNumber: 579,
+                                            columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 580,
-                                    columnNumber: 11
+                                    lineNumber: 574,
+                                    columnNumber: 13
                                 }, this),
                                 timeSeriesData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
                                     width: "100%",
@@ -1644,8 +1585,8 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.95
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 610,
-                                                                columnNumber: 21
+                                                                lineNumber: 602,
+                                                                columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
                                                                 offset: "100%",
@@ -1653,14 +1594,14 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.8
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 611,
-                                                                columnNumber: 21
+                                                                lineNumber: 603,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 609,
-                                                        columnNumber: 19
+                                                        lineNumber: 601,
+                                                        columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
                                                         id: "updateGradient",
@@ -1675,8 +1616,8 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.95
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 614,
-                                                                columnNumber: 21
+                                                                lineNumber: 606,
+                                                                columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
                                                                 offset: "100%",
@@ -1684,14 +1625,14 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.8
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 615,
-                                                                columnNumber: 21
+                                                                lineNumber: 607,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 613,
-                                                        columnNumber: 19
+                                                        lineNumber: 605,
+                                                        columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
                                                         id: "deleteGradient",
@@ -1706,8 +1647,8 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.95
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 618,
-                                                                columnNumber: 21
+                                                                lineNumber: 610,
+                                                                columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
                                                                 offset: "100%",
@@ -1715,20 +1656,20 @@ function AnalyticsPage() {
                                                                 stopOpacity: 0.8
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 619,
-                                                                columnNumber: 21
+                                                                lineNumber: 611,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 617,
-                                                        columnNumber: 19
+                                                        lineNumber: 609,
+                                                        columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 608,
-                                                columnNumber: 17
+                                                lineNumber: 600,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CartesianGrid"], {
                                                 strokeDasharray: "3 3",
@@ -1736,8 +1677,8 @@ function AnalyticsPage() {
                                                 opacity: 0.3
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 622,
-                                                columnNumber: 17
+                                                lineNumber: 614,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
                                                 dataKey: "date",
@@ -1761,8 +1702,8 @@ function AnalyticsPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 623,
-                                                columnNumber: 17
+                                                lineNumber: 615,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
                                                 stroke: "#9ca3af",
@@ -1781,8 +1722,8 @@ function AnalyticsPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 633,
-                                                columnNumber: 17
+                                                lineNumber: 625,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
                                                 contentStyle: {
@@ -1818,21 +1759,21 @@ function AnalyticsPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 638,
-                                                columnNumber: 17
+                                                lineNumber: 630,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Legend"], {
                                                 wrapperStyle: {
                                                     paddingTop: "20px",
-                                                    color: "#9ca3af",
+                                                    color: "rgb(148, 163, 184)",
                                                     fontWeight: 600
                                                 },
                                                 iconType: "square",
                                                 iconSize: 14
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 657,
-                                                columnNumber: 17
+                                                lineNumber: 649,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
                                                 dataKey: "delete",
@@ -1849,8 +1790,8 @@ function AnalyticsPage() {
                                                 strokeWidth: 1
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 662,
-                                                columnNumber: 17
+                                                lineNumber: 654,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
                                                 dataKey: "update",
@@ -1867,8 +1808,8 @@ function AnalyticsPage() {
                                                 strokeWidth: 1
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 671,
-                                                columnNumber: 17
+                                                lineNumber: 663,
+                                                columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Bar"], {
                                                 dataKey: "insert",
@@ -1885,19 +1826,19 @@ function AnalyticsPage() {
                                                 strokeWidth: 1
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 680,
-                                                columnNumber: 17
+                                                lineNumber: 672,
+                                                columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 604,
-                                        columnNumber: 15
+                                        lineNumber: 596,
+                                        columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 603,
-                                    columnNumber: 13
+                                    lineNumber: 595,
+                                    columnNumber: 15
                                 }, this) : events.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "h-[300px] flex flex-col items-center justify-center text-foreground-muted",
                                     children: [
@@ -1906,16 +1847,16 @@ function AnalyticsPage() {
                                             children: "No events found in database"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 693,
-                                            columnNumber: 15
+                                            lineNumber: 685,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-sm",
                                             children: "Make sure:"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 694,
-                                            columnNumber: 15
+                                            lineNumber: 686,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
                                             className: "text-sm list-disc list-inside mt-2 space-y-1",
@@ -1924,34 +1865,34 @@ function AnalyticsPage() {
                                                     children: "Pipelines are active and CDC is enabled"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 696,
-                                                    columnNumber: 17
+                                                    lineNumber: 688,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                     children: "Data changes are being made in source databases"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 697,
-                                                    columnNumber: 17
+                                                    lineNumber: 689,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                     children: "Check the Monitoring page to see if events are being captured"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 698,
-                                                    columnNumber: 17
+                                                    lineNumber: 690,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 695,
-                                            columnNumber: 15
+                                            lineNumber: 687,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 692,
-                                    columnNumber: 13
+                                    lineNumber: 684,
+                                    columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "h-[300px] flex flex-col items-center justify-center text-foreground-muted",
                                     children: [
@@ -1963,8 +1904,8 @@ function AnalyticsPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 703,
-                                            columnNumber: 15
+                                            lineNumber: 695,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-xs mt-2",
@@ -1974,242 +1915,242 @@ function AnalyticsPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 704,
-                                            columnNumber: 15
+                                            lineNumber: 696,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-xs",
                                             children: 'Try selecting "All Time" to see all events'
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 705,
-                                            columnNumber: 15
+                                            lineNumber: 697,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 702,
-                                    columnNumber: 13
+                                    lineNumber: 694,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 579,
-                            columnNumber: 9
+                            lineNumber: 573,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "card-heartbeat bg-surface border-border p-6",
+                            className: "bg-card border-l-4 border-l-cyan-500 shadow-sm p-6 hover:shadow-md transition-all",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                     className: "text-lg font-semibold text-foreground mb-4",
                                     children: "Event Distribution"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 711,
-                                    columnNumber: 11
+                                    lineNumber: 703,
+                                    columnNumber: 13
                                 }, this),
                                 eventTypeData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
-                                            width: "100%",
-                                            height: 300,
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$PieChart$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PieChart"], {
-                                                margin: {
-                                                    top: 20,
-                                                    right: 20,
-                                                    bottom: 20,
-                                                    left: 40
-                                                },
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "relative h-[300px]",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$PieChart$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PieChart"], {
+                                                        margin: {
+                                                            top: 20,
+                                                            right: 20,
+                                                            bottom: 20,
+                                                            left: 40
+                                                        },
                                                         children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
-                                                                id: "insertGradient",
-                                                                x1: "0",
-                                                                y1: "0",
-                                                                x2: "0",
-                                                                y2: "1",
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
                                                                 children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "0%",
-                                                                        stopColor: "#22d3ee",
-                                                                        stopOpacity: 0.9
-                                                                    }, void 0, false, {
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                                                                        id: "insertGradient",
+                                                                        x1: "0",
+                                                                        y1: "0",
+                                                                        x2: "0",
+                                                                        y2: "1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "0%",
+                                                                                stopColor: "#22d3ee",
+                                                                                stopOpacity: 0.9
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 711,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "100%",
+                                                                                stopColor: "#06b6d4",
+                                                                                stopOpacity: 0.7
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 712,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/app/analytics/page.tsx",
+                                                                        lineNumber: 710,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                                                                        id: "updateGradient",
+                                                                        x1: "0",
+                                                                        y1: "0",
+                                                                        x2: "0",
+                                                                        y2: "1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "0%",
+                                                                                stopColor: "#3b82f6",
+                                                                                stopOpacity: 0.9
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 715,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "100%",
+                                                                                stopColor: "#2563eb",
+                                                                                stopOpacity: 0.7
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 716,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/app/analytics/page.tsx",
+                                                                        lineNumber: 714,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                                                                        id: "deleteGradient",
+                                                                        x1: "0",
+                                                                        y1: "0",
+                                                                        x2: "0",
+                                                                        y2: "1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "0%",
+                                                                                stopColor: "#f59e0b",
+                                                                                stopOpacity: 0.9
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 719,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                                offset: "100%",
+                                                                                stopColor: "#d97706",
+                                                                                stopOpacity: 0.7
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                                lineNumber: 720,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
                                                                         lineNumber: 718,
-                                                                        columnNumber: 23
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "100%",
-                                                                        stopColor: "#06b6d4",
-                                                                        stopOpacity: 0.7
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 719,
-                                                                        columnNumber: 23
+                                                                        columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 717,
-                                                                columnNumber: 21
+                                                                lineNumber: 709,
+                                                                columnNumber: 23
                                                             }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
-                                                                id: "updateGradient",
-                                                                x1: "0",
-                                                                y1: "0",
-                                                                x2: "0",
-                                                                y2: "1",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "0%",
-                                                                        stopColor: "#3b82f6",
-                                                                        stopOpacity: 0.9
-                                                                    }, void 0, false, {
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$polar$2f$Pie$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Pie"], {
+                                                                data: eventTypeData,
+                                                                cx: "50%",
+                                                                cy: "50%",
+                                                                innerRadius: 60,
+                                                                outerRadius: 80,
+                                                                paddingAngle: 5,
+                                                                dataKey: "value",
+                                                                children: eventTypeData.map((entry, index)=>{
+                                                                    const gradientId = entry.name === "Inserts" ? "insertGradient" : entry.name === "Updates" ? "updateGradient" : "deleteGradient";
+                                                                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Cell"], {
+                                                                        fill: `url(#${gradientId})`,
+                                                                        stroke: "none"
+                                                                    }, `cell-${index}`, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 722,
-                                                                        columnNumber: 23
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "100%",
-                                                                        stopColor: "#2563eb",
-                                                                        stopOpacity: 0.7
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 723,
-                                                                        columnNumber: 23
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
+                                                                        lineNumber: 737,
+                                                                        columnNumber: 29
+                                                                    }, this);
+                                                                })
+                                                            }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 721,
-                                                                columnNumber: 21
+                                                                lineNumber: 723,
+                                                                columnNumber: 23
                                                             }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
-                                                                id: "deleteGradient",
-                                                                x1: "0",
-                                                                y1: "0",
-                                                                x2: "0",
-                                                                y2: "1",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "0%",
-                                                                        stopColor: "#f59e0b",
-                                                                        stopOpacity: 0.9
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 726,
-                                                                        columnNumber: 23
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                                        offset: "100%",
-                                                                        stopColor: "#d97706",
-                                                                        stopOpacity: 0.7
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 727,
-                                                                        columnNumber: 23
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
+                                                                contentStyle: {
+                                                                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                                                                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                                                                    borderRadius: "12px",
+                                                                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
+                                                                    padding: "12px"
+                                                                },
+                                                                itemStyle: {
+                                                                    color: 'rgb(203, 213, 225)',
+                                                                    fontSize: '13px'
+                                                                }
+                                                            }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 725,
-                                                                columnNumber: 21
+                                                                lineNumber: 745,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 716,
-                                                        columnNumber: 19
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$polar$2f$Pie$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Pie"], {
-                                                        data: eventTypeData,
-                                                        cx: "52%",
-                                                        cy: "50%",
-                                                        labelLine: {
-                                                            stroke: 'rgb(148, 163, 184)',
-                                                            strokeWidth: 2,
-                                                            length: 10,
-                                                            lengthType: 'straight'
-                                                        },
-                                                        label: ({ name, percent, cx, cy, midAngle, innerRadius, outerRadius })=>{
-                                                            const RADIAN = Math.PI / 180;
-                                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                                                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                                            const label = `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`;
-                                                            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("text", {
-                                                                x: x,
-                                                                y: y,
-                                                                fill: "rgb(148, 163, 184)",
-                                                                textAnchor: x > cx ? 'start' : 'end',
-                                                                dominantBaseline: "central",
-                                                                fontSize: 12,
-                                                                fontWeight: 600,
-                                                                style: {
-                                                                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                                                                    pointerEvents: 'none'
-                                                                },
-                                                                children: label
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 748,
-                                                                columnNumber: 25
-                                                            }, void 0);
-                                                        },
-                                                        outerRadius: 85,
-                                                        innerRadius: 50,
-                                                        paddingAngle: 3,
-                                                        dataKey: "value",
-                                                        children: eventTypeData.map((entry, index)=>{
-                                                            const gradientId = entry.name === "Inserts" ? "insertGradient" : entry.name === "Updates" ? "updateGradient" : "deleteGradient";
-                                                            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Cell"], {
-                                                                fill: `url(#${gradientId})`,
-                                                                stroke: "rgba(255, 255, 255, 0.1)",
-                                                                strokeWidth: 2
-                                                            }, `cell-${index}`, false, {
-                                                                fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 775,
-                                                                columnNumber: 25
-                                                            }, this);
-                                                        })
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 730,
-                                                        columnNumber: 19
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
-                                                        contentStyle: {
-                                                            backgroundColor: "rgba(15, 23, 42, 0.95)",
-                                                            border: "1px solid rgb(100, 116, 139)",
-                                                            borderRadius: "12px",
-                                                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-                                                            padding: "12px"
-                                                        },
-                                                        labelStyle: {
-                                                            color: 'rgb(148, 163, 184)',
-                                                            fontWeight: 'bold',
-                                                            fontSize: '14px'
-                                                        },
-                                                        itemStyle: {
-                                                            color: 'rgb(203, 213, 225)',
-                                                            fontSize: '13px'
-                                                        }
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 784,
-                                                        columnNumber: 19
+                                                        lineNumber: 708,
+                                                        columnNumber: 21
                                                     }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 715,
-                                                columnNumber: 17
-                                            }, this)
-                                        }, void 0, false, {
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 707,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none",
+                                                    style: {
+                                                        marginTop: "-20px"
+                                                    },
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                            className: "text-2xl font-black text-foreground",
+                                                            children: eventTypeData.reduce((sum, d)=>sum + d.value, 0).toLocaleString()
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 759,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                            className: "text-[10px] text-foreground-muted uppercase tracking-widest font-bold",
+                                                            children: "Total Events"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 762,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 758,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 714,
-                                            columnNumber: 15
+                                            lineNumber: 706,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "mt-6 grid grid-cols-3 gap-4",
@@ -2238,7 +2179,7 @@ function AnalyticsPage() {
                                                 };
                                                 const style = colorMap[item.name];
                                                 return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: `p-4 bg-gradient-to-br ${style.bg} border ${style.border} rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105`,
+                                                    className: `p-4 bg-card border-l-4 ${style.border.replace('border-', 'border-l-')} shadow-sm hover:shadow-md transition-all`,
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "flex items-center gap-2 mb-2",
@@ -2248,22 +2189,22 @@ function AnalyticsPage() {
                                                                     children: style.icon
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                                    lineNumber: 811,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 779,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "text-sm font-semibold text-foreground",
                                                                     children: item.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                                    lineNumber: 814,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 782,
+                                                                    columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 810,
-                                                            columnNumber: 23
+                                                            lineNumber: 778,
+                                                            columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "mt-2",
@@ -2273,8 +2214,8 @@ function AnalyticsPage() {
                                                                     children: item.value.toLocaleString()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                                    lineNumber: 817,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 785,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "text-xs text-foreground-muted ml-2",
@@ -2285,26 +2226,26 @@ function AnalyticsPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                                    lineNumber: 818,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 786,
+                                                                    columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 816,
-                                                            columnNumber: 23
+                                                            lineNumber: 784,
+                                                            columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, i, true, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 809,
-                                                    columnNumber: 21
+                                                    lineNumber: 777,
+                                                    columnNumber: 23
                                                 }, this);
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 797,
-                                            columnNumber: 15
+                                            lineNumber: 765,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2312,32 +2253,459 @@ function AnalyticsPage() {
                                     children: "No event data available"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 826,
+                                    lineNumber: 794,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/app/analytics/page.tsx",
+                            lineNumber: 702,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/app/analytics/page.tsx",
+                    lineNumber: 572,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "grid grid-cols-1 lg:grid-cols-3 gap-6",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
+                            className: "bg-card border-l-4 border-l-green-500 shadow-sm p-6 hover:shadow-md transition-all flex flex-col items-center justify-center relative overflow-hidden group",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-green-500/10 group-hover:text-green-500/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 804,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                    className: "text-lg font-bold text-foreground mb-4 flex items-center gap-2 self-start relative z-10",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                            className: "w-5 h-5 text-green-500"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 806,
+                                            columnNumber: 15
+                                        }, this),
+                                        "Real-time Health"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 805,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "relative w-full h-[220px] flex items-center justify-center z-10",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
+                                            width: "100%",
+                                            height: "100%",
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$PieChart$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PieChart"], {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                                                            id: "healthGradient",
+                                                            x1: "0",
+                                                            y1: "0",
+                                                            x2: "0",
+                                                            y2: "1",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                    offset: "0%",
+                                                                    stopColor: "#22c55e",
+                                                                    stopOpacity: 1
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                                    lineNumber: 814,
+                                                                    columnNumber: 23
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                                    offset: "100%",
+                                                                    stopColor: "#16a34a",
+                                                                    stopOpacity: 0.8
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                                    lineNumber: 815,
+                                                                    columnNumber: 23
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 813,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/analytics/page.tsx",
+                                                        lineNumber: 812,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$polar$2f$Pie$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Pie"], {
+                                                        data: [
+                                                            {
+                                                                name: 'Progress',
+                                                                value: parseFloat(kpis.syncRate)
+                                                            },
+                                                            {
+                                                                name: 'Remaining',
+                                                                value: Math.max(0, 100 - parseFloat(kpis.syncRate))
+                                                            }
+                                                        ],
+                                                        cx: "50%",
+                                                        cy: "80%",
+                                                        startAngle: 200,
+                                                        endAngle: -20,
+                                                        innerRadius: 75,
+                                                        outerRadius: 95,
+                                                        paddingAngle: 0,
+                                                        dataKey: "value",
+                                                        stroke: "none",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Cell"], {
+                                                                fill: "url(#healthGradient)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                lineNumber: 833,
+                                                                columnNumber: 21
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Cell"], {
+                                                                fill: "rgba(34, 197, 94, 0.1)"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/app/analytics/page.tsx",
+                                                                lineNumber: 834,
+                                                                columnNumber: 21
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/app/analytics/page.tsx",
+                                                        lineNumber: 818,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 811,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 810,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "absolute top-[45%] text-center pointer-events-none",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-4xl font-black text-foreground drop-shadow-sm",
+                                                    children: kpis.syncRate
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 839,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-[10px] text-foreground-muted uppercase tracking-[0.2em] font-bold mt-1",
+                                                    children: "Health Index"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 842,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 838,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 809,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 710,
-                            columnNumber: 9
-                        }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 578,
-                    columnNumber: 7
-                }, this),
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                    className: "bg-gradient-to-br from-purple-500/10 to-blue-500/5 border-purple-500/20 shadow-xl p-6",
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-between mb-6",
+                            lineNumber: 803,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
+                            className: "lg:col-span-2 bg-card border-l-4 border-l-purple-500 shadow-sm p-6 hover:shadow-md transition-all",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                    className: "text-xl font-bold text-foreground flex items-center gap-2",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between mb-6 flex-wrap gap-4",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                            className: "text-xl font-bold text-foreground flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
+                                                    className: "w-5 h-5 text-purple-500"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 850,
+                                                    columnNumber: 17
+                                                }, this),
+                                                "Replication Latency Trend"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 849,
+                                            columnNumber: 15
+                                        }, this),
+                                        selectedPipelineId !== "all" && lsnData[selectedPipelineId] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "flex gap-4 text-sm flex-wrap",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "bg-muted/30 px-3 py-1 rounded border border-border",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-foreground-muted",
+                                                            children: "Source: "
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 856,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-purple-500 font-mono text-xs font-bold",
+                                                            children: lsnData[selectedPipelineId].sourceLsn || "N/A"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 857,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 855,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "bg-muted/30 px-3 py-1 rounded border border-border",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-foreground-muted",
+                                                            children: "Processed: "
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 860,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-purple-500 font-mono text-xs font-bold",
+                                                            children: lsnData[selectedPipelineId].processedLsn || "N/A"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 861,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 859,
+                                                    columnNumber: 19
+                                                }, this),
+                                                lsnData[selectedPipelineId].gapMB !== undefined && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "bg-muted/30 px-3 py-1 rounded border border-border",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-foreground-muted",
+                                                            children: "Gap: "
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 865,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-purple-500 font-bold",
+                                                            children: [
+                                                                lsnData[selectedPipelineId].gapMB?.toFixed(2) || "0.00",
+                                                                " MB"
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 866,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 864,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 854,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 848,
+                                    columnNumber: 13
+                                }, this),
+                                loadingLsn ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "h-[320px] flex items-center justify-center",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "text-foreground-muted",
+                                        children: "Loading LSN latency data..."
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 874,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 873,
+                                    columnNumber: 15
+                                }, this) : latencyData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
+                                    width: "100%",
+                                    height: 320,
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$LineChart$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LineChart"], {
+                                        data: latencyData,
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                                                    id: "latencyGradient",
+                                                    x1: "0",
+                                                    y1: "0",
+                                                    x2: "0",
+                                                    y2: "1",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                            offset: "5%",
+                                                            stopColor: "#a855f7",
+                                                            stopOpacity: 0.3
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 881,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                                                            offset: "95%",
+                                                            stopColor: "#a855f7",
+                                                            stopOpacity: 0
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/analytics/page.tsx",
+                                                            lineNumber: 882,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 880,
+                                                    columnNumber: 21
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 879,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CartesianGrid"], {
+                                                strokeDasharray: "3 3",
+                                                stroke: "#2d3448",
+                                                opacity: 0.3
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 885,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
+                                                dataKey: "timestamp",
+                                                stroke: "#9ca3af",
+                                                style: {
+                                                    fontSize: '12px',
+                                                    fontWeight: 500
+                                                }
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 886,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
+                                                stroke: "#9ca3af",
+                                                label: {
+                                                    value: lsnLatencyData.length > 0 ? "Replication Gap (KB)" : "Latency (ms)",
+                                                    angle: -90,
+                                                    position: "insideLeft",
+                                                    style: {
+                                                        fill: '#9ca3af',
+                                                        fontWeight: 600
+                                                    }
+                                                },
+                                                style: {
+                                                    fontSize: '12px',
+                                                    fontWeight: 500
+                                                }
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 891,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
+                                                contentStyle: {
+                                                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                                                    border: "1px solid rgb(168, 85, 247)",
+                                                    borderRadius: "12px",
+                                                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
+                                                    padding: "12px"
+                                                },
+                                                labelStyle: {
+                                                    color: '#a855f7',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '14px'
+                                                },
+                                                itemStyle: {
+                                                    color: '#e9d5ff',
+                                                    fontSize: '13px'
+                                                }
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 896,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Line"], {
+                                                type: "monotone",
+                                                dataKey: "latency",
+                                                stroke: "#a855f7",
+                                                strokeWidth: 4,
+                                                dot: {
+                                                    fill: "#a855f7",
+                                                    r: 6,
+                                                    strokeWidth: 2,
+                                                    stroke: "#fff"
+                                                },
+                                                activeDot: {
+                                                    r: 8,
+                                                    stroke: "#a855f7",
+                                                    strokeWidth: 3
+                                                },
+                                                name: lsnLatencyData.length > 0 ? "Replication Gap (KB)" : "Latency (ms)",
+                                                fill: "url(#latencyGradient)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/analytics/page.tsx",
+                                                lineNumber: 907,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/app/analytics/page.tsx",
+                                        lineNumber: 878,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/analytics/page.tsx",
+                                    lineNumber: 877,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "h-[320px] flex flex-col items-center justify-center text-foreground-muted",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-6 h-6 text-purple-400",
+                                            className: "w-16 h-16 mb-4 opacity-30",
                                             fill: "none",
                                             stroke: "currentColor",
                                             viewBox: "0 0 24 24",
@@ -2348,368 +2716,98 @@ function AnalyticsPage() {
                                                 d: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 838,
-                                                columnNumber: 15
+                                                lineNumber: 922,
+                                                columnNumber: 19
                                             }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 837,
-                                            columnNumber: 13
-                                        }, this),
-                                        "Replication Latency Trend"
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 836,
-                                    columnNumber: 11
-                                }, this),
-                                selectedPipelineId !== "all" && lsnData[selectedPipelineId] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex gap-4 text-sm",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "bg-surface/50 px-3 py-1 rounded border border-purple-500/20",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-foreground-muted",
-                                                    children: "Source LSN: "
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 845,
-                                                    columnNumber: 17
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-purple-400 font-mono text-xs",
-                                                    children: lsnData[selectedPipelineId].sourceLsn || "N/A"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 846,
-                                                    columnNumber: 17
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 844,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "bg-surface/50 px-3 py-1 rounded border border-purple-500/20",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-foreground-muted",
-                                                    children: "Processed LSN: "
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 849,
-                                                    columnNumber: 17
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-purple-400 font-mono text-xs",
-                                                    children: lsnData[selectedPipelineId].processedLsn || "N/A"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 850,
-                                                    columnNumber: 17
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 848,
-                                            columnNumber: 15
-                                        }, this),
-                                        lsnData[selectedPipelineId].gapMB !== undefined && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "bg-surface/50 px-3 py-1 rounded border border-purple-500/20",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-foreground-muted",
-                                                    children: "Gap: "
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 854,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-purple-400 font-semibold",
-                                                    children: [
-                                                        lsnData[selectedPipelineId].gapMB?.toFixed(2) || "0.00",
-                                                        " MB"
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 855,
-                                                    columnNumber: 19
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 853,
-                                            columnNumber: 17
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 843,
-                                    columnNumber: 13
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 835,
-                            columnNumber: 9
-                        }, this),
-                        loadingLsn ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "h-[320px] flex items-center justify-center",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "text-foreground-muted",
-                                children: "Loading LSN latency data..."
-                            }, void 0, false, {
-                                fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 863,
-                                columnNumber: 13
-                            }, this)
-                        }, void 0, false, {
-                            fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 862,
-                            columnNumber: 11
-                        }, this) : latencyData.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
-                            width: "100%",
-                            height: 320,
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$LineChart$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LineChart"], {
-                                data: latencyData,
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
-                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
-                                            id: "latencyGradient",
-                                            x1: "0",
-                                            y1: "0",
-                                            x2: "0",
-                                            y2: "1",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                    offset: "5%",
-                                                    stopColor: "#a855f7",
-                                                    stopOpacity: 0.3
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 870,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
-                                                    offset: "95%",
-                                                    stopColor: "#a855f7",
-                                                    stopOpacity: 0
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 871,
-                                                    columnNumber: 19
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 869,
-                                            columnNumber: 17
-                                        }, this)
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 868,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CartesianGrid"], {
-                                        strokeDasharray: "3 3",
-                                        stroke: "#2d3448",
-                                        opacity: 0.3
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 874,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["XAxis"], {
-                                        dataKey: "timestamp",
-                                        stroke: "#9ca3af",
-                                        style: {
-                                            fontSize: '12px',
-                                            fontWeight: 500
-                                        }
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 875,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["YAxis"], {
-                                        stroke: "#9ca3af",
-                                        label: {
-                                            value: lsnLatencyData.length > 0 ? "Replication Gap (KB)" : "Latency (ms)",
-                                            angle: -90,
-                                            position: "insideLeft",
-                                            style: {
-                                                fill: '#9ca3af',
-                                                fontWeight: 600
-                                            }
-                                        },
-                                        style: {
-                                            fontSize: '12px',
-                                            fontWeight: 500
-                                        }
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 880,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Tooltip"], {
-                                        contentStyle: {
-                                            backgroundColor: "rgba(15, 23, 42, 0.95)",
-                                            border: "1px solid rgb(168, 85, 247)",
-                                            borderRadius: "12px",
-                                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-                                            padding: "12px"
-                                        },
-                                        labelStyle: {
-                                            color: '#a855f7',
-                                            fontWeight: 'bold',
-                                            fontSize: '14px'
-                                        },
-                                        itemStyle: {
-                                            color: '#e9d5ff',
-                                            fontSize: '13px'
-                                        }
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 885,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Line"], {
-                                        type: "monotone",
-                                        dataKey: "latency",
-                                        stroke: "#a855f7",
-                                        strokeWidth: 4,
-                                        dot: {
-                                            fill: "#a855f7",
-                                            r: 6,
-                                            strokeWidth: 2,
-                                            stroke: "#fff"
-                                        },
-                                        activeDot: {
-                                            r: 8,
-                                            stroke: "#a855f7",
-                                            strokeWidth: 3
-                                        },
-                                        name: lsnLatencyData.length > 0 ? "Replication Gap (KB)" : "Latency (ms)",
-                                        fill: "url(#latencyGradient)"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 896,
-                                        columnNumber: 15
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 867,
-                                columnNumber: 13
-                            }, this)
-                        }, void 0, false, {
-                            fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 866,
-                            columnNumber: 11
-                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "h-[320px] flex flex-col items-center justify-center text-foreground-muted",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                    className: "w-16 h-16 mb-4 opacity-30",
-                                    fill: "none",
-                                    stroke: "currentColor",
-                                    viewBox: "0 0 24 24",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                        strokeLinecap: "round",
-                                        strokeLinejoin: "round",
-                                        strokeWidth: 2,
-                                        d: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 911,
-                                        columnNumber: 15
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 910,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-sm font-medium",
-                                    children: "No latency data available"
-                                }, void 0, false, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 913,
-                                    columnNumber: 13
-                                }, this),
-                                selectedPipelineId === "all" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs mt-2",
-                                    children: "Select a specific pipeline to view LSN replication latency"
-                                }, void 0, false, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 915,
-                                    columnNumber: 15
-                                }, this),
-                                selectedPipelineId !== "all" && !loadingLsn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "text-xs mt-2 space-y-1 text-center",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            children: "LSN tracking may not be enabled for this pipeline or no data available yet"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 919,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-foreground-muted/70",
-                                            children: "Note: LSN tracking is only available for PostgreSQL pipelines"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 920,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-foreground-muted/70",
-                                            children: "The chart will show event latency if LSN data is not available"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
                                             lineNumber: 921,
                                             columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                            className: "text-sm font-medium",
+                                            children: "No latency data available"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 924,
+                                            columnNumber: 17
+                                        }, this),
+                                        selectedPipelineId === "all" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                            className: "text-xs mt-2",
+                                            children: "Select a specific pipeline to view LSN replication latency"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 926,
+                                            columnNumber: 19
+                                        }, this),
+                                        selectedPipelineId !== "all" && !loadingLsn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "text-xs mt-2 space-y-1 text-center",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    children: "LSN tracking may not be enabled for this pipeline or no data available yet"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 930,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-foreground-muted/70",
+                                                    children: "Note: LSN tracking is only available for PostgreSQL pipelines"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 931,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                    className: "text-foreground-muted/70",
+                                                    children: "The chart will show event latency if LSN data is not available"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/analytics/page.tsx",
+                                                    lineNumber: 932,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 929,
+                                            columnNumber: 19
+                                        }, this),
+                                        loadingLsn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                            className: "text-xs mt-2",
+                                            children: "Loading LSN data..."
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/analytics/page.tsx",
+                                            lineNumber: 936,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 918,
-                                    columnNumber: 15
-                                }, this),
-                                loadingLsn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-xs mt-2",
-                                    children: "Loading LSN data..."
-                                }, void 0, false, {
-                                    fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 925,
+                                    lineNumber: 920,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 909,
+                            lineNumber: 847,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 834,
-                    columnNumber: 7
+                    lineNumber: 802,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                    className: "card-heartbeat bg-surface border-border p-6",
+                    className: "bg-card border-l-4 border-l-blue-500 shadow-sm p-6 hover:shadow-md transition-all",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                             className: "text-lg font-semibold text-foreground mb-4",
                             children: "Table-Level Metrics"
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 933,
-                            columnNumber: 9
+                            lineNumber: 945,
+                            columnNumber: 11
                         }, this),
                         tableMetrics.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "overflow-x-auto",
@@ -2725,59 +2823,59 @@ function AnalyticsPage() {
                                                     children: "Table"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 939,
-                                                    columnNumber: 19
+                                                    lineNumber: 951,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Inserts"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 940,
-                                                    columnNumber: 19
+                                                    lineNumber: 952,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Updates"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 941,
-                                                    columnNumber: 19
+                                                    lineNumber: 953,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Deletes"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 942,
-                                                    columnNumber: 19
+                                                    lineNumber: 954,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Avg Latency"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 943,
-                                                    columnNumber: 19
+                                                    lineNumber: 955,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Total"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 944,
-                                                    columnNumber: 19
+                                                    lineNumber: 956,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 938,
-                                            columnNumber: 17
+                                            lineNumber: 950,
+                                            columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 937,
-                                        columnNumber: 15
+                                        lineNumber: 949,
+                                        columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                                         children: tableMetrics.map((metric)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -2788,32 +2886,32 @@ function AnalyticsPage() {
                                                         children: metric.table
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 950,
-                                                        columnNumber: 21
+                                                        lineNumber: 962,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-foreground",
                                                         children: metric.inserted.toLocaleString()
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 951,
-                                                        columnNumber: 21
+                                                        lineNumber: 963,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-foreground",
                                                         children: metric.updated.toLocaleString()
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 952,
-                                                        columnNumber: 21
+                                                        lineNumber: 964,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-foreground",
                                                         children: metric.deleted.toLocaleString()
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 953,
-                                                        columnNumber: 21
+                                                        lineNumber: 965,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-info font-medium",
@@ -2823,83 +2921,74 @@ function AnalyticsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 954,
-                                                        columnNumber: 21
+                                                        lineNumber: 966,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-foreground font-semibold",
                                                         children: (metric.inserted + metric.updated + metric.deleted).toLocaleString()
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 955,
-                                                        columnNumber: 21
+                                                        lineNumber: 967,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, metric.table, true, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 949,
-                                                columnNumber: 19
+                                                lineNumber: 961,
+                                                columnNumber: 21
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 947,
-                                        columnNumber: 15
+                                        lineNumber: 959,
+                                        columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 936,
-                                columnNumber: 13
+                                lineNumber: 948,
+                                columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 935,
-                            columnNumber: 11
+                            lineNumber: 947,
+                            columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "py-12 text-center text-foreground-muted",
                             children: "No table metrics available"
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 964,
-                            columnNumber: 11
+                            lineNumber: 976,
+                            columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 932,
-                    columnNumber: 7
+                    lineNumber: 944,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 md:grid-cols-2 gap-6",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20 shadow-xl p-6",
+                            className: "bg-card border-l-4 border-l-green-500 shadow-sm p-6 hover:shadow-md transition-all",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                     className: "text-xl font-bold text-foreground mb-6 flex items-center gap-2",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-6 h-6 text-green-400",
-                                            fill: "currentColor",
-                                            viewBox: "0 0 20 20",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 974,
-                                                columnNumber: 15
-                                            }, this)
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                            className: "w-5 h-5 text-green-500"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 973,
-                                            columnNumber: 13
+                                            lineNumber: 985,
+                                            columnNumber: 15
                                         }, this),
                                         "Top Performing Tables"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 972,
-                                    columnNumber: 11
+                                    lineNumber: 984,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-3",
@@ -2913,7 +3002,7 @@ function AnalyticsPage() {
                                             const maxLatency = Math.max(...tableMetrics.filter((m)=>m.avg_latency > 0).map((m)=>m.avg_latency));
                                             const performancePercent = maxLatency > 0 ? (maxLatency - table.avg_latency) / maxLatency * 100 : 100;
                                             return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "p-4 bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-500/20 rounded-lg hover:shadow-md transition-all duration-300 hover:scale-[1.02]",
+                                                className: "p-4 bg-card border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex items-center justify-between mb-2",
@@ -2926,22 +3015,22 @@ function AnalyticsPage() {
                                                                         children: medals[index]
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 992,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1002,
+                                                                        columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "text-foreground font-bold",
                                                                         children: table.table
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 993,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1003,
+                                                                        columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 991,
-                                                                columnNumber: 23
+                                                                lineNumber: 1001,
+                                                                columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-sm font-bold text-green-400",
@@ -2951,31 +3040,31 @@ function AnalyticsPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 995,
-                                                                columnNumber: 23
+                                                                lineNumber: 1005,
+                                                                columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 990,
-                                                        columnNumber: 21
+                                                        lineNumber: 1000,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "w-full bg-surface-hover rounded-full h-2 overflow-hidden",
+                                                        className: "w-full bg-muted/30 rounded-full h-2 overflow-hidden",
                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-500",
+                                                            className: "h-full bg-green-500 rounded-full transition-all duration-500",
                                                             style: {
                                                                 width: `${performancePercent}%`
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 998,
-                                                            columnNumber: 23
+                                                            lineNumber: 1008,
+                                                            columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 997,
-                                                        columnNumber: 21
+                                                        lineNumber: 1007,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-xs text-foreground-muted mt-1",
@@ -2986,14 +3075,14 @@ function AnalyticsPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1003,
-                                                        columnNumber: 21
+                                                        lineNumber: 1013,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, table.table, true, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 989,
-                                                columnNumber: 19
+                                                lineNumber: 999,
+                                                columnNumber: 21
                                             }, this);
                                         }),
                                         tableMetrics.filter((m)=>m.avg_latency > 0).length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3007,72 +3096,59 @@ function AnalyticsPage() {
                                                         d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1010,
-                                                        columnNumber: 19
+                                                        lineNumber: 1020,
+                                                        columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1009,
-                                                    columnNumber: 17
+                                                    lineNumber: 1019,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-sm font-medium",
                                                     children: "No latency data available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1012,
-                                                    columnNumber: 17
+                                                    lineNumber: 1022,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1008,
-                                            columnNumber: 15
+                                            lineNumber: 1018,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 978,
-                                    columnNumber: 11
+                                    lineNumber: 988,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 971,
-                            columnNumber: 9
+                            lineNumber: 983,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20 shadow-xl p-6",
+                            className: "bg-card border-l-4 border-l-amber-500 shadow-sm p-6 hover:shadow-md transition-all",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                     className: "text-xl font-bold text-foreground mb-6 flex items-center gap-2",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-6 h-6 text-amber-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 1021,
-                                                columnNumber: 15
-                                            }, this)
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__["Zap"], {
+                                            className: "w-5 h-5 text-amber-500"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1020,
-                                            columnNumber: 13
+                                            lineNumber: 1030,
+                                            columnNumber: 15
                                         }, this),
                                         "Optimization Recommendations"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1019,
-                                    columnNumber: 11
+                                    lineNumber: 1029,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-3",
@@ -3101,7 +3177,7 @@ function AnalyticsPage() {
                                             };
                                             const colors = severityColors[severity];
                                             return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: `p-4 bg-gradient-to-r ${colors.bg} border ${colors.border} rounded-lg hover:shadow-md transition-all duration-300`,
+                                                className: `p-4 bg-card border-l-4 ${colors.border.replace('border-', 'border-l-')} shadow-sm hover:shadow-md transition-all duration-300`,
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex items-start justify-between mb-2",
@@ -3124,27 +3200,27 @@ function AnalyticsPage() {
                                                                                     d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                                                    lineNumber: 1044,
-                                                                                    columnNumber: 29
+                                                                                    lineNumber: 1052,
+                                                                                    columnNumber: 31
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                                lineNumber: 1043,
-                                                                                columnNumber: 27
+                                                                                lineNumber: 1051,
+                                                                                columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                                 className: "text-sm text-foreground font-bold",
                                                                                 children: table.table
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                                lineNumber: 1046,
-                                                                                columnNumber: 27
+                                                                                lineNumber: 1054,
+                                                                                columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 1042,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1050,
+                                                                        columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                         className: `text-xs ${colors.text} font-semibold`,
@@ -3155,39 +3231,39 @@ function AnalyticsPage() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 1048,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1056,
+                                                                        columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 1041,
-                                                                columnNumber: 23
+                                                                lineNumber: 1049,
+                                                                columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: `px-3 py-1 text-xs font-bold rounded-full ${colors.badge} uppercase`,
                                                                 children: severity
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 1050,
-                                                                columnNumber: 23
+                                                                lineNumber: 1058,
+                                                                columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1040,
-                                                        columnNumber: 21
+                                                        lineNumber: 1048,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "mt-3 pt-3 border-t border-border/30",
+                                                        className: "mt-3 pt-3 border-t border-border/50",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                className: "text-xs text-foreground-muted mb-2",
-                                                                children: "💡 Recommended actions:"
+                                                                className: "text-[10px] text-foreground-muted font-bold uppercase tracking-wider mb-2",
+                                                                children: "Recommended actions:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 1055,
-                                                                columnNumber: 23
+                                                                lineNumber: 1063,
+                                                                columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
                                                                 className: "text-xs text-foreground-muted space-y-1",
@@ -3196,40 +3272,40 @@ function AnalyticsPage() {
                                                                         children: "• Increase batch size for better throughput"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 1057,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1065,
+                                                                        columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: "• Review table indexes and query performance"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 1058,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1066,
+                                                                        columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: "• Consider connection pooling optimization"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                                        lineNumber: 1059,
-                                                                        columnNumber: 25
+                                                                        lineNumber: 1067,
+                                                                        columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                                lineNumber: 1056,
-                                                                columnNumber: 23
+                                                                lineNumber: 1064,
+                                                                columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1054,
-                                                        columnNumber: 21
+                                                        lineNumber: 1062,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, table.table, true, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 1039,
-                                                columnNumber: 19
+                                                lineNumber: 1047,
+                                                columnNumber: 21
                                             }, this);
                                         }),
                                         tableMetrics.filter((m)=>m.avg_latency > 15).length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3247,56 +3323,56 @@ function AnalyticsPage() {
                                                         d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1068,
-                                                        columnNumber: 19
+                                                        lineNumber: 1076,
+                                                        columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1067,
-                                                    columnNumber: 17
+                                                    lineNumber: 1075,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-sm font-semibold text-green-400",
                                                     children: "All tables performing well!"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1070,
-                                                    columnNumber: 17
+                                                    lineNumber: 1078,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-xs text-foreground-muted mt-1",
                                                     children: "No optimization needed at this time"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1071,
-                                                    columnNumber: 17
+                                                    lineNumber: 1079,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1066,
-                                            columnNumber: 15
+                                            lineNumber: 1074,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1025,
-                                    columnNumber: 11
+                                    lineNumber: 1033,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 1018,
-                            columnNumber: 9
+                            lineNumber: 1028,
+                            columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 969,
-                    columnNumber: 7
+                    lineNumber: 981,
+                    columnNumber: 9
                 }, this),
                 selectedPipelineId !== "all" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                    className: "bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border-indigo-500/20 shadow-xl p-6",
+                    className: "bg-card border-l-4 border-l-indigo-500 shadow-sm p-6 hover:shadow-md transition-all",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex items-center justify-between mb-6",
@@ -3304,32 +3380,19 @@ function AnalyticsPage() {
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                                     className: "text-xl font-bold text-foreground flex items-center gap-2",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
-                                            className: "w-6 h-6 text-indigo-400",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            viewBox: "0 0 24 24",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                strokeLinecap: "round",
-                                                strokeLinejoin: "round",
-                                                strokeWidth: 2,
-                                                d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 1084,
-                                                columnNumber: 17
-                                            }, this)
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                            className: "w-5 h-5 text-indigo-500"
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1083,
-                                            columnNumber: 15
+                                            lineNumber: 1091,
+                                            columnNumber: 17
                                         }, this),
                                         "CDC Checkpoints"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1082,
-                                    columnNumber: 13
+                                    lineNumber: 1090,
+                                    columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
                                     variant: "outline",
@@ -3368,26 +3431,26 @@ function AnalyticsPage() {
                                                 d: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 1114,
-                                                columnNumber: 17
+                                                lineNumber: 1120,
+                                                columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1113,
-                                            columnNumber: 15
+                                            lineNumber: 1119,
+                                            columnNumber: 17
                                         }, this),
                                         "Refresh"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1088,
-                                    columnNumber: 13
+                                    lineNumber: 1094,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 1081,
-                            columnNumber: 11
+                            lineNumber: 1089,
+                            columnNumber: 13
                         }, this),
                         loadingCheckpoints ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "h-[200px] flex items-center justify-center",
@@ -3396,13 +3459,13 @@ function AnalyticsPage() {
                                 children: "Loading checkpoints..."
                             }, void 0, false, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 1122,
-                                columnNumber: 15
+                                lineNumber: 1128,
+                                columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 1121,
-                            columnNumber: 13
+                            lineNumber: 1127,
+                            columnNumber: 15
                         }, this) : checkpoints.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "h-[200px] flex flex-col items-center justify-center text-foreground-muted",
                             children: [
@@ -3418,35 +3481,35 @@ function AnalyticsPage() {
                                         d: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 1127,
-                                        columnNumber: 17
+                                        lineNumber: 1133,
+                                        columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1126,
-                                    columnNumber: 15
+                                    lineNumber: 1132,
+                                    columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-sm font-medium",
                                     children: "No checkpoints found"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1129,
-                                    columnNumber: 15
+                                    lineNumber: 1135,
+                                    columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-xs mt-2",
                                     children: "Checkpoints will be created automatically when CDC replication starts"
                                 }, void 0, false, {
                                     fileName: "[project]/app/analytics/page.tsx",
-                                    lineNumber: 1130,
-                                    columnNumber: 15
+                                    lineNumber: 1136,
+                                    columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 1125,
-                            columnNumber: 13
+                            lineNumber: 1131,
+                            columnNumber: 15
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "overflow-x-auto",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -3461,51 +3524,51 @@ function AnalyticsPage() {
                                                     children: "Table"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1137,
-                                                    columnNumber: 21
+                                                    lineNumber: 1143,
+                                                    columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-left py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Checkpoint Type"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1138,
-                                                    columnNumber: 21
+                                                    lineNumber: 1144,
+                                                    columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-left py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Position (LSN/SCN/Binlog)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1139,
-                                                    columnNumber: 21
+                                                    lineNumber: 1145,
+                                                    columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-right py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Rows Processed"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1140,
-                                                    columnNumber: 21
+                                                    lineNumber: 1146,
+                                                    columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-left py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Last Updated"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/analytics/page.tsx",
-                                                    lineNumber: 1141,
-                                                    columnNumber: 21
+                                                    lineNumber: 1147,
+                                                    columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/analytics/page.tsx",
-                                            lineNumber: 1136,
-                                            columnNumber: 19
+                                            lineNumber: 1142,
+                                            columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 1135,
-                                        columnNumber: 17
+                                        lineNumber: 1141,
+                                        columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                                         children: checkpoints.map((checkpoint, index)=>{
@@ -3545,8 +3608,8 @@ function AnalyticsPage() {
                                                         children: tableName
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1162,
-                                                        columnNumber: 25
+                                                        lineNumber: 1168,
+                                                        columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4",
@@ -3555,13 +3618,13 @@ function AnalyticsPage() {
                                                             children: cpValue.type
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 1164,
-                                                            columnNumber: 27
+                                                            lineNumber: 1170,
+                                                            columnNumber: 29
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1163,
-                                                        columnNumber: 25
+                                                        lineNumber: 1169,
+                                                        columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4",
@@ -3570,68 +3633,68 @@ function AnalyticsPage() {
                                                             children: cpValue.value
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/analytics/page.tsx",
-                                                            lineNumber: 1169,
-                                                            columnNumber: 27
+                                                            lineNumber: 1175,
+                                                            columnNumber: 29
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1168,
-                                                        columnNumber: 25
+                                                        lineNumber: 1174,
+                                                        columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-right text-foreground",
                                                         children: checkpoint.rows_processed ? checkpoint.rows_processed.toLocaleString() : "0"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1173,
-                                                        columnNumber: 25
+                                                        lineNumber: 1179,
+                                                        columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-foreground-muted text-xs",
                                                         children: checkpoint.last_updated_at ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$format$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["format"])(new Date(checkpoint.last_updated_at), "MMM d, yyyy HH:mm:ss") : checkpoint.last_event_timestamp ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$format$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["format"])(new Date(checkpoint.last_event_timestamp), "MMM d, yyyy HH:mm:ss") : "N/A"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/analytics/page.tsx",
-                                                        lineNumber: 1176,
-                                                        columnNumber: 25
+                                                        lineNumber: 1182,
+                                                        columnNumber: 27
                                                     }, this)
                                                 ]
                                             }, index, true, {
                                                 fileName: "[project]/app/analytics/page.tsx",
-                                                lineNumber: 1161,
-                                                columnNumber: 23
+                                                lineNumber: 1167,
+                                                columnNumber: 25
                                             }, this);
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/app/analytics/page.tsx",
-                                        lineNumber: 1144,
-                                        columnNumber: 17
+                                        lineNumber: 1150,
+                                        columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/analytics/page.tsx",
-                                lineNumber: 1134,
-                                columnNumber: 15
+                                lineNumber: 1140,
+                                columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/analytics/page.tsx",
-                            lineNumber: 1133,
-                            columnNumber: 13
+                            lineNumber: 1139,
+                            columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/analytics/page.tsx",
-                    lineNumber: 1080,
-                    columnNumber: 9
+                    lineNumber: 1088,
+                    columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/analytics/page.tsx",
-            lineNumber: 485,
+            lineNumber: 487,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/analytics/page.tsx",
-        lineNumber: 484,
+        lineNumber: 486,
         columnNumber: 5
     }, this);
 }

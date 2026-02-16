@@ -28,10 +28,14 @@ class KafkaConnectClient:
         """Initialize Kafka Connect client.
         
         Args:
-            base_url: Base URL for Kafka Connect REST API
+            base_url: Base URL for Kafka Connect REST API (without /connectors)
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
         """
+        # Normalize URL: remove any trailing /connectors to prevent double path
+        # Handle multiple cases: /connectors, /connectors/, etc.
+        while base_url.endswith('/connectors') or base_url.endswith('/connectors/'):
+            base_url = base_url.rstrip('/connectors').rstrip('/')
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
         self.session = requests.Session()
@@ -349,6 +353,10 @@ class KafkaConnectClient:
         # the actual error body (session has Retry on 500 which masks the message).
         url = f"{self.base_url}/connectors"
         try:
+            # Log the request for debugging (sanitize password)
+            sanitized_data = {k: (v if k != 'database.password' and k != 'password' else '***') for k, v in data.items()}
+            logger.debug(f"Creating connector {connector_name} at {url} with config keys: {list(data.keys())}")
+            
             response = requests.post(
                 url,
                 json=data,
@@ -359,14 +367,46 @@ class KafkaConnectClient:
             logger.info(f"Connector created: {connector_name}")
             return response.json() if response.content else {}
         except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code >= 500:
+            # Extract actual error message from response for all error codes (400, 500, etc.)
+            if e.response is not None:
                 try:
                     err_body = e.response.json()
-                    err_msg = err_body.get("message") or err_body.get("error") or e.response.text[:500]
-                    logger.error(f"Kafka Connect 5xx creating connector: {err_msg}")
-                    raise type(e)(f"Kafka Connect error: {err_msg}", response=e.response) from e
-                except (ValueError, KeyError):
-                    pass
+                    # Try multiple fields that Kafka Connect might use
+                    err_msg = (
+                        err_body.get("message") or 
+                        err_body.get("error") or 
+                        err_body.get("error_code") or
+                        err_body.get("error_message") or
+                        e.response.text[:500]
+                    )
+                    
+                    # If we have config validation errors, include them
+                    if 'configs' in err_body:
+                        config_errors = []
+                        for config_item in err_body.get('configs', []):
+                            if isinstance(config_item, dict):
+                                if 'value' in config_item and isinstance(config_item['value'], dict) and 'errors' in config_item['value']:
+                                    config_errors.extend(config_item['value']['errors'])
+                                if 'errors' in config_item:
+                                    config_errors.extend(config_item['errors'])
+                        if config_errors:
+                            err_msg = f"{err_msg}; Config errors: {'; '.join(config_errors[:5])}"
+                    
+                    logger.error(f"Kafka Connect {e.response.status_code} creating connector: {err_msg}")
+                    # Create a custom exception with the actual error message
+                    error_with_detail = type(e)(f"Kafka Connect error: {err_msg}", response=e.response)
+                    # Store the detailed message for extraction
+                    error_with_detail.error_detail = err_msg
+                    error_with_detail.detail_message = err_msg
+                    raise error_with_detail from e
+                except (ValueError, KeyError, AttributeError) as parse_error:
+                    # If JSON parsing fails, use raw text
+                    err_text = e.response.text[:1000] if hasattr(e.response, 'text') else str(e)
+                    logger.error(f"Kafka Connect {e.response.status_code} creating connector (could not parse JSON): {err_text}")
+                    error_with_detail = type(e)(f"Kafka Connect error: {err_text}", response=e.response)
+                    error_with_detail.error_detail = err_text
+                    error_with_detail.detail_message = err_text
+                    raise error_with_detail from e
             raise
         except requests.exceptions.RequestException as e:
             raise

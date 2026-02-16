@@ -397,7 +397,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
             }
         }
     };
-    const handleSave = ()=>{
+    const handleSave = async ()=>{
         if (!formData.name || !formData.sourceConnection || !formData.targetConnection || selectedTables.length === 0) {
             alert("Please complete all required fields and select at least one table");
             return;
@@ -406,12 +406,21 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                 source: table,
                 target: tableMapping[table] || table
             }));
-        onSave({
-            ...formData,
-            tables: selectedTables,
-            tableMapping: mappedTables
-        });
-        resetWizard();
+        try {
+            // Call onSave and wait for it to complete
+            await onSave({
+                ...formData,
+                tables: selectedTables,
+                tableMapping: mappedTables
+            });
+            // Only reset and close if save was successful
+            resetWizard();
+            onClose(); // Close the wizard after successful save
+        } catch (error) {
+            // If save fails, don't close the wizard so user can fix errors
+            console.error("Failed to save pipeline:", error);
+        // Error handling is done in the onSave callback (handleAddPipeline/handleEditPipeline)
+        }
     };
     const resetWizard = ()=>{
         setStep(1);
@@ -471,12 +480,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                             children: editingPipeline ? "Edit Replication Pipeline" : "Create Replication Pipeline"
                         }, void 0, false, {
                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                            lineNumber: 434,
+                            lineNumber: 443,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                        lineNumber: 433,
+                        lineNumber: 442,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -495,25 +504,25 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         children: stepNum
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 443,
+                                        lineNumber: 452,
                                         columnNumber: 15
                                     }, this),
                                     stepNum < 5 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: `flex-1 h-1 mx-2 transition-all ${stepNum < step ? "bg-primary" : "bg-border"}`
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 453,
+                                        lineNumber: 462,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, stepNum, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 442,
+                                lineNumber: 451,
                                 columnNumber: 13
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                        lineNumber: 440,
+                        lineNumber: 449,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -527,7 +536,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         children: "Step 1: Basic Configuration"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 464,
+                                        lineNumber: 473,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -537,7 +546,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 children: "Pipeline Name *"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 467,
+                                                lineNumber: 476,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -548,13 +557,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 required: true
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 468,
+                                                lineNumber: 477,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 466,
+                                        lineNumber: 475,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -564,7 +573,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 children: "Description"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 478,
+                                                lineNumber: 487,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -574,13 +583,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 className: "mt-1"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 479,
+                                                lineNumber: 488,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 477,
+                                        lineNumber: 486,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -597,7 +606,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             children: "source"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 490,
+                                                            lineNumber: 499,
                                                             columnNumber: 55
                                                         }, this),
                                                         " (where data comes from) and which will be the ",
@@ -606,19 +615,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             children: "target"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 491,
+                                                            lineNumber: 500,
                                                             columnNumber: 41
                                                         }, this),
                                                         " (where data goes to). Only successfully tested connections are shown."
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                    lineNumber: 489,
+                                                    lineNumber: 498,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 488,
+                                                lineNumber: 497,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -633,14 +642,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         className: "w-2 h-2 rounded-full bg-primary"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 499,
+                                                                        lineNumber: 508,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     "Source Connection"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 498,
+                                                                lineNumber: 507,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -670,20 +679,20 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 className: "w-5 h-5 flex-shrink-0"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 518,
+                                                                                                lineNumber: 527,
                                                                                                 columnNumber: 31
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                                 children: selectedConn.name
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 525,
+                                                                                                lineNumber: 534,
                                                                                                 columnNumber: 31
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 517,
+                                                                                        lineNumber: 526,
                                                                                         columnNumber: 29
                                                                                     }, this);
                                                                                 }
@@ -691,12 +700,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             })()
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 511,
+                                                                            lineNumber: 520,
                                                                             columnNumber: 21
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 510,
+                                                                        lineNumber: 519,
                                                                         columnNumber: 19
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -706,7 +715,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             children: "No successful connections available. Please test your connections first."
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 535,
+                                                                            lineNumber: 544,
                                                                             columnNumber: 25
                                                                         }, this) : successfulConnections.filter((conn)=>conn.name !== formData.targetConnection).map((conn)=>{
                                                                             const dbInfo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$icons$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getDatabaseByConnectionType"])(conn.connection_type);
@@ -723,14 +732,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             className: "w-5 h-5 flex-shrink-0"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 546,
+                                                                                            lineNumber: 555,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                             children: conn.name
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 553,
+                                                                                            lineNumber: 562,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -742,36 +751,36 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 554,
+                                                                                            lineNumber: 563,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 545,
+                                                                                    lineNumber: 554,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             }, conn.id, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 544,
+                                                                                lineNumber: 553,
                                                                                 columnNumber: 31
                                                                             }, this);
                                                                         })
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 533,
+                                                                        lineNumber: 542,
                                                                         columnNumber: 21
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 502,
+                                                                lineNumber: 511,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 497,
+                                                        lineNumber: 506,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -783,14 +792,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         className: "w-2 h-2 rounded-full bg-green-500"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 566,
+                                                                        lineNumber: 575,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     "Target Connection"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 565,
+                                                                lineNumber: 574,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -816,20 +825,20 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 className: "w-5 h-5 flex-shrink-0"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 581,
+                                                                                                lineNumber: 590,
                                                                                                 columnNumber: 33
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                                 children: selectedConn.name
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 588,
+                                                                                                lineNumber: 597,
                                                                                                 columnNumber: 33
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 580,
+                                                                                        lineNumber: 589,
                                                                                         columnNumber: 31
                                                                                     }, this);
                                                                                 }
@@ -837,12 +846,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             })()
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 574,
+                                                                            lineNumber: 583,
                                                                             columnNumber: 23
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 573,
+                                                                        lineNumber: 582,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -852,7 +861,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             children: "No successful connections available. Please test your connections first."
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 598,
+                                                                            lineNumber: 607,
                                                                             columnNumber: 25
                                                                         }, this) : successfulConnections.filter((conn)=>conn.name !== formData.sourceConnection).map((conn)=>{
                                                                             const dbInfo = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$database$2d$icons$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getDatabaseByConnectionType"])(conn.connection_type);
@@ -869,14 +878,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             className: "w-5 h-5 flex-shrink-0"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 609,
+                                                                                            lineNumber: 618,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                             children: conn.name
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 616,
+                                                                                            lineNumber: 625,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -888,48 +897,48 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 617,
+                                                                                            lineNumber: 626,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 608,
+                                                                                    lineNumber: 617,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             }, conn.id, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 607,
+                                                                                lineNumber: 616,
                                                                                 columnNumber: 31
                                                                             }, this);
                                                                         })
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 596,
+                                                                        lineNumber: 605,
                                                                         columnNumber: 21
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 569,
+                                                                lineNumber: 578,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 564,
+                                                        lineNumber: 573,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 496,
+                                                lineNumber: 505,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 487,
+                                        lineNumber: 496,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -939,7 +948,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 children: "Replication Mode"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 630,
+                                                lineNumber: 639,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -950,12 +959,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         className: "mt-1 bg-input border-border",
                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 633,
+                                                            lineNumber: 642,
                                                             columnNumber: 19
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 632,
+                                                        lineNumber: 641,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -966,7 +975,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "Full Load Only"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 636,
+                                                                lineNumber: 645,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -974,7 +983,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "CDC Only"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 637,
+                                                                lineNumber: 646,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -982,31 +991,31 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "Full Load + CDC"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 638,
+                                                                lineNumber: 647,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 635,
+                                                        lineNumber: 644,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 631,
+                                                lineNumber: 640,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 629,
+                                        lineNumber: 638,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 463,
+                                lineNumber: 472,
                                 columnNumber: 11
                             }, this),
                             step === 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1022,7 +1031,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Step 2: Select Tables"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 650,
+                                                        lineNumber: 659,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1030,13 +1039,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Load tables from source connection or manually add table names."
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 651,
+                                                        lineNumber: 660,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 649,
+                                                lineNumber: 658,
                                                 columnNumber: 15
                                             }, this),
                                             sourceConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1049,7 +1058,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             className: "w-4 h-4 animate-spin"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 663,
+                                                            lineNumber: 672,
                                                             columnNumber: 23
                                                         }, this),
                                                         "Loading..."
@@ -1060,7 +1069,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 668,
+                                                            lineNumber: 677,
                                                             columnNumber: 23
                                                         }, this),
                                                         "Load Tables"
@@ -1068,13 +1077,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 }, void 0, true)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 656,
+                                                lineNumber: 665,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 648,
+                                        lineNumber: 657,
                                         columnNumber: 13
                                     }, this),
                                     !sourceConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1082,7 +1091,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         children: "Please select a source connection in Step 1 to load tables automatically."
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 677,
+                                        lineNumber: 686,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1100,7 +1109,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 686,
+                                                        lineNumber: 695,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1119,7 +1128,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     children: table.full_name || table.name
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 698,
+                                                                                    lineNumber: 707,
                                                                                     columnNumber: 29
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1130,42 +1139,42 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 699,
+                                                                                    lineNumber: 708,
                                                                                     columnNumber: 29
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 697,
+                                                                            lineNumber: 706,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         selectedTables.includes(table.name) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             className: "w-2 h-2 rounded-full bg-primary"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 704,
+                                                                            lineNumber: 713,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 696,
+                                                                    lineNumber: 705,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, table.name, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 689,
+                                                                lineNumber: 698,
                                                                 columnNumber: 23
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 687,
+                                                        lineNumber: 696,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 685,
+                                                lineNumber: 694,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1176,7 +1185,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Or Add Table Manually"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 715,
+                                                        lineNumber: 724,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1211,7 +1220,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 className: "flex-1"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 717,
+                                                                lineNumber: 726,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1241,19 +1250,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "Add"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 736,
+                                                                lineNumber: 745,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 716,
+                                                        lineNumber: 725,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 714,
+                                                lineNumber: 723,
                                                 columnNumber: 15
                                             }, this),
                                             selectedTables.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1268,7 +1277,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 760,
+                                                        lineNumber: 769,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1284,7 +1293,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                 children: table
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 768,
+                                                                                lineNumber: 777,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             tableSchemas[table] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1295,13 +1304,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 770,
+                                                                                lineNumber: 779,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 767,
+                                                                        lineNumber: 776,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1322,24 +1331,24 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Remove"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 775,
+                                                                        lineNumber: 784,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, table, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 763,
+                                                                lineNumber: 772,
                                                                 columnNumber: 23
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 761,
+                                                        lineNumber: 770,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 759,
+                                                lineNumber: 768,
                                                 columnNumber: 17
                                             }, this),
                                             selectedTables.length === 0 && availableTables.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1348,24 +1357,24 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                     children: 'No tables selected. Click "Load Tables" to fetch from source or add manually.'
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                    lineNumber: 799,
+                                                    lineNumber: 808,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 798,
+                                                lineNumber: 807,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 682,
+                                        lineNumber: 691,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 647,
+                                lineNumber: 656,
                                 columnNumber: 11
                             }, this),
                             step === 3 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1381,7 +1390,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Step 3: Map Tables Source to Target"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 811,
+                                                        lineNumber: 820,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1389,13 +1398,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Review and manage table mappings. Source and target tables are displayed in separate sections."
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 812,
+                                                        lineNumber: 821,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 810,
+                                                lineNumber: 819,
                                                 columnNumber: 15
                                             }, this),
                                             selectedTables.length > 0 && targetTables.length < selectedTables.length && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1423,13 +1432,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 children: "Auto-map All Tables"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 817,
+                                                lineNumber: 826,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 809,
+                                        lineNumber: 818,
                                         columnNumber: 13
                                     }, this),
                                     selectedTables.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1439,12 +1448,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                             children: "No tables selected. Go back to Step 2 to select tables."
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 841,
+                                            lineNumber: 850,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 840,
+                                        lineNumber: 849,
                                         columnNumber: 15
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "grid grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden",
@@ -1462,7 +1471,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         className: "w-5 h-5 text-primary"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 849,
+                                                                        lineNumber: 858,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1470,7 +1479,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Source Tables"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 850,
+                                                                        lineNumber: 859,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1482,13 +1491,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 851,
+                                                                        lineNumber: 860,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 848,
+                                                                lineNumber: 857,
                                                                 columnNumber: 21
                                                             }, this),
                                                             formData.sourceConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1500,19 +1509,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.sourceConnection
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 857,
+                                                                        lineNumber: 866,
                                                                         columnNumber: 37
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 856,
+                                                                lineNumber: 865,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 847,
+                                                        lineNumber: 856,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1544,7 +1553,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     className: "w-4 h-4 text-foreground-muted flex-shrink-0"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 885,
+                                                                                                    lineNumber: 894,
                                                                                                     columnNumber: 35
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1552,13 +1561,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     children: sourceTable
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 886,
+                                                                                                    lineNumber: 895,
                                                                                                     columnNumber: 35
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 884,
+                                                                                            lineNumber: 893,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         sourceSchema && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1576,30 +1585,30 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                 children: sourceSchema.schema
                                                                                                             }, void 0, false, {
                                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                lineNumber: 893,
+                                                                                                                lineNumber: 902,
                                                                                                                 columnNumber: 74
                                                                                                             }, this)
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                        lineNumber: 893,
+                                                                                                        lineNumber: 902,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 890,
+                                                                                                lineNumber: 899,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 889,
+                                                                                            lineNumber: 898,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 883,
+                                                                                    lineNumber: 892,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 isMapped && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1608,18 +1617,18 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         className: "w-2 h-2 rounded-full bg-primary animate-pulse"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 901,
+                                                                                        lineNumber: 910,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 900,
+                                                                                    lineNumber: 909,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 882,
+                                                                            lineNumber: 891,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         isMapped && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1631,7 +1640,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         className: "w-3 h-3"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 908,
+                                                                                        lineNumber: 917,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     "Mapped to: ",
@@ -1640,41 +1649,41 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         children: mappedTarget
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 909,
+                                                                                        lineNumber: 918,
                                                                                         columnNumber: 46
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 907,
+                                                                                lineNumber: 916,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 906,
+                                                                            lineNumber: 915,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 881,
+                                                                    lineNumber: 890,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, sourceTable, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 868,
+                                                                lineNumber: 877,
                                                                 columnNumber: 25
                                                             }, this);
                                                         })
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 861,
+                                                        lineNumber: 870,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 846,
+                                                lineNumber: 855,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1692,7 +1701,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         className: "w-5 h-5 text-primary"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 928,
+                                                                        lineNumber: 937,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -1700,7 +1709,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Target Tables"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 929,
+                                                                        lineNumber: 938,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1712,13 +1721,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 930,
+                                                                        lineNumber: 939,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 927,
+                                                                lineNumber: 936,
                                                                 columnNumber: 21
                                                             }, this),
                                                             formData.targetConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1730,13 +1739,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.targetConnection
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 936,
+                                                                        lineNumber: 945,
                                                                         columnNumber: 37
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 935,
+                                                                lineNumber: 944,
                                                                 columnNumber: 23
                                                             }, this),
                                                             draggedTable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1748,13 +1757,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 940,
+                                                                lineNumber: 949,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 926,
+                                                        lineNumber: 935,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1769,7 +1778,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                     children: "No target tables mapped yet"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 954,
+                                                                    lineNumber: 963,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1777,13 +1786,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                     children: 'Use "Auto-map All Tables" or map individually'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 955,
+                                                                    lineNumber: 964,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 953,
+                                                            lineNumber: 962,
                                                             columnNumber: 23
                                                         }, this) : targetTables.map((targetTable)=>{
                                                             // Find the source table that maps to this target
@@ -1804,7 +1813,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         children: targetTable
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 973,
+                                                                                        lineNumber: 982,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     targetParsed.schema && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1816,13 +1825,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 children: targetParsed.schema
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 976,
+                                                                                                lineNumber: 985,
                                                                                                 columnNumber: 47
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 975,
+                                                                                        lineNumber: 984,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     targetTable !== sourceTable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1833,13 +1842,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 980,
+                                                                                        lineNumber: 989,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 972,
+                                                                                lineNumber: 981,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1866,46 +1875,46 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     className: "w-4 h-4"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1004,
+                                                                                    lineNumber: 1013,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 985,
+                                                                                lineNumber: 994,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 971,
+                                                                        lineNumber: 980,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 970,
+                                                                    lineNumber: 979,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, targetTable, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 966,
+                                                                lineNumber: 975,
                                                                 columnNumber: 27
                                                             }, this);
                                                         })
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 945,
+                                                        lineNumber: 954,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 921,
+                                                lineNumber: 930,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 844,
+                                        lineNumber: 853,
                                         columnNumber: 15
                                     }, this),
                                     draggedTable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1917,13 +1926,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1018,
+                                        lineNumber: 1027,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 808,
+                                lineNumber: 817,
                                 columnNumber: 11
                             }, this),
                             step === 4 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1942,7 +1951,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "Step 4: Configure Target Tables"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1031,
+                                                                lineNumber: 1040,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1950,13 +1959,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 children: "Edit target table names and review source and target table schemas side by side."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1032,
+                                                                lineNumber: 1041,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1030,
+                                                        lineNumber: 1039,
                                                         columnNumber: 17
                                                     }, this),
                                                     targetConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1971,7 +1980,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                     className: "w-4 h-4 animate-spin"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1046,
+                                                                    lineNumber: 1055,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 "Loading..."
@@ -1982,7 +1991,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                     className: "w-4 h-4"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1051,
+                                                                    lineNumber: 1060,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 "Load Target Tables"
@@ -1990,13 +1999,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         }, void 0, true)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1037,
+                                                        lineNumber: 1046,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1029,
+                                                lineNumber: 1038,
                                                 columnNumber: 15
                                             }, this),
                                             targetAvailableTables.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2013,7 +2022,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1060,
+                                                        lineNumber: 1069,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2021,19 +2030,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "These tables are available in your target database. You can map source tables to these existing tables or create new ones."
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1061,
+                                                        lineNumber: 1070,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1059,
+                                                lineNumber: 1068,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1028,
+                                        lineNumber: 1037,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2044,12 +2053,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 children: "No tables selected. Go back to Step 2 to select tables."
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1071,
+                                                lineNumber: 1080,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 1070,
+                                            lineNumber: 1079,
                                             columnNumber: 17
                                         }, this) : selectedTables.map((sourceTable)=>{
                                             // Get source schema - check both full_name and name for Oracle tables
@@ -2082,7 +2091,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     className: "w-5 h-5 text-primary"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1097,
+                                                                                    lineNumber: 1106,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2092,7 +2101,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "Source Table"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1099,
+                                                                                            lineNumber: 1108,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2100,19 +2109,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: sourceTable
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1102,
+                                                                                            lineNumber: 1111,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1098,
+                                                                                    lineNumber: 1107,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1096,
+                                                                            lineNumber: 1105,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         schema && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2126,20 +2135,20 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: schema.schema || "default"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1107,
+                                                                                            lineNumber: 1116,
                                                                                             columnNumber: 47
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1107,
+                                                                                    lineNumber: 1116,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                     children: "•"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1108,
+                                                                                    lineNumber: 1117,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2150,13 +2159,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: schema.columns?.length || 0
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1109,
+                                                                                            lineNumber: 1118,
                                                                                             columnNumber: 48
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1109,
+                                                                                    lineNumber: 1118,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 formData.sourceConnection && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2165,7 +2174,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "•"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1112,
+                                                                                            lineNumber: 1121,
                                                                                             columnNumber: 37
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2176,13 +2185,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     children: formData.sourceConnection
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1113,
+                                                                                                    lineNumber: 1122,
                                                                                                     columnNumber: 55
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1113,
+                                                                                            lineNumber: 1122,
                                                                                             columnNumber: 37
                                                                                         }, this)
                                                                                     ]
@@ -2190,13 +2199,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1106,
+                                                                            lineNumber: 1115,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1095,
+                                                                    lineNumber: 1104,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2213,14 +2222,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     className: "w-4 h-4"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1127,
+                                                                                    lineNumber: 1136,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 "Copy to Clipboard"
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1120,
+                                                                            lineNumber: 1129,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2254,26 +2263,26 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     className: "w-4 h-4"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1153,
+                                                                                    lineNumber: 1162,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 "Remove"
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1130,
+                                                                            lineNumber: 1139,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1119,
+                                                                    lineNumber: 1128,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1094,
+                                                            lineNumber: 1103,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2285,7 +2294,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Target Table Name *"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1162,
+                                                                        lineNumber: 1171,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2324,12 +2333,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             placeholder: "Select existing table or create new"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1202,
+                                                                                            lineNumber: 1211,
                                                                                             columnNumber: 37
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1201,
+                                                                                        lineNumber: 1210,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2340,7 +2349,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 children: "+ Create New Table"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 1205,
+                                                                                                lineNumber: 1214,
                                                                                                 columnNumber: 37
                                                                                             }, this),
                                                                                             targetAvailableTables.map((table)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2351,19 +2360,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     ]
                                                                                                 }, table.full_name || table.name, true, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1207,
+                                                                                                    lineNumber: 1216,
                                                                                                     columnNumber: 39
                                                                                                 }, this))
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1204,
+                                                                                        lineNumber: 1213,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 1168,
+                                                                                lineNumber: 1177,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2413,7 +2422,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                 placeholder: targetAvailableTables.length > 0 ? "Or enter new table name" : "Enter target table name"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 1218,
+                                                                                lineNumber: 1227,
                                                                                 columnNumber: 31
                                                                             }, this),
                                                                             (()=>{
@@ -2449,14 +2458,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 className: "w-4 h-4"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 1298,
+                                                                                                lineNumber: 1307,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             "Copy Schema"
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1271,
+                                                                                        lineNumber: 1280,
                                                                                         columnNumber: 37
                                                                                     }, this);
                                                                                 }
@@ -2465,7 +2474,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1165,
+                                                                        lineNumber: 1174,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     (()=>{
@@ -2482,7 +2491,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         children: mapped
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1313,
+                                                                                        lineNumber: 1322,
                                                                                         columnNumber: 55
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2496,13 +2505,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1314,
+                                                                                        lineNumber: 1323,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 1312,
+                                                                                lineNumber: 1321,
                                                                                 columnNumber: 35
                                                                             }, this);
                                                                         } else if (targetParsed.schema) {
@@ -2515,7 +2524,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         children: mapped
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1320,
+                                                                                        lineNumber: 1329,
                                                                                         columnNumber: 55
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2527,13 +2536,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                        lineNumber: 1321,
+                                                                                        lineNumber: 1330,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                lineNumber: 1319,
+                                                                                lineNumber: 1328,
                                                                                 columnNumber: 35
                                                                             }, this);
                                                                         }
@@ -2542,12 +2551,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1161,
+                                                                lineNumber: 1170,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1160,
+                                                            lineNumber: 1169,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2560,7 +2569,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                             children: "Schema Comparison"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1333,
+                                                                            lineNumber: 1342,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2573,20 +2582,20 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             className: "w-3 h-3 rounded bg-surface-hover border border-border"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1336,
+                                                                                            lineNumber: 1345,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                             children: "Source"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1337,
+                                                                                            lineNumber: 1346,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1335,
+                                                                                    lineNumber: 1344,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2596,32 +2605,32 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             className: "w-3 h-3 rounded bg-primary/20 border border-primary/50"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1340,
+                                                                                            lineNumber: 1349,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                             children: "Target"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1341,
+                                                                                            lineNumber: 1350,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1339,
+                                                                                    lineNumber: 1348,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1334,
+                                                                            lineNumber: 1343,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1332,
+                                                                    lineNumber: 1341,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2637,7 +2646,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             className: "w-4 h-4 text-foreground-muted"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1349,
+                                                                                            lineNumber: 1358,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2645,13 +2654,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "Source Table Schema"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1350,
+                                                                                            lineNumber: 1359,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1348,
+                                                                                    lineNumber: 1357,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 schema && schema.columns && schema.columns.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2667,7 +2676,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                             children: col.name
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                            lineNumber: 1357,
+                                                                                                            lineNumber: 1366,
                                                                                                             columnNumber: 41
                                                                                                         }, this),
                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2678,7 +2687,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                     children: col.type
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1359,
+                                                                                                                    lineNumber: 1368,
                                                                                                                     columnNumber: 43
                                                                                                                 }, this),
                                                                                                                 col.nullable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2686,24 +2695,24 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                     children: "nullable"
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1361,
+                                                                                                                    lineNumber: 1370,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this)
                                                                                                             ]
                                                                                                         }, void 0, true, {
                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                            lineNumber: 1358,
+                                                                                                            lineNumber: 1367,
                                                                                                             columnNumber: 41
                                                                                                         }, this)
                                                                                                     ]
                                                                                                 }, idx, true, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1356,
+                                                                                                    lineNumber: 1365,
                                                                                                     columnNumber: 39
                                                                                                 }, this))
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1354,
+                                                                                            lineNumber: 1363,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2717,18 +2726,18 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 1368,
+                                                                                                lineNumber: 1377,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1367,
+                                                                                            lineNumber: 1376,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1353,
+                                                                                    lineNumber: 1362,
                                                                                     columnNumber: 33
                                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                     className: "text-sm text-foreground-muted p-6 bg-surface-hover rounded-lg border-2 border-dashed border-border text-center",
@@ -2738,7 +2747,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "Schema information not available"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1373,
+                                                                                            lineNumber: 1382,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2746,19 +2755,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "Will be detected during pipeline execution"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1374,
+                                                                                            lineNumber: 1383,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1372,
+                                                                                    lineNumber: 1381,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1347,
+                                                                            lineNumber: 1356,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2774,7 +2783,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     className: "w-4 h-4 text-primary"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1383,
+                                                                                                    lineNumber: 1392,
                                                                                                     columnNumber: 35
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2782,7 +2791,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     children: "Target Table Schema"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1384,
+                                                                                                    lineNumber: 1393,
                                                                                                     columnNumber: 35
                                                                                                 }, this),
                                                                                                 targetSchema && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2790,13 +2799,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                     children: "✓ Copied"
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1386,
+                                                                                                    lineNumber: 1395,
                                                                                                     columnNumber: 37
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1382,
+                                                                                            lineNumber: 1391,
                                                                                             columnNumber: 33
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2840,14 +2849,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                             className: "w-3 h-3"
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                            lineNumber: 1429,
+                                                                                                            lineNumber: 1438,
                                                                                                             columnNumber: 39
                                                                                                         }, this),
                                                                                                         "Confirm"
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1393,
+                                                                                                    lineNumber: 1402,
                                                                                                     columnNumber: 37
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2872,26 +2881,26 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                             className: "w-3 h-3"
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                            lineNumber: 1447,
+                                                                                                            lineNumber: 1456,
                                                                                                             columnNumber: 37
                                                                                                         }, this),
                                                                                                         "Add Field"
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                    lineNumber: 1433,
+                                                                                                    lineNumber: 1442,
                                                                                                     columnNumber: 35
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1391,
+                                                                                            lineNumber: 1400,
                                                                                             columnNumber: 33
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1381,
+                                                                                    lineNumber: 1390,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 displayTargetSchema && displayTargetSchema.columns && displayTargetSchema.columns.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2908,7 +2917,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                 children: col.name
                                                                                                             }, void 0, false, {
                                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                lineNumber: 1465,
+                                                                                                                lineNumber: 1474,
                                                                                                                 columnNumber: 41
                                                                                                             }, this),
                                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2919,7 +2928,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                         children: col.type
                                                                                                                     }, void 0, false, {
                                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                        lineNumber: 1469,
+                                                                                                                        lineNumber: 1478,
                                                                                                                         columnNumber: 43
                                                                                                                     }, this),
                                                                                                                     col.nullable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2927,19 +2936,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                         children: "nullable"
                                                                                                                     }, void 0, false, {
                                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                        lineNumber: 1475,
+                                                                                                                        lineNumber: 1484,
                                                                                                                         columnNumber: 45
                                                                                                                     }, this)
                                                                                                                 ]
                                                                                                             }, void 0, true, {
                                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                lineNumber: 1468,
+                                                                                                                lineNumber: 1477,
                                                                                                                 columnNumber: 41
                                                                                                             }, this)
                                                                                                         ]
                                                                                                     }, idx, true, {
                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                        lineNumber: 1460,
+                                                                                                        lineNumber: 1469,
                                                                                                         columnNumber: 39
                                                                                                     }, this)),
                                                                                                 (()=>{
@@ -2964,7 +2973,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                     className: "flex-1 text-xs h-8"
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1487,
+                                                                                                                    lineNumber: 1496,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this),
                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -2983,12 +2992,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                             className: "w-32 h-8 text-xs",
                                                                                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                lineNumber: 1508,
+                                                                                                                                lineNumber: 1517,
                                                                                                                                 columnNumber: 49
                                                                                                                             }, this)
                                                                                                                         }, void 0, false, {
                                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                            lineNumber: 1507,
+                                                                                                                            lineNumber: 1516,
                                                                                                                             columnNumber: 47
                                                                                                                         }, this),
                                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2998,7 +3007,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "VARCHAR"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1511,
+                                                                                                                                    lineNumber: 1520,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3006,7 +3015,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "INTEGER"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1512,
+                                                                                                                                    lineNumber: 1521,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3014,7 +3023,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "BIGINT"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1513,
+                                                                                                                                    lineNumber: 1522,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3022,7 +3031,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "DECIMAL"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1514,
+                                                                                                                                    lineNumber: 1523,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3030,7 +3039,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "DATE"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1515,
+                                                                                                                                    lineNumber: 1524,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3038,7 +3047,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "TIMESTAMP"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1516,
+                                                                                                                                    lineNumber: 1525,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3046,7 +3055,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "BOOLEAN"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1517,
+                                                                                                                                    lineNumber: 1526,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this),
                                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3054,19 +3063,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                                     children: "TEXT"
                                                                                                                                 }, void 0, false, {
                                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                                    lineNumber: 1518,
+                                                                                                                                    lineNumber: 1527,
                                                                                                                                     columnNumber: 49
                                                                                                                                 }, this)
                                                                                                                             ]
                                                                                                                         }, void 0, true, {
                                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                            lineNumber: 1510,
+                                                                                                                            lineNumber: 1519,
                                                                                                                             columnNumber: 47
                                                                                                                         }, this)
                                                                                                                     ]
                                                                                                                 }, void 0, true, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1498,
+                                                                                                                    lineNumber: 1507,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this),
                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -3088,14 +3097,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                             className: "mr-1"
                                                                                                                         }, void 0, false, {
                                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                            lineNumber: 1522,
+                                                                                                                            lineNumber: 1531,
                                                                                                                             columnNumber: 47
                                                                                                                         }, this),
                                                                                                                         "Nullable"
                                                                                                                     ]
                                                                                                                 }, void 0, true, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1521,
+                                                                                                                    lineNumber: 1530,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this),
                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3136,12 +3145,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                         className: "w-3 h-3"
                                                                                                                     }, void 0, false, {
                                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                        lineNumber: 1566,
+                                                                                                                        lineNumber: 1575,
                                                                                                                         columnNumber: 47
                                                                                                                     }, this)
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1536,
+                                                                                                                    lineNumber: 1545,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this),
                                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3162,18 +3171,18 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                                         className: "w-3 h-3"
                                                                                                                     }, void 0, false, {
                                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                        lineNumber: 1581,
+                                                                                                                        lineNumber: 1590,
                                                                                                                         columnNumber: 47
                                                                                                                     }, this)
                                                                                                                 }, void 0, false, {
                                                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                                    lineNumber: 1568,
+                                                                                                                    lineNumber: 1577,
                                                                                                                     columnNumber: 45
                                                                                                                 }, this)
                                                                                                             ]
                                                                                                         }, void 0, true, {
                                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                            lineNumber: 1486,
+                                                                                                            lineNumber: 1495,
                                                                                                             columnNumber: 43
                                                                                                         }, this);
                                                                                                     }
@@ -3182,7 +3191,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1458,
+                                                                                            lineNumber: 1467,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3198,24 +3207,24 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                                         children: '(showing source schema - click "Copy Schema" to confirm)'
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                        lineNumber: 1597,
+                                                                                                        lineNumber: 1606,
                                                                                                         columnNumber: 41
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                                lineNumber: 1592,
+                                                                                                lineNumber: 1601,
                                                                                                 columnNumber: 37
                                                                                             }, this)
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1589,
+                                                                                            lineNumber: 1598,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1453,
+                                                                                    lineNumber: 1462,
                                                                                     columnNumber: 33
                                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                     className: "text-sm text-foreground-muted p-6 bg-surface-hover rounded-lg border-2 border-dashed border-border text-center",
@@ -3225,7 +3234,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "No schema available"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1606,
+                                                                                            lineNumber: 1615,
                                                                                             columnNumber: 35
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3233,54 +3242,54 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: 'Click "Copy Schema" to copy from source'
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1607,
+                                                                                            lineNumber: 1616,
                                                                                             columnNumber: 35
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1605,
+                                                                                    lineNumber: 1614,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1380,
+                                                                            lineNumber: 1389,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1345,
+                                                                    lineNumber: 1354,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1331,
+                                                            lineNumber: 1340,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                    lineNumber: 1092,
+                                                    lineNumber: 1101,
                                                     columnNumber: 23
                                                 }, this)
                                             }, sourceTable, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1091,
+                                                lineNumber: 1100,
                                                 columnNumber: 21
                                             }, this);
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1068,
+                                        lineNumber: 1077,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 1027,
+                                lineNumber: 1036,
                                 columnNumber: 11
                             }, this),
                             step === 5 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3291,7 +3300,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         children: "Step 5: Configure Schedule"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1625,
+                                        lineNumber: 1634,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -3304,7 +3313,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                         children: "Replication Schedule"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1629,
+                                                        lineNumber: 1638,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -3315,12 +3324,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 className: "mt-1 bg-input border-border",
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1632,
+                                                                    lineNumber: 1641,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1631,
+                                                                lineNumber: 1640,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -3331,7 +3340,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Immediate Start"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1635,
+                                                                        lineNumber: 1644,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3339,7 +3348,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Every Hour"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1636,
+                                                                        lineNumber: 1645,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3347,7 +3356,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Every 6 Hours"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1637,
+                                                                        lineNumber: 1646,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3355,7 +3364,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Daily at 2 AM"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1638,
+                                                                        lineNumber: 1647,
                                                                         columnNumber: 21
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -3363,25 +3372,25 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Weekly (Monday)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1639,
+                                                                        lineNumber: 1648,
                                                                         columnNumber: 21
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1634,
+                                                                lineNumber: 1643,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1630,
+                                                        lineNumber: 1639,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1628,
+                                                lineNumber: 1637,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3394,12 +3403,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             children: "Pipeline Summary:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1646,
+                                                            lineNumber: 1655,
                                                             columnNumber: 19
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1645,
+                                                        lineNumber: 1654,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -3413,13 +3422,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.name
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1650,
+                                                                        lineNumber: 1659,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1649,
+                                                                lineNumber: 1658,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -3430,13 +3439,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: selectedTables.length
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1653,
+                                                                        lineNumber: 1662,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1652,
+                                                                lineNumber: 1661,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -3447,13 +3456,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.mode.replace(/_/g, " ")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1656,
+                                                                        lineNumber: 1665,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1655,
+                                                                lineNumber: 1664,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
@@ -3464,43 +3473,43 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.schedule
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1659,
+                                                                        lineNumber: 1668,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1658,
+                                                                lineNumber: 1667,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1648,
+                                                        lineNumber: 1657,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1644,
+                                                lineNumber: 1653,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1627,
+                                        lineNumber: 1636,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 1624,
+                                lineNumber: 1633,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                        lineNumber: 460,
+                        lineNumber: 469,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3515,14 +3524,14 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1675,
+                                        lineNumber: 1684,
                                         columnNumber: 13
                                     }, this),
                                     step === 1 ? "Cancel" : "Back"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 1670,
+                                lineNumber: 1679,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3538,13 +3547,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1687,
+                                                lineNumber: 1696,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1681,
+                                        lineNumber: 1690,
                                         columnNumber: 15
                                     }, this),
                                     step === 5 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3553,25 +3562,25 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                         children: editingPipeline ? "Update Pipeline" : "Create Pipeline"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1691,
+                                        lineNumber: 1700,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 1679,
+                                lineNumber: 1688,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                        lineNumber: 1669,
+                        lineNumber: 1678,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                lineNumber: 432,
+                lineNumber: 441,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -3587,12 +3596,12 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                 children: "Confirm Schema Copy"
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                lineNumber: 1703,
+                                lineNumber: 1712,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                            lineNumber: 1702,
+                            lineNumber: 1711,
                             columnNumber: 11
                         }, this),
                         schemaConfirmData && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3603,7 +3612,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                     children: "Please review the source and target table information before confirming the schema copy."
                                 }, void 0, false, {
                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                    lineNumber: 1708,
+                                    lineNumber: 1717,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3620,7 +3629,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             children: "Source Table"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1717,
+                                                            lineNumber: 1726,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -3628,18 +3637,18 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                             children: "Target Table"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1720,
+                                                            lineNumber: 1729,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                    lineNumber: 1716,
+                                                    lineNumber: 1725,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1715,
+                                                lineNumber: 1724,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -3655,41 +3664,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: schemaConfirmData.sourceTable
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1729,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "text-xs text-foreground-muted mt-1",
-                                                                        children: (()=>{
-                                                                            const parsed = parseTableName(schemaConfirmData.sourceTable);
-                                                                            return parsed.schema ? `Schema: ${parsed.schema}` : 'No schema';
-                                                                        })()
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1730,
-                                                                        columnNumber: 25
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
-                                                                fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1728,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                                                className: "px-4 py-3 text-sm text-foreground bg-surface-hover/50",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        className: "font-medium",
-                                                                        children: schemaConfirmData.targetTable
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
                                                                         lineNumber: 1738,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "text-xs text-foreground-muted mt-1",
                                                                         children: (()=>{
-                                                                            const parsed = parseTableName(schemaConfirmData.targetTable);
+                                                                            const parsed = parseTableName(schemaConfirmData.sourceTable);
                                                                             return parsed.schema ? `Schema: ${parsed.schema}` : 'No schema';
                                                                         })()
                                                                     }, void 0, false, {
@@ -3702,11 +3683,39 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
                                                                 lineNumber: 1737,
                                                                 columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
+                                                                className: "px-4 py-3 text-sm text-foreground bg-surface-hover/50",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "font-medium",
+                                                                        children: schemaConfirmData.targetTable
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
+                                                                        lineNumber: 1747,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "text-xs text-foreground-muted mt-1",
+                                                                        children: (()=>{
+                                                                            const parsed = parseTableName(schemaConfirmData.targetTable);
+                                                                            return parsed.schema ? `Schema: ${parsed.schema}` : 'No schema';
+                                                                        })()
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
+                                                                        lineNumber: 1748,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
+                                                                lineNumber: 1746,
+                                                                columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1727,
+                                                        lineNumber: 1736,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -3720,7 +3729,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Connection:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1751,
+                                                                        lineNumber: 1760,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3728,13 +3737,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.sourceConnection || 'N/A'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1752,
+                                                                        lineNumber: 1761,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1750,
+                                                                lineNumber: 1759,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3745,7 +3754,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Connection:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1755,
+                                                                        lineNumber: 1764,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3753,19 +3762,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: formData.targetConnection || 'N/A'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1756,
+                                                                        lineNumber: 1765,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1754,
+                                                                lineNumber: 1763,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1749,
+                                                        lineNumber: 1758,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -3779,7 +3788,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Columns:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1763,
+                                                                        lineNumber: 1772,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3790,13 +3799,13 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1764,
+                                                                        lineNumber: 1773,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1762,
+                                                                lineNumber: 1771,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3807,7 +3816,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Columns (will be copied):"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1769,
+                                                                        lineNumber: 1778,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3818,36 +3827,36 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1770,
+                                                                        lineNumber: 1779,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1768,
+                                                                lineNumber: 1777,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                        lineNumber: 1761,
+                                                        lineNumber: 1770,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1725,
+                                                lineNumber: 1734,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                        lineNumber: 1714,
+                                        lineNumber: 1723,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                    lineNumber: 1713,
+                                    lineNumber: 1722,
                                     columnNumber: 15
                                 }, this),
                                 schemaConfirmData.sourceSchema?.columns && schemaConfirmData.sourceSchema.columns.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3858,7 +3867,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                             children: "Column Details"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 1782,
+                                            lineNumber: 1791,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3878,7 +3887,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Source Column"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1788,
+                                                                        lineNumber: 1797,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -3886,18 +3895,18 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                         children: "Target Column (will be created)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                        lineNumber: 1791,
+                                                                        lineNumber: 1800,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                lineNumber: 1787,
+                                                                lineNumber: 1796,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1786,
+                                                            lineNumber: 1795,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -3912,7 +3921,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     children: col.name
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1800,
+                                                                                    lineNumber: 1809,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3924,19 +3933,19 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "(nullable)"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1803,
+                                                                                            lineNumber: 1812,
                                                                                             columnNumber: 52
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1801,
+                                                                                    lineNumber: 1810,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1799,
+                                                                            lineNumber: 1808,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3947,7 +3956,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                     children: col.name
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1807,
+                                                                                    lineNumber: 1816,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3959,52 +3968,52 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                                                                             children: "(nullable)"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                            lineNumber: 1810,
+                                                                                            lineNumber: 1819,
                                                                                             columnNumber: 52
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                                    lineNumber: 1808,
+                                                                                    lineNumber: 1817,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                            lineNumber: 1806,
+                                                                            lineNumber: 1815,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, idx, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                                    lineNumber: 1798,
+                                                                    lineNumber: 1807,
                                                                     columnNumber: 29
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                            lineNumber: 1796,
+                                                            lineNumber: 1805,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                    lineNumber: 1785,
+                                                    lineNumber: 1794,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                                lineNumber: 1784,
+                                                lineNumber: 1793,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 1783,
+                                            lineNumber: 1792,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                    lineNumber: 1781,
+                                    lineNumber: 1790,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4020,7 +4029,7 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                             children: "Cancel"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 1824,
+                                            lineNumber: 1833,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4050,36 +4059,36 @@ function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }) {
                                             children: "Confirm & Copy Schema"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                            lineNumber: 1834,
+                                            lineNumber: 1843,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                                    lineNumber: 1823,
+                                    lineNumber: 1832,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                            lineNumber: 1707,
+                            lineNumber: 1716,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                    lineNumber: 1701,
+                    lineNumber: 1710,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-                lineNumber: 1700,
+                lineNumber: 1709,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/pipelines/pipeline-wizard.tsx",
-        lineNumber: 431,
+        lineNumber: 440,
         columnNumber: 5
     }, this);
 }
@@ -4807,6 +4816,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-alert.js [app-client] (ecmascript) <export default as AlertCircle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/refresh-cw.js [app-client] (ecmascript) <export default as RefreshCw>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/rotate-cw.js [app-client] (ecmascript) <export default as RotateCw>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/zap.js [app-client] (ecmascript) <export default as Zap>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/clock.js [app-client] (ecmascript) <export default as Clock>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/select.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/label.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
@@ -4827,9 +4838,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$pipelines$2f$checkpoint$2d$manager$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/pipelines/checkpoint-manager.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$confirm$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/confirm-dialog.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$error$2d$toast$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/error-toast.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/utils.ts [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
+;
 ;
 ;
 ;
@@ -4968,8 +4981,8 @@ function PipelineDetail({ pipeline, onBack }) {
         "PipelineDetail.useMemo[stablePipelineId]": ()=>{
             if (!pipeline?.id) return null;
             const pipelineIdStr = String(pipeline.id);
-            const numId = Number(pipeline.id);
-            const pipelineId = !isNaN(numId) && isFinite(numId) ? numId : pipelineIdStr;
+            const numId = pipeline.id;
+            const pipelineId = !isNaN(Number(numId)) && isFinite(Number(numId)) ? numId : pipelineIdStr;
             // Validate pipeline ID is not NaN or undefined
             if (!pipelineId || pipelineId === 'NaN' || pipelineId === 'undefined' || typeof pipelineId === 'number' && isNaN(pipelineId)) {
                 return null;
@@ -5135,7 +5148,7 @@ function PipelineDetail({ pipeline, onBack }) {
         "PipelineDetail.useMemo[replicationLag]": ()=>{
             if (!pipeline?.id) return null;
             const pipelineIdStr = String(pipeline.id);
-            const pipelineId = !isNaN(Number(pipeline.id)) ? Number(pipeline.id) : pipelineIdStr;
+            const pipelineId = !isNaN(Number(pipeline.id)) ? pipeline.id : pipelineIdStr;
             const pipelineEvents = events.filter({
                 "PipelineDetail.useMemo[replicationLag].pipelineEvents": (e)=>{
                     const eventPipelineId = String(e.pipeline_id || '');
@@ -5195,7 +5208,7 @@ function PipelineDetail({ pipeline, onBack }) {
                         return {
                             time,
                             records: metric.total_events || metric.throughput_events_per_sec || 0,
-                            latency: Math.round(metric.avg_latency_ms || metric.lag_seconds * 1000 || 0)
+                            latency: Math.round(metric.avg_latency_ms || (metric.lag_seconds || 0) * 1000 || 0)
                         };
                     }
                 }["PipelineDetail.useMemo[performanceData].metricsData"]);
@@ -5373,33 +5386,30 @@ function PipelineDetail({ pipeline, onBack }) {
             const isSourceOracle = sourceConn?.connection_type?.toLowerCase() === 'oracle';
             const isTargetOracle = targetConn?.connection_type?.toLowerCase() === 'oracle';
             // Fetch source data first (sequential to avoid overwhelming backend)
+            let sourceTableName = tm.source_table;
+            let sourceSchema = tm.source_schema && tm.source_schema !== "undefined" && tm.source_schema.trim() !== "" ? tm.source_schema.trim() : undefined;
+            const sourceLimit = isSourceOracle ? 100 : 1000;
+            // Split table name if it contains schema (e.g., "public.employees" -> schema: "public", table: "employees")
+            // Check if table name contains schema (format: "schema.table")
+            if (sourceTableName.includes('.') && !sourceSchema) {
+                const parts = sourceTableName.split('.');
+                if (parts.length === 2) {
+                    sourceSchema = parts[0];
+                    sourceTableName = parts[1];
+                    console.log(`[Compare] Split table name: "${tm.source_table}" -> schema: "${sourceSchema}", table: "${sourceTableName}"`);
+                }
+            }
+            // Handle "undefined" schema string - convert to undefined/null
+            if (sourceSchema === "undefined" || sourceSchema?.trim() === "") {
+                sourceSchema = undefined;
+            }
             try {
-                // Split table name if it contains schema (e.g., "public.employees" -> schema: "public", table: "employees")
-                let sourceTableName1 = tm.source_table;
-                let sourceSchema1 = tm.source_schema && tm.source_schema !== "undefined" && tm.source_schema.trim() !== "" ? tm.source_schema.trim() : undefined;
-                // Check if table name contains schema (format: "schema.table")
-                if (sourceTableName1.includes('.') && !sourceSchema1) {
-                    const parts = sourceTableName1.split('.');
-                    if (parts.length === 2) {
-                        sourceSchema1 = parts[0];
-                        sourceTableName1 = parts[1];
-                        console.log(`[Compare] Split table name: "${tm.source_table}" -> schema: "${sourceSchema1}", table: "${sourceTableName1}"`);
-                    }
-                }
-                // Handle "undefined" schema string - convert to undefined/null
-                if (sourceSchema1 === "undefined" || sourceSchema1?.trim() === "") {
-                    sourceSchema1 = undefined;
-                }
-                console.log(`[Compare] Fetching source table: ${sourceTableName1} (schema: ${sourceSchema1 || 'default'}, connection type: ${sourceConn?.connection_type || 'unknown'})`);
-                // Fetch all records (backend supports up to 1000)
-                // For Oracle connections, use smaller limit to avoid timeouts, but still fetch more records
-                const sourceLimit1 = isSourceOracle ? 100 : 1000 // Increased from 20/25 to 100/1000
-                ;
+                console.log(`[Compare] Fetching source table: ${sourceTableName} (schema: ${sourceSchema || 'default'}, connection type: ${sourceConn?.connection_type || 'unknown'})`);
                 // Use UUID if available, otherwise fall back to numeric ID
                 const sourceConnectionId = pipeline.source_connection_uuid || pipeline.source_connection_id;
                 console.log(`[Compare] Using source connection ID: ${sourceConnectionId} (UUID: ${pipeline.source_connection_uuid || 'not available'}, numeric: ${pipeline.source_connection_id})`);
                 try {
-                    const sourceResult = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getTableData(sourceConnectionId, sourceTableName1, sourceSchema1, sourceLimit1, isSourceOracle ? 1 : 2, isSourceOracle // Pass Oracle flag
+                    const sourceResult = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["apiClient"].getTableData(sourceConnectionId, sourceTableName, sourceSchema, sourceLimit, isSourceOracle ? 1 : 2, isSourceOracle // Pass Oracle flag
                     );
                     setSourceData(sourceResult);
                     console.log(`[Compare] Source table loaded: ${sourceResult?.records?.length || 0} records`, {
@@ -5768,64 +5778,104 @@ function PipelineDetail({ pipeline, onBack }) {
                 className: "space-y-4",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex items-center gap-4",
+                        className: "flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                variant: "outline",
-                                size: "sm",
-                                onClick: onBack,
-                                className: "bg-transparent border-border hover:bg-surface-hover text-foreground hover:text-foreground",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowLeft$3e$__["ArrowLeft"], {
-                                        className: "w-4 h-4 mr-2"
-                                    }, void 0, false, {
-                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1018,
-                                        columnNumber: 13
-                                    }, this),
-                                    "Back"
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1012,
-                                columnNumber: 11
-                            }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex-1",
+                                className: "flex items-center gap-4",
                                 children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                        className: "text-3xl font-bold text-foreground mb-2",
-                                        children: pipeline.name
-                                    }, void 0, false, {
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                        variant: "outline",
+                                        size: "sm",
+                                        onClick: onBack,
+                                        className: "bg-white/5 border-border hover:bg-white/10 text-foreground transition-all h-10 px-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowLeft$3e$__["ArrowLeft"], {
+                                                className: "w-4 h-4 mr-2"
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 1020,
+                                                columnNumber: 15
+                                            }, this),
+                                            "Back"
+                                        ]
+                                    }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1022,
+                                        lineNumber: 1014,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center gap-2 text-foreground-muted",
+                                        className: "space-y-1",
                                         children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm",
-                                                children: sourceConn
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                                className: "text-4xl font-black text-foreground tracking-tighter drop-shadow-sm",
+                                                children: pipeline.name
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                 lineNumber: 1024,
                                                 columnNumber: 15
                                             }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-info",
-                                                children: "→"
-                                            }, void 0, false, {
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex items-center gap-3 text-foreground-muted",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex items-center gap-2 px-2 py-0.5 bg-muted rounded-md border border-border/50",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                                className: "w-3.5 h-3.5 text-primary/70"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 1027,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "text-xs font-bold",
+                                                                children: sourceConn
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 1028,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1026,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__["Zap"], {
+                                                        className: "w-3.5 h-3.5 text-info animate-pulse"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1030,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex items-center gap-2 px-2 py-0.5 bg-muted rounded-md border border-border/50",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                                className: "w-3.5 h-3.5 text-info/70"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 1032,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "text-xs font-bold",
+                                                                children: targetConn
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 1033,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1031,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
                                                 lineNumber: 1025,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm",
-                                                children: targetConn
-                                            }, void 0, false, {
-                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1026,
                                                 columnNumber: 15
                                             }, this)
                                         ]
@@ -5837,21 +5887,124 @@ function PipelineDetail({ pipeline, onBack }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1021,
+                                lineNumber: 1013,
                                 columnNumber: 11
                             }, this),
-                            (pipeline.status === "active" || pipeline.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "px-3 py-1 rounded-full text-xs font-semibold bg-success/20 text-success animate-pulse",
-                                children: "Running"
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("relative overflow-hidden border-none shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.5)]", "rounded-3xl min-w-[240px] h-24 flex flex-col justify-center px-8 transition-all duration-500 group", pipeline.status === "active" || pipeline.status === "running" ? "bg-emerald-500/5 ring-1 ring-emerald-500/20" : pipeline.status === "paused" ? "bg-amber-500/5 ring-1 ring-amber-500/20" : "bg-red-500/5 ring-1 ring-red-500/20"),
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "absolute inset-0 opacity-[0.15] group-hover:opacity-[0.25] transition-opacity",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                            viewBox: "0 0 100 40",
+                                            className: "w-full h-full",
+                                            preserveAspectRatio: "none",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                    d: "M0,20 L15,20 L20,20 L22,10 L28,30 L30,20 L45,20 L50,20 L52,-5 L58,45 L60,20 L80,20 L82,15 L88,25 L90,20 L100,20",
+                                                    fill: "none",
+                                                    stroke: pipeline.status === "active" || pipeline.status === "running" ? "rgb(16, 185, 129)" : pipeline.status === "paused" ? "rgb(245, 158, 11)" : "rgb(239, 68, 68)",
+                                                    strokeWidth: "0.5",
+                                                    className: "opacity-20"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                    lineNumber: 1051,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                    d: "M0,20 L15,20 L20,20 L22,10 L28,30 L30,20 L45,20 L50,20 L52,-5 L58,45 L60,20 L80,20 L82,15 L88,25 L90,20 L100,20",
+                                                    fill: "none",
+                                                    stroke: pipeline.status === "active" || pipeline.status === "running" ? "rgb(16, 185, 129)" : pipeline.status === "paused" ? "rgb(245, 158, 11)" : "rgb(239, 68, 68)",
+                                                    strokeWidth: "0.8",
+                                                    className: "animate-heart-pulse"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                    lineNumber: 1059,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                            lineNumber: 1049,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 1048,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "absolute -right-6 -bottom-6 transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                            className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-36 h-36 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-[0.1] transition-opacity", pipeline.status === "active" || pipeline.status === "running" ? "text-emerald-500" : pipeline.status === "paused" ? "text-amber-500" : "text-red-500")
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                            lineNumber: 1071,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 1070,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "relative z-10 flex flex-col",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-1",
+                                                children: "STATUS"
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 1079,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex items-center gap-3",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("text-3xl font-black tracking-tighter drop-shadow-md transition-transform duration-500 group-hover:scale-105 origin-left", pipeline.status === "active" || pipeline.status === "running" ? "text-emerald-500" : pipeline.status === "paused" ? "text-amber-500" : "text-red-500"),
+                                                        children: (pipeline.status || 'UNKNOWN').toUpperCase()
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1081,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("w-3 h-3 rounded-full animate-ping shadow-[0_0_10px_currentColor]", pipeline.status === "active" || pipeline.status === "running" ? "bg-emerald-500 text-emerald-400" : pipeline.status === "paused" ? "bg-amber-500 text-amber-400" : "bg-red-500 text-red-400")
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1088,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 1080,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 1078,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 1097,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1030,
-                                columnNumber: 13
+                                lineNumber: 1040,
+                                columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 1011,
+                        lineNumber: 1012,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5865,7 +6018,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "Replication Mode:"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1039,
+                                        lineNumber: 1104,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5968,12 +6121,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 className: "w-[200px] bg-input border-border text-foreground",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1155,
+                                                    lineNumber: 1220,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1154,
+                                                lineNumber: 1219,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5985,7 +6138,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Full Load Only"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1158,
+                                                        lineNumber: 1223,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5994,7 +6147,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "CDC Only"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1161,
+                                                        lineNumber: 1226,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -6003,19 +6156,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Full Load + CDC"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1164,
+                                                        lineNumber: 1229,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1157,
+                                                lineNumber: 1222,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1040,
+                                        lineNumber: 1105,
                                         columnNumber: 13
                                     }, this),
                                     (pipeline.status === "active" || pipeline.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6023,19 +6176,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "(Stop pipeline to change mode)"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1170,
+                                        lineNumber: 1235,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1038,
+                                lineNumber: 1103,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "flex items-center gap-2",
                                 children: [
-                                    pipeline.status === "active" || pipeline.status === "running" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                    pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                                 variant: "outline",
@@ -6067,14 +6220,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1209,
+                                                        lineNumber: 1274,
                                                         columnNumber: 19
                                                     }, this),
                                                     "Pause"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1180,
+                                                lineNumber: 1245,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6112,14 +6265,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1252,
+                                                        lineNumber: 1317,
                                                         columnNumber: 19
                                                     }, this),
                                                     "Stop"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1212,
+                                                lineNumber: 1277,
                                                 columnNumber: 17
                                             }, this)
                                         ]
@@ -6213,14 +6366,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1348,
+                                                lineNumber: 1413,
                                                 columnNumber: 17
                                             }, this),
                                             "Run Pipeline"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1257,
+                                        lineNumber: 1322,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6232,14 +6385,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1357,
+                                                lineNumber: 1422,
                                                 columnNumber: 15
                                             }, this),
                                             "Monitor"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1352,
+                                        lineNumber: 1417,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6268,32 +6421,32 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1382,
+                                                lineNumber: 1447,
                                                 columnNumber: 15
                                             }, this),
                                             "Export DAG"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1360,
+                                        lineNumber: 1425,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1177,
+                                lineNumber: 1242,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 1037,
+                        lineNumber: 1102,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 1009,
+                lineNumber: 1010,
                 columnNumber: 7
             }, this),
             (()=>{
@@ -6350,7 +6503,7 @@ function PipelineDetail({ pipeline, onBack }) {
                             children: "Replication Offset"
                         }, void 0, false, {
                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                            lineNumber: 1442,
+                            lineNumber: 1507,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6364,7 +6517,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             children: "Current LSN"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1446,
+                                            lineNumber: 1511,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6374,12 +6527,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 children: currentLsn
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1448,
+                                                lineNumber: 1513,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1447,
+                                            lineNumber: 1512,
                                             columnNumber: 19
                                         }, this),
                                         pipeline?.last_offset_updated && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6390,13 +6543,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1451,
+                                            lineNumber: 1516,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 1445,
+                                    lineNumber: 1510,
                                     columnNumber: 17
                                 }, this),
                                 currentOffset && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6407,7 +6560,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             children: "Binlog Position"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1459,
+                                            lineNumber: 1524,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6417,12 +6570,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 children: currentOffset
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1461,
+                                                lineNumber: 1526,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1460,
+                                            lineNumber: 1525,
                                             columnNumber: 19
                                         }, this),
                                         pipeline?.last_offset_updated && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6433,13 +6586,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1464,
+                                            lineNumber: 1529,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 1458,
+                                    lineNumber: 1523,
                                     columnNumber: 17
                                 }, this),
                                 currentScn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6450,7 +6603,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             children: "Current SCN"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1472,
+                                            lineNumber: 1537,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6460,12 +6613,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 children: currentScn
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1474,
+                                                lineNumber: 1539,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1473,
+                                            lineNumber: 1538,
                                             columnNumber: 19
                                         }, this),
                                         pipeline?.last_offset_updated && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6476,25 +6629,25 @@ function PipelineDetail({ pipeline, onBack }) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1477,
+                                            lineNumber: 1542,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 1471,
+                                    lineNumber: 1536,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                            lineNumber: 1443,
+                            lineNumber: 1508,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                    lineNumber: 1441,
+                    lineNumber: 1506,
                     columnNumber: 11
                 }, this);
             })(),
@@ -6506,7 +6659,7 @@ function PipelineDetail({ pipeline, onBack }) {
                         children: "Replication Progress"
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 1490,
+                        lineNumber: 1555,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6526,34 +6679,34 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Full Load"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1497,
+                                                        lineNumber: 1562,
                                                         columnNumber: 19
                                                     }, this),
                                                     (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
                                                         className: "w-4 h-4 animate-spin text-primary"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1499,
+                                                        lineNumber: 1564,
                                                         columnNumber: 21
                                                     }, this),
                                                     replicationProgress?.full_load?.status === "completed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                                         className: "w-4 h-4 text-success"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1502,
+                                                        lineNumber: 1567,
                                                         columnNumber: 21
                                                     }, this),
                                                     replicationProgress?.full_load?.status === "failed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                         className: "w-4 h-4 text-error"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1505,
+                                                        lineNumber: 1570,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1496,
+                                                lineNumber: 1561,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6561,13 +6714,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 children: replicationProgress?.full_load ? replicationProgress.full_load.status === "completed" || Math.min(100, Math.max(0, replicationProgress.full_load.progress_percent || 0)) >= 100 ? '100%' : `${Math.min(100, Math.max(0, replicationProgress.full_load.progress_percent || 0)).toFixed(1)}%` : pipeline?.status === "starting" || pipeline?.status === "running" ? "0%" : "N/A"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1508,
+                                                lineNumber: 1573,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1495,
+                                        lineNumber: 1560,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6585,12 +6738,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     className: "w-14 h-14 text-blue-400"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1525,
+                                                                    lineNumber: 1590,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1524,
+                                                                lineNumber: 1589,
                                                                 columnNumber: 21
                                                             }, this),
                                                             (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -6599,14 +6752,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1529,
+                                                                        lineNumber: 1594,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1530,
+                                                                        lineNumber: 1595,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
@@ -6614,7 +6767,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1523,
+                                                        lineNumber: 1588,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6622,13 +6775,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: sourceConn
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1534,
+                                                        lineNumber: 1599,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1522,
+                                                lineNumber: 1587,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6640,40 +6793,40 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             style: {
                                                                 width: `${Math.min(100, Math.max(0, replicationProgress?.full_load?.progress_percent || 0))}%`
                                                             },
-                                                            className: "jsx-59ec16a8a6ddde2" + " " + `h-full transition-all duration-500 ease-out rounded-full relative ${replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-400' : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400'}`,
+                                                            className: "jsx-59ec16a8a6ddde2" + " " + `h-full transition-all duration-500 ease-out rounded-full relative ${replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-400' : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400'}`,
                                                             children: [
-                                                                (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     style: {
                                                                         backgroundSize: '200% 100%'
                                                                     },
                                                                     className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1552,
+                                                                    lineNumber: 1616,
                                                                     columnNumber: 25
                                                                 }, this),
-                                                                (replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     style: {
                                                                         backgroundSize: '200% 100%'
                                                                     },
                                                                     className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1557,
+                                                                    lineNumber: 1621,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1543,
+                                                            lineNumber: 1608,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1542,
+                                                        lineNumber: 1607,
                                                         columnNumber: 19
                                                     }, this),
-                                                    (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none",
                                                         children: [
                                                             ...Array(5)
@@ -6698,43 +6851,43 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     className: "jsx-59ec16a8a6ddde2"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 1580,
+                                                                                    lineNumber: 1644,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                lineNumber: 1579,
+                                                                                lineNumber: 1643,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1578,
+                                                                            lineNumber: 1642,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-cyan-400 rounded-lg blur-md opacity-60 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1583,
+                                                                            lineNumber: 1647,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1577,
+                                                                    lineNumber: 1641,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             }, i, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1568,
+                                                                lineNumber: 1632,
                                                                 columnNumber: 25
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1566,
+                                                        lineNumber: 1630,
                                                         columnNumber: 21
                                                     }, this),
-                                                    (replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none",
                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "jsx-59ec16a8a6ddde2" + " " + "relative",
@@ -6745,40 +6898,40 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-8 h-8 text-white"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1594,
+                                                                        lineNumber: 1658,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1593,
+                                                                    lineNumber: 1657,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-green-400 rounded-full blur-xl opacity-60 animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1596,
+                                                                    lineNumber: 1660,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1592,
+                                                            lineNumber: 1656,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1591,
+                                                        lineNumber: 1655,
                                                         columnNumber: 21
                                                     }, this),
-                                                    (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-cyan-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1604,
+                                                                lineNumber: 1668,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6786,23 +6939,23 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Transferring Data..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1605,
+                                                                lineNumber: 1669,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1603,
+                                                        lineNumber: 1667,
                                                         columnNumber: 21
                                                     }, this),
-                                                    (replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-green-500/10 rounded-full border border-green-500/30",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1610,
+                                                                lineNumber: 1674,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6810,19 +6963,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Transfer Complete - 100%"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1611,
+                                                                lineNumber: 1675,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1609,
+                                                        lineNumber: 1673,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1540,
+                                                lineNumber: 1605,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6832,20 +6985,20 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "jsx-59ec16a8a6ddde2" + " " + "relative group",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "jsx-59ec16a8a6ddde2" + " " + `p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20' : replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running" ? 'bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border-blue-500/30 group-hover:shadow-2xl group-hover:shadow-blue-500/20' : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'}`,
+                                                                className: "jsx-59ec16a8a6ddde2" + " " + `p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20' : replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running" ? 'bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border-blue-500/30 group-hover:shadow-2xl group-hover:shadow-blue-500/20' : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'}`,
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                                                                    className: `w-14 h-14 transition-colors duration-500 ${replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'text-green-400' : replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running" ? 'text-blue-400 animate-pulse' : 'text-gray-400'}`
+                                                                    className: `w-14 h-14 transition-colors duration-500 ${replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed" ? 'text-green-400' : replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running" ? 'text-blue-400 animate-pulse' : 'text-gray-400'}`
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1626,
+                                                                    lineNumber: 1689,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1619,
+                                                                lineNumber: 1683,
                                                                 columnNumber: 21
                                                             }, this),
-                                                            (replicationProgress?.full_load?.status === "completed" || replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                            (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-2 -right-2 w-9 h-9 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce",
@@ -6853,37 +7006,37 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             className: "w-6 h-6 text-white"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1637,
+                                                                            lineNumber: 1699,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1636,
+                                                                        lineNumber: 1698,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute inset-0 bg-green-400 rounded-2xl blur-xl opacity-40 animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1639,
+                                                                        lineNumber: 1701,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true),
-                                                            (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                            (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1644,
+                                                                        lineNumber: 1706,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-59ec16a8a6ddde2" + " " + "absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1645,
+                                                                        lineNumber: 1707,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
@@ -6891,7 +7044,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1618,
+                                                        lineNumber: 1682,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6899,19 +7052,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: targetConn
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1649,
+                                                        lineNumber: 1711,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1617,
+                                                lineNumber: 1681,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1520,
+                                        lineNumber: 1585,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -6934,7 +7087,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1694,
+                                                        lineNumber: 1756,
                                                         columnNumber: 21
                                                     }, this),
                                                     replicationProgress.full_load.current_table && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6945,13 +7098,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1698,
+                                                        lineNumber: 1760,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1693,
+                                                lineNumber: 1755,
                                                 columnNumber: 19
                                             }, this),
                                             replicationProgress.full_load.status === "completed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6961,7 +7114,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1703,
+                                                        lineNumber: 1765,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6973,13 +7126,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1704,
+                                                        lineNumber: 1766,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1702,
+                                                lineNumber: 1764,
                                                 columnNumber: 21
                                             }, this),
                                             replicationProgress.full_load.progress_percent >= 100 && replicationProgress.full_load.status !== "completed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6989,7 +7142,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1710,
+                                                        lineNumber: 1772,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6997,13 +7150,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Full load completed successfully - 100%"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1711,
+                                                        lineNumber: 1773,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1709,
+                                                lineNumber: 1771,
                                                 columnNumber: 21
                                             }, this),
                                             replicationProgress.full_load.status === "failed" && replicationProgress.full_load.error_message && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7013,7 +7166,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4 mt-0.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1716,
+                                                        lineNumber: 1778,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7021,19 +7174,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: replicationProgress.full_load.error_message
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1717,
+                                                        lineNumber: 1779,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1715,
+                                                lineNumber: 1777,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1692,
+                                        lineNumber: 1754,
                                         columnNumber: 17
                                     }, this) : pipeline?.status === "starting" || pipeline?.status === "running" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "jsx-59ec16a8a6ddde2" + " " + "space-y-2",
@@ -7045,31 +7198,31 @@ function PipelineDetail({ pipeline, onBack }) {
                                                     children: "Initializing pipeline..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1724,
+                                                    lineNumber: 1786,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
                                                     className: "w-4 h-4 animate-spin text-primary"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1725,
+                                                    lineNumber: 1787,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1723,
+                                            lineNumber: 1785,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1722,
+                                        lineNumber: 1784,
                                         columnNumber: 17
                                     }, this) : null
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1494,
+                                lineNumber: 1559,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "text-center py-8 text-foreground-muted",
@@ -7078,7 +7231,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-12 h-12 mx-auto mb-2 opacity-50"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1732,
+                                        lineNumber: 1794,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7086,13 +7239,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "Full load not started yet"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1733,
+                                        lineNumber: 1795,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1731,
+                                lineNumber: 1793,
                                 columnNumber: 13
                             }, this),
                             pipeline.cdc_enabled || replicationProgress?.cdc ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7109,7 +7262,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "CDC Monitoring"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1742,
+                                                        lineNumber: 1804,
                                                         columnNumber: 19
                                                     }, this),
                                                     (replicationProgress?.cdc?.status === "watching" || replicationProgress?.cdc?.status === "active" || pipeline.cdc_enabled && !replicationProgress?.cdc || pipeline.status === "active" || pipeline.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7121,8 +7274,8 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     className: "w-6 h-6 text-cyan-400 animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1750,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1812,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "absolute inset-0 -m-2",
@@ -7130,13 +7283,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-10 h-10 rounded-full border-2 border-cyan-400/30 animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1753,
-                                                                        columnNumber: 27
+                                                                        lineNumber: 1815,
+                                                                        columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1752,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1814,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "absolute inset-0 -m-2",
@@ -7147,13 +7300,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         }
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1756,
-                                                                        columnNumber: 27
+                                                                        lineNumber: 1818,
+                                                                        columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1755,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1817,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "absolute inset-0 -m-1",
@@ -7166,43 +7319,43 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         }
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1760,
-                                                                        columnNumber: 27
+                                                                        lineNumber: 1822,
+                                                                        columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1759,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1821,
+                                                                    columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1749,
-                                                            columnNumber: 23
+                                                            lineNumber: 1811,
+                                                            columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1747,
-                                                        columnNumber: 21
+                                                        lineNumber: 1809,
+                                                        columnNumber: 23
                                                     }, this),
                                                     replicationProgress?.cdc?.status === "stopped" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Square$3e$__["Square"], {
                                                         className: "w-5 h-5 text-foreground-muted"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1770,
+                                                        lineNumber: 1832,
                                                         columnNumber: 21
                                                     }, this),
                                                     replicationProgress?.cdc?.status === "error" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                         className: "w-5 h-5 text-red-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1773,
+                                                        lineNumber: 1835,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1741,
+                                                lineNumber: 1803,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7215,33 +7368,33 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 className: "w-2 h-2 bg-green-400 rounded-full animate-pulse"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1782,
-                                                                columnNumber: 23
+                                                                lineNumber: 1844,
+                                                                columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "absolute inset-0 w-2 h-2 bg-green-400/50 rounded-full animate-ping"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1783,
-                                                                columnNumber: 23
+                                                                lineNumber: 1845,
+                                                                columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1781,
-                                                        columnNumber: 21
+                                                        lineNumber: 1843,
+                                                        columnNumber: 23
                                                     }, this),
                                                     replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching" || pipeline.cdc_enabled && !replicationProgress?.cdc || pipeline.status === "active" || pipeline.status === "running" ? "Watching CDC Events" : replicationProgress?.cdc?.status || "Ready"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1776,
+                                                lineNumber: 1838,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1740,
+                                        lineNumber: 1802,
                                         columnNumber: 15
                                     }, this),
                                     (replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching" || pipeline.cdc_enabled && !replicationProgress?.cdc || pipeline.status === "active" || pipeline.status === "running") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7254,8 +7407,8 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1801,
-                                                columnNumber: 19
+                                                lineNumber: 1863,
+                                                columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "absolute inset-0 flex items-center justify-center gap-1",
@@ -7268,13 +7421,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         }
                                                     }, i, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1806,
-                                                        columnNumber: 23
+                                                        lineNumber: 1868,
+                                                        columnNumber: 25
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1804,
-                                                columnNumber: 19
+                                                lineNumber: 1866,
+                                                columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "absolute inset-0 flex items-center justify-center",
@@ -7288,39 +7441,39 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     className: "w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1816,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1878,
+                                                                    columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "absolute inset-0 w-1.5 h-1.5 bg-cyan-400/50 rounded-full animate-ping"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1817,
-                                                                    columnNumber: 25
+                                                                    lineNumber: 1879,
+                                                                    columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1815,
-                                                            columnNumber: 23
+                                                            lineNumber: 1877,
+                                                            columnNumber: 25
                                                         }, this),
                                                         "Real-time CDC Active - Always Watching"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1814,
-                                                    columnNumber: 21
+                                                    lineNumber: 1876,
+                                                    columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1813,
-                                                columnNumber: 19
+                                                lineNumber: 1875,
+                                                columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1799,
-                                        columnNumber: 17
+                                        lineNumber: 1861,
+                                        columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "grid grid-cols-3 gap-4",
@@ -7335,7 +7488,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         }
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1829,
+                                                        lineNumber: 1891,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7359,16 +7512,16 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1851,
+                                                            lineNumber: 1913,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1833,
+                                                        lineNumber: 1895,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
+                                                        className: "flex items-center gap-2 mb-2 relative z-10",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-foreground-muted text-xs font-semibold uppercase tracking-wide",
@@ -7376,7 +7529,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Captured"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1855,
+                                                                lineNumber: 1917,
                                                                 columnNumber: 21
                                                             }, this),
                                                             (replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7386,37 +7539,37 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1860,
+                                                                        lineNumber: 1922,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "absolute inset-0 w-2 h-2 bg-cyan-400/50 rounded-full animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1861,
+                                                                        lineNumber: 1923,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1859,
+                                                                lineNumber: 1921,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1854,
+                                                        lineNumber: 1916,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-baseline gap-2",
+                                                        className: "flex items-baseline gap-2 relative z-10",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-foreground font-extrabold text-2xl bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent",
                                                                 children: replicationProgress?.cdc?.events_captured || 0
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1867,
+                                                                lineNumber: 1929,
                                                                 columnNumber: 21
                                                             }, this),
                                                             (replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7424,65 +7577,79 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Live"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1871,
+                                                                lineNumber: 1933,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1866,
+                                                        lineNumber: 1928,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
+                                                        className: "text-xs text-foreground-muted mt-1 relative z-10",
                                                         children: "All events from source"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1875,
+                                                        lineNumber: 1937,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                        className: "absolute -right-4 -bottom-4 w-20 h-20 text-blue-500/10 group-hover:text-blue-500/15 transition-colors transform rotate-12"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1938,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1826,
+                                                lineNumber: 1888,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all",
+                                                className: "bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative group overflow-hidden",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "text-foreground-muted block mb-2 text-xs font-semibold uppercase tracking-wide",
+                                                        className: "text-foreground-muted block mb-2 text-xs font-semibold uppercase tracking-wide relative z-10",
                                                         title: "Events successfully applied to target database",
                                                         children: "Applied"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1878,
+                                                        lineNumber: 1942,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "text-green-400 font-extrabold text-2xl",
+                                                        className: "text-green-400 font-extrabold text-2xl relative z-10",
                                                         children: replicationProgress?.cdc?.events_applied || 0
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1881,
+                                                        lineNumber: 1945,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
+                                                        className: "text-xs text-foreground-muted mt-1 relative z-10",
                                                         children: "Successfully replicated"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1884,
+                                                        lineNumber: 1948,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                                        className: "absolute -right-4 -bottom-4 w-20 h-20 text-green-500/10 group-hover:text-green-500/15 transition-colors transform rotate-12"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1949,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1877,
+                                                lineNumber: 1941,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: `bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative overflow-hidden ${(replicationProgress?.cdc?.events_failed || 0) > 0 ? 'border-red-500/40' : ''}`,
+                                                className: `bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative group overflow-hidden ${(replicationProgress?.cdc?.events_failed || 0) > 0 ? 'border-red-500/40' : ''}`,
                                                 children: [
                                                     (replicationProgress?.cdc?.events_failed || 0) > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                         children: [
@@ -7493,11 +7660,11 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 }
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1892,
+                                                                lineNumber: 1957,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "absolute top-2 right-2",
+                                                                className: "absolute top-2 right-2 z-20",
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "relative",
                                                                     children: [
@@ -7505,31 +7672,31 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             className: "w-4 h-4 text-red-400 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1896,
+                                                                            lineNumber: 1961,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             className: "absolute inset-0 w-4 h-4 text-red-400/50 animate-ping"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1897,
+                                                                            lineNumber: 1962,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1895,
+                                                                    lineNumber: 1960,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1894,
+                                                                lineNumber: 1959,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
+                                                        className: "flex items-center gap-2 mb-2 relative z-10",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-foreground-muted text-xs font-semibold uppercase tracking-wide",
@@ -7537,7 +7704,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Failed"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1904,
+                                                                lineNumber: 1969,
                                                                 columnNumber: 21
                                                             }, this),
                                                             (replicationProgress?.cdc?.events_failed || 0) > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7547,54 +7714,61 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-2 h-2 bg-red-400 rounded-full animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1909,
+                                                                        lineNumber: 1974,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "absolute inset-0 w-2 h-2 bg-red-400/50 rounded-full animate-ping"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 1910,
+                                                                        lineNumber: 1975,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 1908,
+                                                                lineNumber: 1973,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1903,
+                                                        lineNumber: 1968,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "text-red-400 font-extrabold text-2xl",
+                                                        className: "text-red-400 font-extrabold text-2xl relative z-10",
                                                         children: replicationProgress?.cdc?.events_failed || 0
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1915,
+                                                        lineNumber: 1980,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
+                                                        className: "text-xs text-foreground-muted mt-1 relative z-10",
                                                         children: (replicationProgress?.cdc?.events_failed || 0) > 0 ? 'Needs attention' : 'All events applied'
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 1918,
+                                                        lineNumber: 1983,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                                        className: "absolute -right-4 -bottom-4 w-20 h-20 text-red-500/10 group-hover:text-red-500/15 transition-colors transform rotate-12"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 1988,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1886,
+                                                lineNumber: 1952,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1825,
+                                        lineNumber: 1887,
                                         columnNumber: 15
                                     }, this),
                                     replicationProgress?.cdc?.last_event_time && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7605,7 +7779,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1926,
+                                        lineNumber: 1992,
                                         columnNumber: 17
                                     }, this),
                                     replicationProgress?.cdc?.status === "error" && replicationProgress.cdc.error_message && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7615,20 +7789,20 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 className: "w-5 h-5 mt-0.5 flex-shrink-0"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1932,
+                                                lineNumber: 1998,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: replicationProgress.cdc.error_message
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 1933,
+                                                lineNumber: 1999,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 1931,
+                                        lineNumber: 1997,
                                         columnNumber: 17
                                     }, this),
                                     (()=>{
@@ -7650,7 +7824,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-5 h-5 text-red-400"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1956,
+                                                            lineNumber: 2022,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -7662,13 +7836,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1957,
+                                                            lineNumber: 2023,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1955,
+                                                    lineNumber: 2021,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7687,7 +7861,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     children: event.event_type?.toUpperCase() || 'UNKNOWN'
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 1967,
+                                                                                    lineNumber: 2033,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7695,13 +7869,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     children: event.table_name || 'Unknown Table'
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 1970,
+                                                                                    lineNumber: 2036,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1966,
+                                                                            lineNumber: 2032,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7712,7 +7886,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     children: new Date(event.created_at).toLocaleTimeString()
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 1975,
+                                                                                    lineNumber: 2041,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7745,30 +7919,30 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                         className: "w-3 h-3 animate-spin"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 2006,
+                                                                                        lineNumber: 2072,
                                                                                         columnNumber: 35
                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__["RotateCw"], {
                                                                                         className: "w-3 h-3"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 2008,
+                                                                                        lineNumber: 2074,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 1978,
+                                                                                    lineNumber: 2044,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 1974,
+                                                                            lineNumber: 2040,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 1965,
+                                                                    lineNumber: 2031,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7776,31 +7950,31 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: event.error_message
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2013,
+                                                                    lineNumber: 2079,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, event.id, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 1961,
+                                                            lineNumber: 2027,
                                                             columnNumber: 25
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 1959,
+                                                    lineNumber: 2025,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 1954,
+                                            lineNumber: 2020,
                                             columnNumber: 19
                                         }, this);
                                     })()
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 1739,
+                                lineNumber: 1801,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "text-center py-8 text-foreground-muted border-t border-border/50 pt-6",
@@ -7809,7 +7983,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-12 h-12 mx-auto mb-3 opacity-30"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2025,
+                                        lineNumber: 2091,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7817,25 +7991,25 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "CDC monitoring not active"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2026,
+                                        lineNumber: 2092,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2024,
+                                lineNumber: 2090,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 1491,
+                        lineNumber: 1556,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 1489,
+                lineNumber: 1554,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7844,9 +8018,9 @@ function PipelineDetail({ pipeline, onBack }) {
                     {
                         label: "Status",
                         value: pipeline.status || "Unknown",
-                        gradient: "from-emerald-500/10 to-green-600/5",
-                        borderColor: "border-emerald-500/20",
-                        textGradient: "from-emerald-400 to-green-500"
+                        gradient: pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting" ? "from-cyan-500/10 to-cyan-600/5" : pipeline.status === "paused" ? "from-amber-500/10 to-amber-600/5" : pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error" ? "from-red-500/10 to-red-600/5" : "from-emerald-500/10 to-green-600/5",
+                        borderColor: pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting" ? "border-cyan-500/20" : pipeline.status === "paused" ? "border-amber-500/20" : pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error" ? "border-red-500/20" : "border-emerald-500/20",
+                        textGradient: pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting" ? "from-cyan-400 to-cyan-600" : pipeline.status === "paused" ? "from-amber-400 to-amber-600" : pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error" ? "from-red-400 to-red-600" : "from-emerald-400 to-green-500"
                     },
                     {
                         label: "Tables",
@@ -7864,39 +8038,68 @@ function PipelineDetail({ pipeline, onBack }) {
                     },
                     {
                         label: "Replication Lag",
-                        value: replicationLag !== null ? replicationLag + "s" : "N/A",
+                        value: replicationLag !== null ? replicationLag + "s" : pipeline.lagSeconds !== undefined && pipeline.lagSeconds !== null ? pipeline.lagSeconds + "s" : "N/A",
                         gradient: "from-cyan-500/10 to-cyan-600/5",
                         borderColor: "border-cyan-500/20",
-                        textGradient: "from-cyan-400 to-cyan-600"
+                        textGradient: "from-cyan-400 to-cyan-600",
+                        // Add Consumer Lag details if available
+                        subValue: replicationProgress?.consumer_lag?.['cdc-event-logger'] !== undefined ? `Consumer Lag: ${replicationProgress.consumer_lag['cdc-event-logger']}` : pipeline.consumerLag ? `Consumer Lag: ${pipeline.consumerLag}` : null
                     }
-                ].map((stat, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                        className: `bg-gradient-to-br ${stat.gradient} ${stat.borderColor} p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`,
+                ].map((stat, i)=>{
+                    const Icon = i === 0 ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"] : i === 1 ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"] : i === 2 ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$zap$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Zap$3e$__["Zap"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"];
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                        className: `bg-gradient-to-br ${stat.gradient} ${stat.borderColor} p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group relative overflow-hidden`,
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2",
-                                children: stat.label
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "relative z-10",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2",
+                                        children: stat.label
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 2156,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: `text-3xl font-extrabold bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`,
+                                        children: stat.value
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 2157,
+                                        columnNumber: 17
+                                    }, this),
+                                    stat.subValue && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-xs font-medium text-foreground-muted mt-1 opacity-80",
+                                        children: stat.subValue
+                                    }, void 0, false, {
+                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                        lineNumber: 2160,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2065,
-                                columnNumber: 13
+                                lineNumber: 2155,
+                                columnNumber: 15
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: `text-3xl font-extrabold bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`,
-                                children: stat.value
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                className: `absolute -right-4 -bottom-4 w-24 h-24 ${stat.borderColor.replace('border-', 'text-').replace('/20', '/10')} group-hover:${stat.borderColor.replace('border-', 'text-').replace('/20', '/15')} transition-colors transform rotate-12`
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2066,
-                                columnNumber: 13
+                                lineNumber: 2165,
+                                columnNumber: 15
                             }, this)
                         ]
                     }, i, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2064,
-                        columnNumber: 11
-                    }, this))
+                        lineNumber: 2154,
+                        columnNumber: 13
+                    }, this);
+                })
             }, void 0, false, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2033,
+                lineNumber: 2099,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7912,14 +8115,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-6 h-6 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2075,
+                                        lineNumber: 2175,
                                         columnNumber: 13
                                     }, this),
                                     "Records Per Hour"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2074,
+                                lineNumber: 2174,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -7933,7 +8136,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             stroke: "rgba(100, 116, 139, 0.15)"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2080,
+                                            lineNumber: 2180,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -7946,7 +8149,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2081,
+                                            lineNumber: 2181,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -7958,7 +8161,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2086,
+                                            lineNumber: 2186,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -7977,7 +8180,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2090,
+                                            lineNumber: 2190,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Bar"], {
@@ -8003,7 +8206,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             stopOpacity: 0.9
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2107,
+                                                            lineNumber: 2207,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
@@ -8012,40 +8215,40 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             stopOpacity: 0.7
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2108,
+                                                            lineNumber: 2208,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2106,
+                                                    lineNumber: 2206,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2105,
+                                                lineNumber: 2205,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2100,
+                                            lineNumber: 2200,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 2079,
+                                    lineNumber: 2179,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2078,
+                                lineNumber: 2178,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2073,
+                        lineNumber: 2173,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -8058,14 +8261,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-6 h-6 text-cyan-400"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2118,
+                                        lineNumber: 2218,
                                         columnNumber: 13
                                     }, this),
                                     "Replication Latency (seconds)"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2117,
+                                lineNumber: 2217,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -8079,7 +8282,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             stroke: "rgba(100, 116, 139, 0.15)"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2123,
+                                            lineNumber: 2223,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -8092,7 +8295,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2124,
+                                            lineNumber: 2224,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -8104,7 +8307,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2129,
+                                            lineNumber: 2229,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -8123,7 +8326,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2133,
+                                            lineNumber: 2233,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
@@ -8141,30 +8344,30 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2143,
+                                            lineNumber: 2243,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 2122,
+                                    lineNumber: 2222,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2121,
+                                lineNumber: 2221,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2116,
+                        lineNumber: 2216,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2072,
+                lineNumber: 2172,
                 columnNumber: 7
             }, this),
             pipeline.cdc_enabled && pipeline.id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -8180,14 +8383,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-6 h-6 text-indigo-400"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2161,
+                                        lineNumber: 2261,
                                         columnNumber: 15
                                     }, this),
                                     "Continuous Replication Status"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2160,
+                                lineNumber: 2260,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -8199,7 +8402,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                             className: "w-2 h-2 rounded-full bg-success mr-2 animate-pulse"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2174,
+                                            lineNumber: 2273,
                                             columnNumber: 19
                                         }, this),
                                         "Active"
@@ -8207,13 +8410,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                 }, void 0, true) : pipeline.status
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2164,
+                                lineNumber: 2264,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2159,
+                        lineNumber: 2259,
                         columnNumber: 11
                     }, this),
                     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
@@ -8299,7 +8502,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Data Transfer Progress"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2235,
+                                                        lineNumber: 2334,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8310,13 +8513,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2236,
+                                                        lineNumber: 2335,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2234,
+                                                lineNumber: 2333,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8326,7 +8529,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_3s_infinite] bg-[length:200%_100%]"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2244,
+                                                        lineNumber: 2343,
                                                         columnNumber: 21
                                                     }, this),
                                                     successEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8351,7 +8554,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                 }
                                                                             }, i, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                lineNumber: 2255,
+                                                                                lineNumber: 2354,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                     }["PipelineDetail.useMemo"]),
@@ -8368,21 +8571,21 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                 }
                                                                             }, `small-${i}`, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                lineNumber: 2268,
+                                                                                lineNumber: 2367,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                     }["PipelineDetail.useMemo"])
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2253,
+                                                                lineNumber: 2352,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                 className: "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite] bg-[length:200%_100%]"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2282,
+                                                                lineNumber: 2381,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8392,7 +8595,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-4 h-4 text-white animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2286,
+                                                                        lineNumber: 2385,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8400,19 +8603,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         children: successEvents.toLocaleString()
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2287,
+                                                                        lineNumber: 2386,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2285,
+                                                                lineNumber: 2384,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2248,
+                                                        lineNumber: 2347,
                                                         columnNumber: 23
                                                     }, this),
                                                     failedEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8426,7 +8629,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 className: "absolute inset-0 bg-red-600/30 animate-pulse"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2302,
+                                                                lineNumber: 2401,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8436,7 +8639,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-4 h-4 text-white animate-pulse"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2306,
+                                                                        lineNumber: 2405,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8444,19 +8647,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         children: failedEvents.toLocaleString()
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2307,
+                                                                        lineNumber: 2406,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2305,
+                                                                lineNumber: 2404,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2294,
+                                                        lineNumber: 2393,
                                                         columnNumber: 23
                                                     }, this),
                                                     pendingEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8478,13 +8681,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             }
                                                                         }, i, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 2324,
+                                                                            lineNumber: 2423,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                 }["PipelineDetail.useMemo"])
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2322,
+                                                                lineNumber: 2421,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8494,7 +8697,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-4 h-4 text-white animate-spin"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2334,
+                                                                        lineNumber: 2433,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8502,19 +8705,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         children: pendingEvents.toLocaleString()
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2335,
+                                                                        lineNumber: 2434,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2333,
+                                                                lineNumber: 2432,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2314,
+                                                        lineNumber: 2413,
                                                         columnNumber: 23
                                                     }, this),
                                                     totalEvents === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8526,7 +8729,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     className: "w-2 h-2 bg-indigo-400 rounded-full animate-pulse"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2344,
+                                                                    lineNumber: 2443,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8534,7 +8737,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Waiting for replication events..."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2345,
+                                                                    lineNumber: 2444,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8544,7 +8747,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2346,
+                                                                    lineNumber: 2445,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8554,31 +8757,31 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2347,
+                                                                    lineNumber: 2446,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2343,
+                                                            lineNumber: 2442,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2342,
+                                                        lineNumber: 2441,
                                                         columnNumber: 23
                                                     }, this),
                                                     pipeline.status === "active" && totalEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "absolute inset-0 rounded-xl border-2 border-indigo-400/50 animate-pulse pointer-events-none"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2354,
+                                                        lineNumber: 2453,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2242,
+                                                lineNumber: 2341,
                                                 columnNumber: 19
                                             }, this),
                                             pipeline.status === "active" && totalEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8591,27 +8794,27 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 className: "w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2362,
+                                                                lineNumber: 2461,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: "Live Data Transfer"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2363,
+                                                                lineNumber: 2462,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2361,
+                                                        lineNumber: 2460,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "•"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2365,
+                                                        lineNumber: 2464,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8621,13 +8824,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2366,
+                                                        lineNumber: 2465,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2360,
+                                                lineNumber: 2459,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8643,7 +8846,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3 rounded bg-success"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2374,
+                                                                        lineNumber: 2473,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8653,13 +8856,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2375,
+                                                                        lineNumber: 2474,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2373,
+                                                                lineNumber: 2472,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8669,7 +8872,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3 rounded bg-error"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2378,
+                                                                        lineNumber: 2477,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8679,13 +8882,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2379,
+                                                                        lineNumber: 2478,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2377,
+                                                                lineNumber: 2476,
                                                                 columnNumber: 23
                                                             }, this),
                                                             pendingEvents > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8695,7 +8898,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3 rounded bg-warning/50"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2383,
+                                                                        lineNumber: 2482,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8705,19 +8908,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2384,
+                                                                        lineNumber: 2483,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2382,
+                                                                lineNumber: 2481,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2372,
+                                                        lineNumber: 2471,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8728,19 +8931,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2388,
+                                                        lineNumber: 2487,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2371,
+                                                lineNumber: 2470,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2233,
+                                        lineNumber: 2332,
                                         columnNumber: 17
                                     }, this),
                                     lsnDisplay && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8754,7 +8957,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: lsnDisplay.label
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2396,
+                                                        lineNumber: 2495,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -8763,13 +8966,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: lsnDisplay.type
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2397,
+                                                        lineNumber: 2496,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2395,
+                                                lineNumber: 2494,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8779,7 +8982,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4 text-indigo-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2402,
+                                                        lineNumber: 2501,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8787,7 +8990,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: lsnDisplay.value
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2403,
+                                                        lineNumber: 2502,
                                                         columnNumber: 23
                                                     }, this),
                                                     latestEvent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8798,292 +9001,412 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2407,
+                                                        lineNumber: 2506,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2401,
+                                                lineNumber: 2500,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2394,
+                                        lineNumber: 2493,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "grid grid-cols-2 md:grid-cols-4 gap-4",
+                                        className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6",
                                         children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-lg",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                                className: "relative overflow-hidden p-6 border-none bg-blue-500/5 shadow-[0_15px_30px_-5px_rgba(59,130,246,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-blue-500/10",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                                                                className: "w-4 h-4 text-blue-400"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2419,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "text-xs text-foreground-muted",
-                                                                children: "Captured"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2420,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2418,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-2xl font-bold text-blue-400",
-                                                        children: totalEvents.toLocaleString()
+                                                        className: "absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                            className: "w-32 h-32 text-blue-500"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                            lineNumber: 2520,
+                                                            columnNumber: 23
+                                                        }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2422,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
-                                                        children: "Total Events"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2423,
-                                                        columnNumber: 21
-                                                    }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2417,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "p-4 bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-lg",
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
-                                                                className: "w-4 h-4 text-green-400"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2428,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "text-xs text-foreground-muted",
-                                                                children: "Applied"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2429,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2427,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-2xl font-bold text-green-400",
-                                                        children: successEvents.toLocaleString()
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2431,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
-                                                        children: "Successfully Synced"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2432,
-                                                        columnNumber: 21
-                                                    }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2426,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-lg",
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
-                                                                className: "w-4 h-4 text-red-400"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2437,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "text-xs text-foreground-muted",
-                                                                children: "Errors"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2438,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2436,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-2xl font-bold text-red-400",
-                                                        children: failedEvents.toLocaleString()
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2440,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                        className: "text-xs text-foreground-muted mt-1",
-                                                        children: "Failed Events"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2441,
-                                                        columnNumber: 21
-                                                    }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2435,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-lg",
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex items-center gap-2 mb-2",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
-                                                                className: "w-4 h-4 text-purple-400"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2446,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "text-xs text-foreground-muted",
-                                                                children: "Operations"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2447,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2445,
+                                                        lineNumber: 2519,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "space-y-1",
+                                                        className: "relative z-10",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "flex justify-between text-xs",
+                                                                className: "flex items-center gap-2 mb-4",
                                                                 children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-foreground-muted",
-                                                                        children: "Inserts:"
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "p-2 bg-blue-400/10 rounded-lg",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                                                            className: "w-4 h-4 text-blue-400"
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                            lineNumber: 2525,
+                                                                            columnNumber: 27
+                                                                        }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2451,
+                                                                        lineNumber: 2524,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-purple-400 font-semibold",
-                                                                        children: insertEvents.toLocaleString()
+                                                                        className: "text-[10px] font-black text-blue-400/80 uppercase tracking-[0.2em]",
+                                                                        children: "Captured"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2452,
+                                                                        lineNumber: 2527,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2450,
+                                                                lineNumber: 2523,
                                                                 columnNumber: 23
                                                             }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "flex justify-between text-xs",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-foreground-muted",
-                                                                        children: "Updates:"
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2455,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-purple-400 font-semibold",
-                                                                        children: updateEvents.toLocaleString()
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2456,
-                                                                        columnNumber: 25
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-4xl font-black text-blue-500 tracking-tighter drop-shadow-sm",
+                                                                children: totalEvents.toLocaleString()
+                                                            }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2454,
+                                                                lineNumber: 2529,
                                                                 columnNumber: 23
                                                             }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "flex justify-between text-xs",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-foreground-muted",
-                                                                        children: "Deletes:"
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2459,
-                                                                        columnNumber: 25
-                                                                    }, this),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                        className: "text-purple-400 font-semibold",
-                                                                        children: deleteEvents.toLocaleString()
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2460,
-                                                                        columnNumber: 25
-                                                                    }, this)
-                                                                ]
-                                                            }, void 0, true, {
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60",
+                                                                children: "Total Pipeline Events"
+                                                            }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2458,
+                                                                lineNumber: 2530,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2449,
+                                                        lineNumber: 2522,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2444,
+                                                lineNumber: 2518,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                                className: "relative overflow-hidden p-6 border-none bg-emerald-500/5 shadow-[0_15px_30px_-5px_rgba(16,185,129,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-emerald-500/10",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                                            className: "w-32 h-32 text-emerald-500"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                            lineNumber: 2537,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2536,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "relative z-10",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex items-center gap-2 mb-4",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "p-2 bg-emerald-400/10 rounded-lg",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                                                            className: "w-4 h-4 text-emerald-400"
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                            lineNumber: 2542,
+                                                                            columnNumber: 27
+                                                                        }, this)
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2541,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]",
+                                                                        children: "Applied"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2544,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2540,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-4xl font-black text-emerald-500 tracking-tighter drop-shadow-sm",
+                                                                children: successEvents.toLocaleString()
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2546,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60",
+                                                                children: "Successfully Synced"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2547,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2539,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 2535,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                                className: "relative overflow-hidden p-6 border-none bg-red-500/5 shadow-[0_15px_30px_-5px_rgba(239,68,68,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-red-500/10",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                                            className: "w-32 h-32 text-red-500"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                            lineNumber: 2554,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2553,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "relative z-10",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex items-center gap-2 mb-4",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "p-2 bg-red-400/10 rounded-lg",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                                                            className: "w-4 h-4 text-red-400"
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                            lineNumber: 2559,
+                                                                            columnNumber: 27
+                                                                        }, this)
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2558,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "text-[10px] font-black text-red-400/80 uppercase tracking-[0.2em]",
+                                                                        children: "Errors"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2561,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2557,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-4xl font-black text-red-500 tracking-tighter drop-shadow-sm",
+                                                                children: failedEvents.toLocaleString()
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2563,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60",
+                                                                children: "Failed Event Batches"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2564,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2556,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 2552,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                                                className: "relative overflow-hidden p-6 border-none bg-purple-500/5 shadow-[0_15px_30px_-5px_rgba(168,85,247,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-purple-500/10",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                                            className: "w-32 h-32 text-purple-500"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                            lineNumber: 2571,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2570,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "relative z-10",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex items-center gap-2 mb-4",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "p-2 bg-purple-400/10 rounded-lg",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                                                            className: "w-4 h-4 text-purple-400"
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                            lineNumber: 2576,
+                                                                            columnNumber: 27
+                                                                        }, this)
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2575,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "text-[10px] font-black text-purple-400/80 uppercase tracking-[0.2em]",
+                                                                        children: "Ops Mix"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2578,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2574,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex flex-col gap-1.5 pt-1",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "flex justify-between items-baseline",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-[10px] font-black text-foreground-muted opacity-80 uppercase",
+                                                                                children: "INS"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2582,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-xl font-black text-purple-500 tracking-tighter",
+                                                                                children: insertEvents.toLocaleString()
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2583,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2581,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "flex justify-between items-baseline",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-[10px] font-black text-foreground-muted opacity-80 uppercase",
+                                                                                children: "UPD"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2586,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-xl font-black text-purple-500 tracking-tighter",
+                                                                                children: updateEvents.toLocaleString()
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2587,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2585,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "flex justify-between items-baseline",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-[10px] font-black text-foreground-muted opacity-80 uppercase",
+                                                                                children: "DEL"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2590,
+                                                                                columnNumber: 27
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                className: "text-xl font-black text-purple-500 tracking-tighter",
+                                                                                children: deleteEvents.toLocaleString()
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                                lineNumber: 2591,
+                                                                                columnNumber: 27
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                        lineNumber: 2589,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                                lineNumber: 2580,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                        lineNumber: 2573,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/components/pipelines/pipeline-detail.tsx",
+                                                lineNumber: 2569,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2416,
+                                        lineNumber: 2516,
                                         columnNumber: 17
                                     }, this),
                                     pipeline.status === "active" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9096,7 +9419,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-2 h-2 rounded-full bg-success animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2470,
+                                                        lineNumber: 2602,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9104,13 +9427,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "Replication Active"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2471,
+                                                        lineNumber: 2603,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2469,
+                                                lineNumber: 2601,
                                                 columnNumber: 21
                                             }, this),
                                             replicationProgress?.cdc && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9121,19 +9444,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2474,
+                                                lineNumber: 2606,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2468,
+                                        lineNumber: 2600,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2231,
+                                lineNumber: 2330,
                                 columnNumber: 15
                             }, this);
                         }
@@ -9147,7 +9470,7 @@ function PipelineDetail({ pipeline, onBack }) {
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2158,
+                lineNumber: 2258,
                 columnNumber: 9
             }, this),
             pipeline.cdc_enabled && pipeline.id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$pipelines$2f$checkpoint$2d$manager$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CheckpointManager"], {
@@ -9156,7 +9479,7 @@ function PipelineDetail({ pipeline, onBack }) {
                 tableMappings: pipeline.table_mappings || []
             }, void 0, false, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2490,
+                lineNumber: 2622,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -9171,7 +9494,7 @@ function PipelineDetail({ pipeline, onBack }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2499,
+                        lineNumber: 2631,
                         columnNumber: 9
                     }, this),
                     tableNames.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9188,7 +9511,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 children: tm.source_table
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2507,
+                                                lineNumber: 2639,
                                                 columnNumber: 21
                                             }, this),
                                             tm.source_table !== tm.target_table && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -9198,7 +9521,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: "→"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2510,
+                                                        lineNumber: 2642,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9206,7 +9529,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         children: tm.target_table
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2511,
+                                                        lineNumber: 2643,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
@@ -9220,13 +9543,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2515,
+                                                lineNumber: 2647,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2506,
+                                        lineNumber: 2638,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9254,7 +9577,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4 animate-spin"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2538,
+                                                            lineNumber: 2670,
                                                             columnNumber: 27
                                                         }, this),
                                                         "Comparing..."
@@ -9265,7 +9588,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2543,
+                                                            lineNumber: 2675,
                                                             columnNumber: 27
                                                         }, this),
                                                         "Compare"
@@ -9273,26 +9596,26 @@ function PipelineDetail({ pipeline, onBack }) {
                                                 }, void 0, true)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2519,
+                                                lineNumber: 2651,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                                 className: "w-5 h-5 text-success flex-shrink-0"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2548,
+                                                lineNumber: 2680,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2518,
+                                        lineNumber: 2650,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, idx, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2505,
+                                lineNumber: 2637,
                                 columnNumber: 17
                             }, this)) : // Fallback to simple table names
                         tableNames.map((table, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9303,25 +9626,25 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: table
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2556,
+                                        lineNumber: 2688,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                         className: "w-5 h-5 text-success"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2557,
+                                        lineNumber: 2689,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, idx, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2555,
+                                lineNumber: 2687,
                                 columnNumber: 17
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2501,
+                        lineNumber: 2633,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "text-center py-8 text-foreground-muted",
@@ -9329,18 +9652,18 @@ function PipelineDetail({ pipeline, onBack }) {
                             children: "No tables configured for this pipeline."
                         }, void 0, false, {
                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                            lineNumber: 2564,
+                            lineNumber: 2696,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2563,
+                        lineNumber: 2695,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2498,
+                lineNumber: 2630,
                 columnNumber: 7
             }, this),
             selectedTable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -9356,7 +9679,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "Data Comparison"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2574,
+                                        lineNumber: 2706,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9368,13 +9691,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2575,
+                                        lineNumber: 2707,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2573,
+                                lineNumber: 2705,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -9387,20 +9710,20 @@ function PipelineDetail({ pipeline, onBack }) {
                                         className: "w-4 h-4 mr-2"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2585,
+                                        lineNumber: 2717,
                                         columnNumber: 15
                                     }, this),
                                     "Close"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2579,
+                                lineNumber: 2711,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2572,
+                        lineNumber: 2704,
                         columnNumber: 11
                     }, this),
                     loadingData ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9410,7 +9733,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                 className: "w-6 h-6 animate-spin text-foreground-muted"
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2592,
+                                lineNumber: 2724,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9418,13 +9741,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                 children: "Loading table data..."
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2593,
+                                lineNumber: 2725,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2591,
+                        lineNumber: 2723,
                         columnNumber: 13
                     }, this) : !sourceData && !targetData ? // Only show error if both tables failed
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9437,7 +9760,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                     children: dataError || 'Failed to fetch table data'
                                 }, void 0, false, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 2602,
+                                    lineNumber: 2734,
                                     columnNumber: 17
                                 }, this),
                                 dataError?.includes('connections that don\'t exist') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -9457,7 +9780,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                             // Clear error and retry
                                             setDataError(null);
                                             if (selectedTable) {
-                                                handleCompareTable(selectedTable).catch(console.error);
+                                                handleCompareTable({
+                                                    source_table: selectedTable.source,
+                                                    target_table: selectedTable.target,
+                                                    source_schema: selectedTable.sourceSchema,
+                                                    target_schema: selectedTable.targetSchema
+                                                }).catch(console.error);
                                             }
                                         } catch (err) {
                                             showError(err?.message || 'Unknown error', "Failed to Fix Connections");
@@ -9469,25 +9797,25 @@ function PipelineDetail({ pipeline, onBack }) {
                                             className: "w-4 h-4 mr-2"
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2629,
+                                            lineNumber: 2766,
                                             columnNumber: 21
                                         }, this),
                                         "Fix Connections"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 2604,
+                                    lineNumber: 2736,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                            lineNumber: 2601,
+                            lineNumber: 2733,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2597,
+                        lineNumber: 2729,
                         columnNumber: 13
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "space-y-4",
@@ -9505,7 +9833,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                     children: dataError
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2645,
+                                                    lineNumber: 2782,
                                                     columnNumber: 23
                                                 }, this),
                                                 dataError.includes('Target') && !targetData && selectedTable && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9523,13 +9851,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2647,
+                                                    lineNumber: 2784,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2644,
+                                            lineNumber: 2781,
                                             columnNumber: 21
                                         }, this),
                                         dataError.includes('Target') && !targetData && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -9576,7 +9904,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4 mr-2 animate-spin"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2709,
+                                                        lineNumber: 2846,
                                                         columnNumber: 29
                                                     }, this),
                                                     "Retrying..."
@@ -9587,7 +9915,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-4 h-4 mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2714,
+                                                        lineNumber: 2851,
                                                         columnNumber: 29
                                                     }, this),
                                                     "Retry Target"
@@ -9595,18 +9923,18 @@ function PipelineDetail({ pipeline, onBack }) {
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2660,
+                                            lineNumber: 2797,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                    lineNumber: 2643,
+                                    lineNumber: 2780,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2639,
+                                lineNumber: 2776,
                                 columnNumber: 17
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9617,7 +9945,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                         children: "Table Data Comparison"
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2726,
+                                        lineNumber: 2863,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9630,20 +9958,20 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-3 h-3 rounded bg-surface-hover border border-border"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2729,
+                                                        lineNumber: 2866,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Source"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2730,
+                                                        lineNumber: 2867,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2728,
+                                                lineNumber: 2865,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9653,32 +9981,32 @@ function PipelineDetail({ pipeline, onBack }) {
                                                         className: "w-3 h-3 rounded bg-primary/20 border border-primary/50"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2733,
+                                                        lineNumber: 2870,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Target"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2734,
+                                                        lineNumber: 2871,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                lineNumber: 2732,
+                                                lineNumber: 2869,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2727,
+                                        lineNumber: 2864,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2725,
+                                lineNumber: 2862,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9696,7 +10024,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4 text-foreground-muted"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2746,
+                                                            lineNumber: 2883,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9707,7 +10035,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Source Table"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2748,
+                                                                    lineNumber: 2885,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9724,13 +10052,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     })()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2749,
+                                                                    lineNumber: 2886,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2747,
+                                                            lineNumber: 2884,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9741,7 +10069,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Records"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2762,
+                                                                    lineNumber: 2899,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9749,19 +10077,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: sourceData?.count || sourceRecords.length || 0
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2763,
+                                                                    lineNumber: 2900,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2761,
+                                                            lineNumber: 2898,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2745,
+                                                    lineNumber: 2882,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9782,7 +10110,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                         children: col.name
                                                                                     }, `source-header-${idx}`, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 2777,
+                                                                                        lineNumber: 2914,
                                                                                         columnNumber: 39
                                                                                     }, this));
                                                                             } else if (sourceRecords.length > 0 && sourceRecords[0]) {
@@ -9792,7 +10120,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                         children: key
                                                                                     }, `source-header-${idx}`, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 2784,
+                                                                                        lineNumber: 2921,
                                                                                         columnNumber: 39
                                                                                     }, this));
                                                                             } else {
@@ -9801,19 +10129,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     children: "No columns available"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 2790,
+                                                                                    lineNumber: 2927,
                                                                                     columnNumber: 39
                                                                                 }, this);
                                                                             }
                                                                         })()
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2772,
+                                                                        lineNumber: 2909,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2771,
+                                                                    lineNumber: 2908,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -9856,18 +10184,18 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                                 children: "NULL"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                                lineNumber: 2841,
+                                                                                                lineNumber: 2978,
                                                                                                 columnNumber: 51
                                                                                             }, this)
                                                                                         }, `source-cell-${rowIdx}-${colIdx}`, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                            lineNumber: 2838,
+                                                                                            lineNumber: 2975,
                                                                                             columnNumber: 45
                                                                                         }, this);
                                                                                     })
                                                                                 }, `source-row-${rowIdx}`, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 2822,
+                                                                                    lineNumber: 2959,
                                                                                     columnNumber: 39
                                                                                 }, this);
                                                                             }).filter(Boolean);
@@ -9884,17 +10212,17 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                                 children: "NULL"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                                lineNumber: 2859,
+                                                                                                lineNumber: 2996,
                                                                                                 columnNumber: 47
                                                                                             }, this)
                                                                                         }, `source-cell-${rowIdx}-${colIdx}`, false, {
                                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                            lineNumber: 2856,
+                                                                                            lineNumber: 2993,
                                                                                             columnNumber: 41
                                                                                         }, this))
                                                                                 }, `source-row-${rowIdx}`, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 2854,
+                                                                                    lineNumber: 2991,
                                                                                     columnNumber: 37
                                                                                 }, this));
                                                                         } else {
@@ -9905,35 +10233,35 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                     children: sourceRecords.length > 0 ? `No records on page ${sourcePage} of ${sourceTotalPages} (Total: ${sourceRecords.length} records)` : "No data available"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 2867,
+                                                                                    lineNumber: 3004,
                                                                                     columnNumber: 39
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                lineNumber: 2866,
+                                                                                lineNumber: 3003,
                                                                                 columnNumber: 37
                                                                             }, this);
                                                                         }
                                                                     })()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2798,
+                                                                    lineNumber: 2935,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2770,
+                                                            lineNumber: 2907,
                                                             columnNumber: 27
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2769,
+                                                        lineNumber: 2906,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2768,
+                                                    lineNumber: 2905,
                                                     columnNumber: 23
                                                 }, this),
                                                 sourceTotalPages > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9956,7 +10284,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2883,
+                                                            lineNumber: 3020,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9972,12 +10300,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2894,
+                                                                        lineNumber: 3031,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2887,
+                                                                    lineNumber: 3024,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10004,13 +10332,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             children: pageNum
                                                                         }, pageNum, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 2909,
+                                                                            lineNumber: 3046,
                                                                             columnNumber: 35
                                                                         }, this);
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2896,
+                                                                    lineNumber: 3033,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -10023,35 +10351,35 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 2933,
+                                                                        lineNumber: 3070,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2926,
+                                                                    lineNumber: 3063,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2886,
+                                                            lineNumber: 3023,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2882,
+                                                    lineNumber: 3019,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2744,
+                                            lineNumber: 2881,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2743,
+                                        lineNumber: 2880,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
                                         className: "bg-surface border-2 border-border p-6 shadow-lg",
@@ -10065,7 +10393,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4 text-foreground-muted"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2944,
+                                                            lineNumber: 3081,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10076,7 +10404,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Source Table"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2946,
+                                                                    lineNumber: 3083,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10093,19 +10421,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     })()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2947,
+                                                                    lineNumber: 3084,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2945,
+                                                            lineNumber: 3082,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2943,
+                                                    lineNumber: 3080,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10117,14 +10445,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 className: "w-5 h-5 animate-spin mx-auto mb-2"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2963,
+                                                                lineNumber: 3100,
                                                                 columnNumber: 29
                                                             }, this),
                                                             "Loading source data..."
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2962,
+                                                        lineNumber: 3099,
                                                         columnNumber: 27
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "text-foreground-muted",
@@ -10134,7 +10462,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Source data not available"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2968,
+                                                                lineNumber: 3105,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10142,29 +10470,29 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                 children: "Please check the source database connection"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                lineNumber: 2969,
+                                                                lineNumber: 3106,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 2967,
+                                                        lineNumber: 3104,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2960,
+                                                    lineNumber: 3097,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2942,
+                                            lineNumber: 3079,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2941,
+                                        lineNumber: 3078,
                                         columnNumber: 19
                                     }, this),
                                     targetData ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -10179,7 +10507,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4 text-primary"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2982,
+                                                            lineNumber: 3119,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10190,7 +10518,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Target Table"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2984,
+                                                                    lineNumber: 3121,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10207,13 +10535,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     })()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2985,
+                                                                    lineNumber: 3122,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2983,
+                                                            lineNumber: 3120,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10224,7 +10552,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Records"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2998,
+                                                                    lineNumber: 3135,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10232,19 +10560,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: targetData?.count || targetRecords.length || 0
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 2999,
+                                                                    lineNumber: 3136,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 2997,
+                                                            lineNumber: 3134,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 2981,
+                                                    lineNumber: 3118,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10262,17 +10590,17 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                 children: col.name
                                                                             }, idx, false, {
                                                                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                lineNumber: 3010,
+                                                                                lineNumber: 3147,
                                                                                 columnNumber: 35
                                                                             }, this))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3008,
+                                                                        lineNumber: 3145,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3007,
+                                                                    lineNumber: 3144,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -10306,18 +10634,18 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                         children: "NULL"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 3047,
+                                                                                        lineNumber: 3184,
                                                                                         columnNumber: 49
                                                                                     }, this)
                                                                                 }, colIdx, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 3044,
+                                                                                    lineNumber: 3181,
                                                                                     columnNumber: 43
                                                                                 }, this);
                                                                             })
                                                                         }, rowIdx, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 3033,
+                                                                            lineNumber: 3170,
                                                                             columnNumber: 37
                                                                         }, this);
                                                                     }) : targetRecords.length > 0 ? // If we have records but pagination is wrong, show all records
@@ -10351,18 +10679,18 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                                         children: "NULL"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                        lineNumber: 3085,
+                                                                                        lineNumber: 3222,
                                                                                         columnNumber: 49
                                                                                     }, this)
                                                                                 }, colIdx, false, {
                                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                                    lineNumber: 3082,
+                                                                                    lineNumber: 3219,
                                                                                     columnNumber: 43
                                                                                 }, this);
                                                                             })
                                                                         }, rowIdx, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 3071,
+                                                                            lineNumber: 3208,
                                                                             columnNumber: 37
                                                                         }, this);
                                                                     }) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -10372,33 +10700,33 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             children: targetData?.count === 0 || targetRecords.length === 0 && (!targetData?.count || targetData.count === 0) ? "No data available in target table" : targetRecords.length === 0 && targetData?.count > 0 ? `Table exists with ${targetData.count} records, but none loaded. Please check the table structure.` : `Showing ${targetRecords.length} records (page ${targetPage} of ${targetTotalPages})`
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 3094,
+                                                                            lineNumber: 3231,
                                                                             columnNumber: 35
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3093,
+                                                                        lineNumber: 3230,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3016,
+                                                                    lineNumber: 3153,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3006,
+                                                            lineNumber: 3143,
                                                             columnNumber: 27
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                        lineNumber: 3005,
+                                                        lineNumber: 3142,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 3004,
+                                                    lineNumber: 3141,
                                                     columnNumber: 23
                                                 }, this),
                                                 targetTotalPages > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10421,7 +10749,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3110,
+                                                            lineNumber: 3247,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10437,12 +10765,12 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3121,
+                                                                        lineNumber: 3258,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3114,
+                                                                    lineNumber: 3251,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10469,13 +10797,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                             children: pageNum
                                                                         }, pageNum, false, {
                                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                            lineNumber: 3136,
+                                                                            lineNumber: 3273,
                                                                             columnNumber: 35
                                                                         }, this);
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3123,
+                                                                    lineNumber: 3260,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -10488,35 +10816,35 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3160,
+                                                                        lineNumber: 3297,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3153,
+                                                                    lineNumber: 3290,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3113,
+                                                            lineNumber: 3250,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 3109,
+                                                    lineNumber: 3246,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 2980,
+                                            lineNumber: 3117,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 2979,
+                                        lineNumber: 3116,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
                                         className: "bg-surface border-2 border-primary/50 p-6 shadow-lg",
@@ -10530,7 +10858,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             className: "w-4 h-4 text-primary"
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3171,
+                                                            lineNumber: 3308,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10541,7 +10869,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Target Table"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3173,
+                                                                    lineNumber: 3310,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10558,19 +10886,19 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     })()
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3174,
+                                                                    lineNumber: 3311,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3172,
+                                                            lineNumber: 3309,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 3170,
+                                                    lineNumber: 3307,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10583,14 +10911,14 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     className: "w-5 h-5 animate-spin mx-auto mb-2"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3190,
+                                                                    lineNumber: 3327,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 "Loading target data..."
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3189,
+                                                            lineNumber: 3326,
                                                             columnNumber: 27
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "text-foreground-muted",
@@ -10600,7 +10928,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Target data not available"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3195,
+                                                                    lineNumber: 3332,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10608,13 +10936,13 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                     children: "Please check the target database connection"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                    lineNumber: 3196,
+                                                                    lineNumber: 3333,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3194,
+                                                            lineNumber: 3331,
                                                             columnNumber: 27
                                                         }, this),
                                                         !loadingData && !targetData && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -10660,7 +10988,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-4 h-4 mr-2 animate-spin"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3248,
+                                                                        lineNumber: 3385,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     "Retrying..."
@@ -10671,7 +10999,7 @@ function PipelineDetail({ pipeline, onBack }) {
                                                                         className: "w-4 h-4 mr-2"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                                        lineNumber: 3253,
+                                                                        lineNumber: 3390,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     "Retry Target"
@@ -10679,58 +11007,58 @@ function PipelineDetail({ pipeline, onBack }) {
                                                             }, void 0, true)
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                            lineNumber: 3200,
+                                                            lineNumber: 3337,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                                    lineNumber: 3187,
+                                                    lineNumber: 3324,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                            lineNumber: 3169,
+                                            lineNumber: 3306,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                        lineNumber: 3168,
+                                        lineNumber: 3305,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                                lineNumber: 2740,
+                                lineNumber: 2877,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                        lineNumber: 2636,
+                        lineNumber: 2773,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 2571,
+                lineNumber: 2703,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ConfirmDialogComponent, {}, void 0, false, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 3268,
+                lineNumber: 3405,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ErrorToastComponent, {}, void 0, false, {
                 fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-                lineNumber: 3269,
+                lineNumber: 3406,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/pipelines/pipeline-detail.tsx",
-        lineNumber: 1007,
+        lineNumber: 1008,
         columnNumber: 5
     }, this);
 }

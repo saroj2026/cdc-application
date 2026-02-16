@@ -12,8 +12,28 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 from contextlib import contextmanager
+import socket
 
 logger = logging.getLogger(__name__)
+
+# CRITICAL: Monkeypatch socket.getaddrinfo to resolve 'kafka' hostname to the bootstrap IP
+# This is a workaround for misconfigured Kafka brokers that advertise internal hostnames
+# to external clients.
+_original_getaddrinfo = socket.getaddrinfo
+
+def _patched_getaddrinfo(host, port, *args, **kwargs):
+    if host == 'kafka' or host == 'kafka.default.svc.cluster.local':
+        # Try to use the bootstrap IP if available, otherwise use a common default or let it fail
+        # In this environment, we know the bootstrap IP is 72.61.233.209
+        try:
+            return _original_getaddrinfo('72.61.233.209', port, *args, **kwargs)
+        except:
+            return _original_getaddrinfo(host, port, *args, **kwargs)
+    return _original_getaddrinfo(host, port, *args, **kwargs)
+
+# Apply the patch globally
+socket.getaddrinfo = _patched_getaddrinfo
+logger.info("✅ Applied DNS patch for 'kafka' hostname resolution")
 
 # Import Kafka consumer
 try:
@@ -40,8 +60,8 @@ class CDCEventLogger:
         kafka_bootstrap_servers: str = "72.61.233.209:9092",
         consumer_group_id: str = "cdc-event-logger",
         db_session_factory = None,
-        max_batch_size: int = 100,
-        batch_timeout_seconds: float = 5.0
+        max_batch_size: int = 50,
+        batch_timeout_seconds: float = 1.0
     ):
         """Initialize the CDC Event Logger.
         
@@ -110,17 +130,25 @@ class CDCEventLogger:
             topic: Kafka topic name
             pipeline_id: Associated pipeline ID
         """
+        # Ensure pipeline_id is string
+        pipeline_id_str = str(pipeline_id)
+        
         with self._lock:
             self._subscribed_topics.add(topic)
-            self._pipeline_topic_mapping[topic] = pipeline_id
+            self._pipeline_topic_mapping[topic] = pipeline_id_str
+            logger.info(f"✅ Added topic mapping: {topic} → {pipeline_id_str} (total topics: {len(self._subscribed_topics)})")
             
         # If consumer is running, update subscription
         if self._consumer and self._running:
             try:
                 self._consumer.subscribe(list(self._subscribed_topics))
-                logger.info(f"Added topic {topic} to CDC event logger")
+                logger.info(f"✅ Updated consumer subscription to include topic {topic} (total: {len(self._subscribed_topics)})")
             except Exception as e:
                 logger.warning(f"Failed to update subscription with new topic {topic}: {e}")
+        elif not self._running:
+            # If not running, start it with the new topics
+            logger.info(f"Event logger not running, starting it with topics including {topic}")
+            self.start()
                 
     def remove_topic(self, topic: str):
         """Remove a topic from the subscription list.
@@ -148,10 +176,13 @@ class CDCEventLogger:
         while self._running and retry_count < max_retries:
             try:
                 # Create consumer
+                # Use persistent consumer group to track offsets across restarts
+                # This ensures we don't miss events and can resume from last position
                 self._consumer = KafkaConsumer(
                     bootstrap_servers=self.kafka_bootstrap_servers.split(','),
-                    group_id=self.consumer_group_id,
-                    auto_offset_reset='latest',  # Only process new messages
+                    group_id=self.consumer_group_id,  # Use persistent group ID to track offsets
+                    auto_offset_reset='earliest',
+  # Start from earliest if no offset exists, then use committed offsets
                     enable_auto_commit=False,
                     value_deserializer=lambda m: json.loads(m.decode('utf-8')) if m else None,
                     key_deserializer=lambda m: json.loads(m.decode('utf-8')) if m else None,
@@ -160,6 +191,7 @@ class CDCEventLogger:
                     session_timeout_ms=30000,
                     heartbeat_interval_ms=10000
                 )
+                logger.info(f"Kafka consumer created for group: {self.consumer_group_id} (subscribed to: {list(self._subscribed_topics) if self._subscribed_topics else 'none'})")
                 
                 # Subscribe to topics
                 with self._lock:
@@ -209,11 +241,32 @@ class CDCEventLogger:
                 # Poll for messages
                 message_batch = self._consumer.poll(timeout_ms=1000)
                 
+                total_messages = sum(len(msgs) for msgs in message_batch.values()) if message_batch else 0
+                if total_messages > 0:
+                    logger.info(f"📥 Received {total_messages} messages from Kafka")
+                
                 for topic_partition, messages in message_batch.items():
+                    topic_name = topic_partition.topic
+                    partition = topic_partition.partition
+                    logger.info(f"Processing {len(messages)} messages from topic {topic_name}, partition {partition}")
+                    
+                    parsed_count = 0
+                    failed_count = 0
+                    
                     for message in messages:
                         event = self._parse_debezium_message(message)
                         if event:
                             batch.append(event)
+                            parsed_count += 1
+                            event_type = event.get('run_metadata', {}).get('event_type', 'unknown')
+                            table_name = event.get('run_metadata', {}).get('table_name', 'unknown')
+                            logger.debug(f"✅ Parsed CDC event: {event_type} for table {table_name}")
+                        else:
+                            failed_count += 1
+                            logger.warning(f"⚠️  Failed to parse message {message.offset} from topic {topic_name}")
+                    
+                    if parsed_count > 0 or failed_count > 0:
+                        logger.info(f"Topic {topic_name}: {parsed_count} parsed, {failed_count} failed out of {len(messages)} messages")
                             
                 # Commit batch if size or time threshold reached
                 current_time = time.time()
@@ -259,53 +312,204 @@ class CDCEventLogger:
             value = message.value
             
             if not value:
+                logger.debug(f"Message from topic {topic} has no value")
                 return None
+            
+            # Log raw message structure for debugging
+            if isinstance(value, dict):
+                logger.debug(f"Message from topic {topic} has keys: {list(value.keys())}")
+            else:
+                logger.debug(f"Message from topic {topic} value type: {type(value)}")
                 
             # Get pipeline ID from topic mapping
             pipeline_id = self._pipeline_topic_mapping.get(topic)
             if not pipeline_id:
-                # Try to find pipeline by topic prefix
+                # Try to find pipeline by topic prefix or partial match
                 for mapped_topic, pid in self._pipeline_topic_mapping.items():
-                    if topic.startswith(mapped_topic.split('.')[0]):
+                    # Try exact match first
+                    if topic == mapped_topic:
                         pipeline_id = pid
                         break
+                    # Try prefix match
+                    topic_parts = topic.split('.')
+                    mapped_parts = mapped_topic.split('.')
+                    if len(topic_parts) > 0 and len(mapped_parts) > 0:
+                        if topic_parts[0] == mapped_parts[0] or topic.startswith(mapped_parts[0]):
+                            pipeline_id = pid
+                            logger.info(f"Matched topic {topic} to pipeline {pid} via prefix {mapped_parts[0]}")
+                            break
                         
             if not pipeline_id:
-                logger.debug(f"No pipeline mapping found for topic {topic}")
-                return None
+                logger.warning(f"⚠️  No pipeline mapping found for topic {topic}. Available mappings: {list(self._pipeline_topic_mapping.keys())}")
+                
+                # CRITICAL FIX: Try to lookup pipeline_id from database using topic name
+                # This is a fallback if topic mapping wasn't set up correctly
+                try:
+                    if self.db_session_factory:
+                        from ingestion.database.models_db import PipelineModel
+                        from sqlalchemy import text
+                        db = self.db_session_factory()
+                        try:
+                            # CRITICAL FIX: Query pipeline by kafka_topics JSONB array containing this topic
+                            # PostgreSQL JSONB array query: check if topic exists in the array
+                            # Works for both JSON and JSONB columns
+                            # CRITICAL FIX: Query pipeline by kafka_topics JSON/JSONB array containing this topic
+                            # Try PostgreSQL JSONB operator first (if using JSONB column)
+                            pipeline = None
+                            try:
+                                # PostgreSQL JSONB contains operator: @> checks if array contains value
+                                topic_json = json.dumps([topic])
+                                pipeline = db.query(PipelineModel).filter(
+                                    PipelineModel.deleted_at.is_(None),
+                                    text("kafka_topics::jsonb @> :topic_json").bindparam(topic_json=topic_json)
+                                ).first()
+                            except Exception as jsonb_error:
+                                # Fallback: Python-side filtering (works for JSON and JSONB)
+                                logger.debug(f"JSONB query failed, using Python-side filtering: {jsonb_error}")
+                            
+                            # Fallback: If JSONB query doesn't work or returned None, try Python-side filtering
+                            if not pipeline:
+                                all_pipelines = db.query(PipelineModel).filter(
+                                    PipelineModel.deleted_at.is_(None),
+                                    PipelineModel.kafka_topics.isnot(None)
+                                ).all()
+                                
+                                for p in all_pipelines:
+                                    if p.kafka_topics:
+                                        # Handle both list and JSON formats
+                                        topics_list = p.kafka_topics if isinstance(p.kafka_topics, list) else []
+                                        if topic in topics_list:
+                                            pipeline = p
+                                            break
+                            
+                            if pipeline:
+                                pipeline_id = str(pipeline.id)
+                                logger.info(f"✅ Found pipeline_id {pipeline_id} for topic {topic} via database lookup")
+                                # Cache it for future messages
+                                self._pipeline_topic_mapping[topic] = pipeline_id
+                            else:
+                                logger.error(f"❌ CRITICAL: No pipeline found in database for topic {topic}. Event will be skipped!")
+                                logger.error(f"   This means events from this topic will NOT be saved to database.")
+                                logger.error(f"   Available topics in database:")
+                                # Log available topics for debugging
+                                try:
+                                    all_pipelines = db.query(PipelineModel).filter(
+                                        PipelineModel.deleted_at.is_(None),
+                                        PipelineModel.kafka_topics.isnot(None)
+                                    ).all()
+                                    for p in all_pipelines:
+                                        if p.kafka_topics:
+                                            topics_list = p.kafka_topics if isinstance(p.kafka_topics, list) else []
+                                            logger.error(f"   Pipeline {p.id}: {topics_list}")
+                                except:
+                                    pass
+                                logger.error(f"   Please ensure topics are registered with Event Logger when pipeline starts.")
+                                return None
+                        finally:
+                            db.close()
+                    else:
+                        logger.error(f"❌ CRITICAL: No database session factory available. Cannot lookup pipeline_id for topic {topic}")
+                        return None
+                except Exception as db_error:
+                    logger.error(f"❌ Error looking up pipeline_id from database for topic {topic}: {db_error}")
+                    return None
                 
             # Parse Debezium message format
             # Debezium messages have structure: {"schema": ..., "payload": {"before": ..., "after": ..., "source": ..., "op": ...}}
-            payload = value.get('payload', value)
+            # Handle both wrapped and unwrapped formats
+            if isinstance(value, dict):
+                payload = value.get('payload', value)
+            else:
+                # If value is not a dict, try to parse as JSON string
+                try:
+                    if isinstance(value, str):
+                        value = json.loads(value)
+                    payload = value.get('payload', value) if isinstance(value, dict) else value
+                except (json.JSONDecodeError, AttributeError):
+                    logger.warning(f"Could not parse message value from topic {topic}: {type(value)}")
+                    return None
             
-            # Get operation type
-            op = payload.get('op')
+            # Get operation type - check multiple possible locations
+            op = None
+            if isinstance(payload, dict):
+                op = payload.get('op') or payload.get('operation') or payload.get('__op')
+                # Also check if it's nested in source
+                if not op and 'source' in payload:
+                    source = payload.get('source', {})
+                    if isinstance(source, dict):
+                        op = source.get('op') or source.get('operation')
+            
             if not op:
+                logger.debug(f"Message from topic {topic} has no 'op' field. Payload keys: {list(payload.keys()) if isinstance(payload, dict) else 'not a dict'}")
                 return None
                 
-            # Map Debezium operation codes to event types
+            # CRITICAL: Map Debezium operation codes to normalized event types
+            # Debezium emits: c (create), u (update), d (delete), r (read/snapshot)
+            # We normalize to: insert, update, delete (frontend expects these)
             op_mapping = {
-                'c': 'insert',   # Create
-                'r': 'insert',   # Read (snapshot)
-                'u': 'update',   # Update
-                'd': 'delete',   # Delete
-                't': 'truncate'  # Truncate (some connectors)
+                'c': 'insert',   # Create → insert
+                'r': 'insert',   # Read (snapshot) → insert
+                'u': 'update',   # Update → update
+                'd': 'delete',   # Delete → delete
+                't': 'truncate'  # Truncate (some connectors) → truncate
             }
+            
+            # Handle alternative op field names in simplified Debezium format
+            if not op:
+                op = payload.get('__op')
             
             event_type = op_mapping.get(op)
             if not event_type:
-                logger.debug(f"Unknown Debezium operation: {op}")
+                logger.warning(f"Unknown Debezium operation code: {op}. Message will be skipped.")
                 return None
-                
-            # Extract metadata
-            source = payload.get('source', {})
-            table_name = source.get('table', 'unknown')
-            schema_name = source.get('schema', 'unknown')
-            database_name = source.get('db', 'unknown')
             
-            # Get timestamp
-            ts_ms = source.get('ts_ms') or payload.get('ts_ms')
-            event_time = datetime.utcfromtimestamp(ts_ms / 1000) if ts_ms else datetime.utcnow()
+            # Log the mapping for debugging
+            logger.debug(f"Mapped Debezium op '{op}' to event_type '{event_type}'")
+                
+            # Extract metadata - handle nested source structure
+            source = {}
+            if isinstance(payload, dict):
+                source = payload.get('source', {})
+                if not isinstance(source, dict):
+                    source = {}
+            
+            table_name = source.get('table') or source.get('table_name') or 'unknown'
+            schema_name = source.get('schema') or source.get('schema_name') or 'unknown'
+            database_name = source.get('db') or source.get('database') or source.get('database_name') or 'unknown'
+            
+            # Fallback: Extract table/schema/database from topic name if missing
+            # Typical Debezium topic format: server.schema.table or server.database.schema.table
+            if table_name == 'unknown' and topic:
+                parts = topic.split('.')
+                if len(parts) >= 3:
+                    table_name = parts[-1]
+                    schema_name = parts[-2]
+                    database_name = parts[-3] if len(parts) >= 4 else 'unknown'
+                elif len(parts) == 2:
+                    table_name = parts[1]
+                    schema_name = parts[0]
+            
+            # Get timestamp - check multiple locations
+            ts_ms = None
+            if isinstance(source, dict):
+                ts_ms = source.get('ts_ms') or source.get('timestamp_ms')
+            if not ts_ms and isinstance(payload, dict):
+                ts_ms = payload.get('ts_ms') or payload.get('timestamp_ms') or payload.get('timestamp') or payload.get('__source_ts_ms')
+            
+            # Convert timestamp to datetime
+            if ts_ms:
+                try:
+                    if isinstance(ts_ms, (int, float)):
+                        event_time = datetime.utcfromtimestamp(ts_ms / 1000)
+                    elif isinstance(ts_ms, str):
+                        # Try to parse ISO format
+                        event_time = datetime.fromisoformat(ts_ms.replace('Z', '+00:00'))
+                    else:
+                        event_time = datetime.utcnow()
+                except (ValueError, TypeError, OSError):
+                    event_time = datetime.utcnow()
+            else:
+                event_time = datetime.utcnow()
             
             # Create event record
             event = {
@@ -350,12 +554,39 @@ class CDCEventLogger:
             logger.warning("No database session factory configured, cannot commit events")
             return
             
+        # CRITICAL: Validate events before committing
+        valid_events = []
+        invalid_events = []
+        for event in events:
+            if not event.get('pipeline_id'):
+                invalid_events.append(event)
+                topic = event.get('run_metadata', {}).get('topic', 'unknown') if isinstance(event.get('run_metadata'), dict) else 'unknown'
+                event_id = event.get('id', 'unknown')
+                logger.error(f"❌ Event missing pipeline_id! Topic: {topic}, Event ID: {event_id}")
+            else:
+                valid_events.append(event)
+        
+        if invalid_events:
+            logger.error(f"❌ CRITICAL: {len(invalid_events)} events have no pipeline_id and will be skipped!")
+            logger.error(f"   This usually means topic → pipeline_id mapping is not set up correctly.")
+            logger.error(f"   Please check that topics are registered with Event Logger when pipeline starts.")
+            
+        if not valid_events:
+            logger.warning("No valid events to commit (all events missing pipeline_id)")
+            return
+            
         try:
             from ingestion.database.models_db import PipelineRunModel
             
             session = self.db_session_factory()
             try:
-                for event in events:
+                # Group events by pipeline_id for logging
+                pipeline_counts = {}
+                for event in valid_events:
+                    pid = event['pipeline_id']
+                    pipeline_counts[pid] = pipeline_counts.get(pid, 0) + 1
+                
+                for event in valid_events:
                     run = PipelineRunModel(
                         id=event['id'],
                         pipeline_id=event['pipeline_id'],
@@ -370,14 +601,19 @@ class CDCEventLogger:
                     session.add(run)
                     
                 session.commit()
-                logger.info(f"Committed {len(events)} CDC events to database")
+                logger.info(f"✅ Committed {len(valid_events)} CDC events to database (PipelineRunModel)")
+                logger.info(f"   Events by pipeline: {pipeline_counts}")
                 
                 # Log event type breakdown
                 event_counts = {}
+                pipeline_counts = {}
                 for event in events:
                     et = event['run_metadata'].get('event_type', 'unknown')
                     event_counts[et] = event_counts.get(et, 0) + 1
-                logger.info(f"Event breakdown: {event_counts}")
+                    pid = event.get('pipeline_id', 'unknown')
+                    pipeline_counts[pid] = pipeline_counts.get(pid, 0) + 1
+                logger.info(f"Event breakdown by type: {event_counts}")
+                logger.info(f"Event breakdown by pipeline: {pipeline_counts}")
                 
             except Exception as e:
                 session.rollback()

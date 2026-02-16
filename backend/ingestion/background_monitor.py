@@ -26,9 +26,11 @@ class BackgroundCDCMonitor:
         """Initialize background monitor.
         
         Args:
-            kafka_connect_url: Kafka Connect URL
+            kafka_connect_url: Kafka Connect URL (base URL only, without /connectors)
             check_interval_seconds: How often to check pipelines (default: 60 seconds)
         """
+        # Normalize URL: remove any trailing /connectors to prevent double path
+        kafka_connect_url = kafka_connect_url.rstrip('/connectors').rstrip('/')
         self.kafka_connect_url = kafka_connect_url
         self.check_interval = check_interval_seconds
         self.running = False
@@ -125,13 +127,15 @@ def start_background_monitor(
     """Start the global background monitor.
     
     Args:
-        kafka_connect_url: Kafka Connect URL
+        kafka_connect_url: Kafka Connect URL (base URL only, without /connectors)
         check_interval_seconds: Check interval in seconds
     """
     global _background_monitor
     if _background_monitor is None:
+        # Normalize URL: remove any trailing /connectors to prevent double path
+        normalized_url = kafka_connect_url.rstrip('/connectors').rstrip('/')
         _background_monitor = BackgroundCDCMonitor(
-            kafka_connect_url=kafka_connect_url,
+            kafka_connect_url=normalized_url,
             check_interval_seconds=check_interval_seconds
         )
         _background_monitor.start()

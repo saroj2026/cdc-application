@@ -52,7 +52,23 @@ class LagMonitor:
             
             # Calculate lag
             lag_seconds = 0.0
-            if source_lsn_info.get("timestamp") and target_lsn_info.get("timestamp"):
+            
+            # Check for PostgreSQL replication stats (more accurate)
+            if source_lsn_info.get("metadata") and "replication_stats" in source_lsn_info["metadata"]:
+                stats = source_lsn_info["metadata"]["replication_stats"]
+                # Find relevant replication slot/application if possible, or take max lag
+                current_max_lag = 0.0
+                for stat in stats:
+                    # Prefer replay_lag, then flush_lag, then write_lag
+                    stat_lag = stat.get("replay_lag_seconds") or stat.get("flush_lag_seconds") or stat.get("write_lag_seconds") or 0.0
+                    if stat_lag > current_max_lag:
+                        current_max_lag = stat_lag
+                
+                if current_max_lag > 0:
+                    lag_seconds = current_max_lag
+            
+            # Fallback to timestamp diff if no replication stats
+            elif source_lsn_info.get("timestamp") and target_lsn_info.get("timestamp"):
                 source_time = datetime.fromisoformat(source_lsn_info["timestamp"].replace("Z", "+00:00"))
                 target_time = datetime.fromisoformat(target_lsn_info["timestamp"].replace("Z", "+00:00"))
                 lag = (source_time - target_time).total_seconds()

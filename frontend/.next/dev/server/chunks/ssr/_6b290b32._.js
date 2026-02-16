@@ -25,7 +25,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$
 function Card({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         "data-slot": "card",
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm', className),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-4 rounded-xl border shadow-sm', className),
         ...props
     }, void 0, false, {
         fileName: "[project]/components/ui/card.tsx",
@@ -159,15 +159,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 function PageHeader({ title, subtitle, icon: Icon, action }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "flex items-center justify-between",
+        className: "flex items-center justify-between pb-6 border-b border-border mb-6",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex flex-col gap-1",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                        className: "text-3xl font-bold text-foreground mb-2 flex items-center gap-3",
+                        className: "text-2xl font-bold text-foreground flex items-center gap-2 tracking-tight",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                className: "w-8 h-8 text-cyan-400"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "p-1.5 bg-primary/10 rounded-lg",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                    className: "w-5 h-5 text-primary"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/ui/page-header.tsx",
+                                    lineNumber: 19,
+                                    columnNumber: 13
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/ui/page-header.tsx",
                                 lineNumber: 18,
@@ -181,11 +189,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-foreground-muted",
+                        className: "text-sm text-foreground-muted ml-1",
                         children: subtitle
                     }, void 0, false, {
                         fileName: "[project]/components/ui/page-header.tsx",
-                        lineNumber: 21,
+                        lineNumber: 23,
                         columnNumber: 9
                     }, this)
                 ]
@@ -195,10 +203,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                 columnNumber: 7
             }, this),
             action && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex items-center gap-2",
                 children: action
             }, void 0, false, {
                 fileName: "[project]/components/ui/page-header.tsx",
-                lineNumber: 23,
+                lineNumber: 25,
                 columnNumber: 18
             }, this)
         ]
@@ -2263,6 +2272,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/shield.js [app-ssr] (ecmascript) <export default as Shield>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/database.js [app-ssr] (ecmascript) <export default as Database>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LineChart$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chart-line.js [app-ssr] (ecmascript) <export default as LineChart>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$page$2d$header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/page-header.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/hooks.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$connectionSlice$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/slices/connectionSlice.ts [app-ssr] (ecmascript)");
@@ -2429,7 +2439,7 @@ function GovernancePage() {
                     }, void 0, false, {
                         fileName: "[project]/app/governance/page.tsx",
                         lineNumber: 166,
-                        columnNumber: 11
+                        columnNumber: 13
                     }, void 0)
                 }, void 0, false, {
                     fileName: "[project]/app/governance/page.tsx",
@@ -2437,24 +2447,31 @@ function GovernancePage() {
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                    className: "card-heartbeat bg-surface border-border p-6",
+                    className: "bg-card border-l-4 border-l-primary shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden",
                     children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                            className: "absolute -right-4 -bottom-4 w-24 h-24 text-primary/10 group-hover:text-primary/15 transition-colors transform rotate-12"
+                        }, void 0, false, {
+                            fileName: "[project]/app/governance/page.tsx",
+                            lineNumber: 177,
+                            columnNumber: 11
+                        }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                            className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2",
+                            className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2 relative z-10",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                                    className: "w-5 h-5"
+                                    className: "w-5 h-5 text-primary"
                                 }, void 0, false, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 178,
-                                    columnNumber: 11
+                                    lineNumber: 179,
+                                    columnNumber: 13
                                 }, this),
                                 "Data Lineage"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 177,
-                            columnNumber: 9
+                            lineNumber: 178,
+                            columnNumber: 11
                         }, this),
                         dataLineage.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-4",
@@ -2469,24 +2486,24 @@ function GovernancePage() {
                                                     children: "Source"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 186,
-                                                    columnNumber: 19
+                                                    lineNumber: 187,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-foreground font-semibold",
                                                     children: lineage.source
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 187,
-                                                    columnNumber: 19
+                                                    lineNumber: 188,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-xs text-foreground-muted mt-1",
                                                     children: lineage.pipelineName
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 188,
-                                                    columnNumber: 19
+                                                    lineNumber: 189,
+                                                    columnNumber: 21
                                                 }, this),
                                                 lineage.tables.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex gap-2 mt-2 flex-wrap",
@@ -2496,8 +2513,8 @@ function GovernancePage() {
                                                                 children: table
                                                             }, table, false, {
                                                                 fileName: "[project]/app/governance/page.tsx",
-                                                                lineNumber: 192,
-                                                                columnNumber: 25
+                                                                lineNumber: 193,
+                                                                columnNumber: 27
                                                             }, this)),
                                                         (()=>{
                                                             const pipeline = pipelines.find((p)=>p.id === lineage.id);
@@ -2510,28 +2527,28 @@ function GovernancePage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/governance/page.tsx",
-                                                                lineNumber: 199,
-                                                                columnNumber: 27
+                                                                lineNumber: 200,
+                                                                columnNumber: 29
                                                             }, this);
                                                         })()
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 190,
-                                                    columnNumber: 21
+                                                    lineNumber: 191,
+                                                    columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 185,
-                                            columnNumber: 17
+                                            lineNumber: 186,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {
                                             className: "w-6 h-6 text-foreground-muted mx-4"
                                         }, void 0, false, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 207,
-                                            columnNumber: 17
+                                            lineNumber: 208,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
@@ -2540,75 +2557,82 @@ function GovernancePage() {
                                                     children: "Target"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 209,
-                                                    columnNumber: 19
+                                                    lineNumber: 210,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-foreground font-semibold",
                                                     children: lineage.target
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 210,
-                                                    columnNumber: 19
+                                                    lineNumber: 211,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 208,
-                                            columnNumber: 17
+                                            lineNumber: 209,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, lineage.id, true, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 184,
-                                    columnNumber: 15
+                                    lineNumber: 185,
+                                    columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 182,
-                            columnNumber: 11
+                            lineNumber: 183,
+                            columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-8 text-foreground-muted",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "No data lineage available. Create pipelines to see data flow."
                             }, void 0, false, {
                                 fileName: "[project]/app/governance/page.tsx",
-                                lineNumber: 217,
-                                columnNumber: 13
+                                lineNumber: 218,
+                                columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 216,
-                            columnNumber: 11
+                            lineNumber: 217,
+                            columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/governance/page.tsx",
                     lineNumber: 176,
-                    columnNumber: 7
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 md:grid-cols-2 gap-6",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "card-heartbeat bg-surface border-border p-6",
+                            className: "bg-card border-l-4 border-l-warning shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-warning/10 group-hover:text-warning/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/governance/page.tsx",
+                                    lineNumber: 226,
+                                    columnNumber: 13
+                                }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                    className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2",
+                                    className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2 relative z-10",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
-                                            className: "w-5 h-5"
+                                            className: "w-5 h-5 text-warning"
                                         }, void 0, false, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 226,
-                                            columnNumber: 13
+                                            lineNumber: 228,
+                                            columnNumber: 15
                                         }, this),
                                         "Compliance Status"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 225,
-                                    columnNumber: 11
+                                    lineNumber: 227,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-3",
@@ -2623,67 +2647,74 @@ function GovernancePage() {
                                                             children: item.policy
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/governance/page.tsx",
-                                                            lineNumber: 233,
-                                                            columnNumber: 19
+                                                            lineNumber: 235,
+                                                            columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                             className: "text-xs text-foreground-muted mt-1",
                                                             children: item.details
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/governance/page.tsx",
-                                                            lineNumber: 234,
-                                                            columnNumber: 19
+                                                            lineNumber: 236,
+                                                            columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 232,
-                                                    columnNumber: 17
+                                                    lineNumber: 234,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
                                                     className: item.status === "compliant" ? "bg-success/20 text-success" : item.status === "review_needed" ? "bg-warning/20 text-warning" : "bg-error/20 text-error",
                                                     children: item.status === "compliant" ? "Compliant" : item.status === "review_needed" ? "Review Needed" : "Non-Compliant"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 236,
-                                                    columnNumber: 17
+                                                    lineNumber: 238,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, item.policy, true, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 231,
-                                            columnNumber: 15
+                                            lineNumber: 233,
+                                            columnNumber: 17
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 229,
-                                    columnNumber: 11
+                                    lineNumber: 231,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 224,
-                            columnNumber: 9
+                            lineNumber: 225,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                            className: "card-heartbeat bg-surface border-border p-6",
+                            className: "bg-card border-l-4 border-l-success shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden",
                             children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LineChart$3e$__["LineChart"], {
+                                    className: "absolute -right-4 -bottom-4 w-24 h-24 text-success/10 group-hover:text-success/15 transition-colors transform rotate-12"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/governance/page.tsx",
+                                    lineNumber: 259,
+                                    columnNumber: 13
+                                }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                    className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2",
+                                    className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2 relative z-10",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$line$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LineChart$3e$__["LineChart"], {
-                                            className: "w-5 h-5"
+                                            className: "w-5 h-5 text-success"
                                         }, void 0, false, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 258,
-                                            columnNumber: 13
+                                            lineNumber: 261,
+                                            columnNumber: 15
                                         }, this),
                                         "Quality Metrics"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 257,
-                                    columnNumber: 11
+                                    lineNumber: 260,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "space-y-3",
@@ -2712,50 +2743,66 @@ function GovernancePage() {
                                                     children: item.metric
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 269,
-                                                    columnNumber: 17
+                                                    lineNumber: 272,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-foreground font-semibold",
                                                     children: item.value
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 270,
-                                                    columnNumber: 17
+                                                    lineNumber: 273,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, item.metric, true, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 268,
-                                            columnNumber: 15
+                                            lineNumber: 271,
+                                            columnNumber: 17
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/app/governance/page.tsx",
-                                    lineNumber: 261,
-                                    columnNumber: 11
+                                    lineNumber: 264,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 256,
-                            columnNumber: 9
+                            lineNumber: 258,
+                            columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/governance/page.tsx",
-                    lineNumber: 223,
-                    columnNumber: 7
+                    lineNumber: 224,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
-                    className: "card-heartbeat bg-surface border-border p-6",
+                    className: "bg-card border-l-4 border-l-blue-500 shadow-sm p-6 hover:shadow-md transition-all group relative overflow-hidden",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                            className: "text-lg font-semibold text-foreground mb-4",
-                            children: "Data Owner Assignment"
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                            className: "absolute -right-4 -bottom-4 w-24 h-24 text-blue-500/10 group-hover:text-blue-500/15 transition-colors transform rotate-12"
                         }, void 0, false, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 279,
-                            columnNumber: 9
+                            lineNumber: 282,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                            className: "text-lg font-semibold text-foreground mb-4 flex items-center gap-2 relative z-10",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                                    className: "w-5 h-5 text-blue-500"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/governance/page.tsx",
+                                    lineNumber: 284,
+                                    columnNumber: 13
+                                }, this),
+                                "Data Owner Assignment"
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/app/governance/page.tsx",
+                            lineNumber: 283,
+                            columnNumber: 11
                         }, this),
                         tableOwnership.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "overflow-x-auto",
@@ -2771,43 +2818,43 @@ function GovernancePage() {
                                                     children: "Database / Table"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 285,
-                                                    columnNumber: 19
+                                                    lineNumber: 292,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-left py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Pipeline"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 286,
-                                                    columnNumber: 19
+                                                    lineNumber: 293,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-left py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "Classification"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 287,
-                                                    columnNumber: 19
+                                                    lineNumber: 294,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                     className: "text-center py-3 px-4 font-semibold text-foreground-muted",
                                                     children: "SLA"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/governance/page.tsx",
-                                                    lineNumber: 288,
-                                                    columnNumber: 19
+                                                    lineNumber: 295,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/governance/page.tsx",
-                                            lineNumber: 284,
-                                            columnNumber: 17
+                                            lineNumber: 291,
+                                            columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/governance/page.tsx",
-                                        lineNumber: 283,
-                                        columnNumber: 15
+                                        lineNumber: 290,
+                                        columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                                         children: tableOwnership.map((row)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -2818,16 +2865,16 @@ function GovernancePage() {
                                                         children: row.table
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/governance/page.tsx",
-                                                        lineNumber: 294,
-                                                        columnNumber: 21
+                                                        lineNumber: 301,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-foreground",
                                                         children: row.pipeline
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/governance/page.tsx",
-                                                        lineNumber: 295,
-                                                        columnNumber: 21
+                                                        lineNumber: 302,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4",
@@ -2836,62 +2883,62 @@ function GovernancePage() {
                                                             children: row.classification
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/governance/page.tsx",
-                                                            lineNumber: 297,
-                                                            columnNumber: 23
+                                                            lineNumber: 304,
+                                                            columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/governance/page.tsx",
-                                                        lineNumber: 296,
-                                                        columnNumber: 21
+                                                        lineNumber: 303,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                         className: "py-3 px-4 text-center text-foreground font-semibold",
                                                         children: row.sla
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/governance/page.tsx",
-                                                        lineNumber: 309,
-                                                        columnNumber: 21
+                                                        lineNumber: 316,
+                                                        columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, row.table, true, {
                                                 fileName: "[project]/app/governance/page.tsx",
-                                                lineNumber: 293,
-                                                columnNumber: 19
+                                                lineNumber: 300,
+                                                columnNumber: 21
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/app/governance/page.tsx",
-                                        lineNumber: 291,
-                                        columnNumber: 15
+                                        lineNumber: 298,
+                                        columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/governance/page.tsx",
-                                lineNumber: 282,
-                                columnNumber: 13
+                                lineNumber: 289,
+                                columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 281,
-                            columnNumber: 11
+                            lineNumber: 288,
+                            columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-8 text-foreground-muted",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "No table ownership data available. Create pipelines with table mappings to see ownership."
                             }, void 0, false, {
                                 fileName: "[project]/app/governance/page.tsx",
-                                lineNumber: 317,
-                                columnNumber: 13
+                                lineNumber: 324,
+                                columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/governance/page.tsx",
-                            lineNumber: 316,
-                            columnNumber: 11
+                            lineNumber: 323,
+                            columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/governance/page.tsx",
-                    lineNumber: 278,
-                    columnNumber: 7
+                    lineNumber: 281,
+                    columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$governance$2f$policy$2d$modal$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PolicyModal"], {
                     isOpen: isPolicyModalOpen,
@@ -2904,8 +2951,8 @@ function GovernancePage() {
                     }
                 }, void 0, false, {
                     fileName: "[project]/app/governance/page.tsx",
-                    lineNumber: 323,
-                    columnNumber: 7
+                    lineNumber: 330,
+                    columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {

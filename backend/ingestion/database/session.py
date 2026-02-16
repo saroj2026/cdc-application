@@ -26,7 +26,11 @@ engine = create_engine(
     pool_recycle=3600,
     echo=False,
     connect_args={
-        "connect_timeout": 10,  # 10 second timeout for initial connection
+        "connect_timeout": 30,  # 30 second timeout for initial connection (increased from 10)
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5,
     }
 )
 
@@ -44,11 +48,20 @@ def check_db_connection() -> bool:
     global _db_available
     try:
         with engine.connect() as conn:
+            # Set statement timeout to 25 seconds (less than connection timeout)
+            try:
+                conn.execute(text("SET statement_timeout = '25s'"))
+            except:
+                pass  # Some databases may not support this
             conn.execute(text("SELECT 1"))
         _db_available = True
         return True
-    except (OperationalError, DisconnectionError, Exception) as e:
+    except (OperationalError, DisconnectionError) as e:
         logger.warning(f"Database connection check failed: {e}")
+        _db_available = False
+        return False
+    except Exception as e:
+        logger.warning(f"Database connection check error: {e}")
         _db_available = False
         return False
 
@@ -70,7 +83,12 @@ def get_db() -> Generator[Optional[Session], None, None]:
     db = None
     try:
         db = SessionLocal()
-        # Test the connection
+        # Test the connection with statement timeout
+        try:
+            # Set statement timeout to prevent long-running queries (25 seconds)
+            db.execute(text("SET statement_timeout = '25s'"))
+        except:
+            pass  # Some databases may not support this setting
         db.execute(text("SELECT 1"))
         _db_available = True
     except (OperationalError, DisconnectionError) as e:

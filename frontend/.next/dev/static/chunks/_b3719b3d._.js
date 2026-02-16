@@ -25,7 +25,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$
 function Card({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         "data-slot": "card",
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm', className),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])('bg-card text-card-foreground flex flex-col gap-4 rounded-xl border shadow-sm', className),
         ...props
     }, void 0, false, {
         fileName: "[project]/components/ui/card.tsx",
@@ -183,15 +183,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 function PageHeader({ title, subtitle, icon: Icon, action }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "flex items-center justify-between",
+        className: "flex items-center justify-between pb-6 border-b border-border mb-6",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex flex-col gap-1",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                        className: "text-3xl font-bold text-foreground mb-2 flex items-center gap-3",
+                        className: "text-2xl font-bold text-foreground flex items-center gap-2 tracking-tight",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                className: "w-8 h-8 text-cyan-400"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "p-1.5 bg-primary/10 rounded-lg",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                    className: "w-5 h-5 text-primary"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/ui/page-header.tsx",
+                                    lineNumber: 19,
+                                    columnNumber: 13
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/ui/page-header.tsx",
                                 lineNumber: 18,
@@ -205,11 +213,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-foreground-muted",
+                        className: "text-sm text-foreground-muted ml-1",
                         children: subtitle
                     }, void 0, false, {
                         fileName: "[project]/components/ui/page-header.tsx",
-                        lineNumber: 21,
+                        lineNumber: 23,
                         columnNumber: 9
                     }, this)
                 ]
@@ -219,10 +227,11 @@ function PageHeader({ title, subtitle, icon: Icon, action }) {
                 columnNumber: 7
             }, this),
             action && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex items-center gap-2",
                 children: action
             }, void 0, false, {
                 fileName: "[project]/components/ui/page-header.tsx",
-                lineNumber: 23,
+                lineNumber: 25,
                 columnNumber: 18
             }, this)
         ]
@@ -256,7 +265,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$hooks$2e$ts_
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$monitoringSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/slices/monitoringSlice.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/store/slices/pipelineSlice.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$websocket$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/websocket/client.ts [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$formatDistanceToNow$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/date-fns/formatDistanceToNow.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-client] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/activity.js [app-client] (ecmascript) <export default as Activity>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/database.js [app-client] (ecmascript) <export default as Database>");
@@ -277,11 +285,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/Tooltip.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/ResponsiveContainer.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/Legend.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$PieChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/chart/PieChart.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$polar$2f$Pie$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/polar/Pie.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/Cell.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$page$2d$header$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/page-header.tsx [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
-;
 ;
 ;
 ;
@@ -371,13 +381,13 @@ function PipelineMonitorPage() {
                     console.error("Failed to fetch pipeline data:", err);
                 }
             }["PipelineMonitorPage.useEffect"]);
-            // Auto-refresh pipeline status every 10 seconds
+            // Auto-refresh pipeline status every 1 second for real-time status updates
             const pipelineRefreshInterval = setInterval({
                 "PipelineMonitorPage.useEffect.pipelineRefreshInterval": ()=>{
                     dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$pipelineSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchPipelines"])());
                 }
-            }["PipelineMonitorPage.useEffect.pipelineRefreshInterval"], 10000);
-            // Auto-refresh events every 5 seconds to show all events (including past)
+            }["PipelineMonitorPage.useEffect.pipelineRefreshInterval"], 1000);
+            // Auto-refresh events every 1 second to show all events in real-time
             const interval = setInterval({
                 "PipelineMonitorPage.useEffect.interval": ()=>{
                     dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$monitoringSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchReplicationEvents"])({
@@ -386,7 +396,7 @@ function PipelineMonitorPage() {
                         todayOnly: false
                     }));
                 }
-            }["PipelineMonitorPage.useEffect.interval"], 5000);
+            }["PipelineMonitorPage.useEffect.interval"], 1000);
             // Update WebSocket status function
             const updateWsStatus = {
                 "PipelineMonitorPage.useEffect.updateWsStatus": ()=>{
@@ -489,7 +499,7 @@ function PipelineMonitorPage() {
     }["PipelineMonitorPage.useMemo[eventDistribution]"], [
         pipelineEvents
     ]);
-    if (!mounted || authLoading || pipelinesLoading) {
+    if (!mounted || authLoading || pipelinesLoading && pipelines.length === 0) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "flex items-center justify-center h-screen",
             children: [
@@ -497,7 +507,7 @@ function PipelineMonitorPage() {
                     className: "w-6 h-6 animate-spin text-foreground-muted"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 180,
+                    lineNumber: 182,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -505,13 +515,13 @@ function PipelineMonitorPage() {
                     children: "Loading pipeline..."
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 181,
+                    lineNumber: 183,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-            lineNumber: 179,
+            lineNumber: 181,
             columnNumber: 7
         }, this);
     }
@@ -528,14 +538,14 @@ function PipelineMonitorPage() {
                             className: "w-4 h-4 mr-2"
                         }, void 0, false, {
                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 190,
+                            lineNumber: 192,
                             columnNumber: 11
                         }, this),
                         "Back to Pipelines"
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 189,
+                    lineNumber: 191,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -547,7 +557,7 @@ function PipelineMonitorPage() {
                                 className: "w-12 h-12 text-error mx-auto mb-4 opacity-50"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 195,
+                                lineNumber: 197,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -555,7 +565,7 @@ function PipelineMonitorPage() {
                                 children: "Pipeline not found"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 196,
+                                lineNumber: 198,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -567,7 +577,7 @@ function PipelineMonitorPage() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 197,
+                                lineNumber: 199,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -576,24 +586,24 @@ function PipelineMonitorPage() {
                                 children: "Go to Pipelines"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 200,
+                                lineNumber: 202,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 194,
+                        lineNumber: 196,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 193,
+                    lineNumber: 195,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-            lineNumber: 188,
+            lineNumber: 190,
             columnNumber: 7
         }, this);
     }
@@ -605,7 +615,7 @@ function PipelineMonitorPage() {
                     className: "w-6 h-6 animate-spin text-foreground-muted"
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 212,
+                    lineNumber: 214,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -613,13 +623,13 @@ function PipelineMonitorPage() {
                     children: "Loading..."
                 }, void 0, false, {
                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                    lineNumber: 213,
+                    lineNumber: 215,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-            lineNumber: 211,
+            lineNumber: 213,
             columnNumber: 7
         }, this);
     }
@@ -643,14 +653,14 @@ function PipelineMonitorPage() {
                                 className: "w-4 h-4 mr-2"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 230,
+                                lineNumber: 232,
                                 columnNumber: 11
                             }, this),
                             "Back"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 229,
+                        lineNumber: 231,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$page$2d$header$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PageHeader"], {
@@ -677,16 +687,16 @@ function PipelineMonitorPage() {
                                                 className: "w-3 h-3 mr-1.5 animate-pulse"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 260,
-                                                columnNumber: 17
+                                                lineNumber: 262,
+                                                columnNumber: 21
                                             }, void 0),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "font-medium",
                                                 children: "WebSocket Connected"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 261,
-                                                columnNumber: 17
+                                                lineNumber: 263,
+                                                columnNumber: 21
                                             }, void 0)
                                         ]
                                     }, void 0, true) : wsAvailable ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -695,16 +705,16 @@ function PipelineMonitorPage() {
                                                 className: "w-3 h-3 mr-1.5 animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 265,
-                                                columnNumber: 17
+                                                lineNumber: 267,
+                                                columnNumber: 21
                                             }, void 0),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "font-medium",
                                                 children: "Connecting WebSocket..."
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 266,
-                                                columnNumber: 17
+                                                lineNumber: 268,
+                                                columnNumber: 21
                                             }, void 0)
                                         ]
                                     }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -713,23 +723,23 @@ function PipelineMonitorPage() {
                                                 className: "w-3.5 h-3.5 mr-1.5 text-blue-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 270,
-                                                columnNumber: 17
+                                                lineNumber: 272,
+                                                columnNumber: 21
                                             }, void 0),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "font-semibold",
                                                 children: "WebSocket Unavailable (Click to Retry)"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 271,
-                                                columnNumber: 17
+                                                lineNumber: 273,
+                                                columnNumber: 21
                                             }, void 0)
                                         ]
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 240,
-                                    columnNumber: 11
+                                    lineNumber: 242,
+                                    columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                     variant: "outline",
@@ -751,264 +761,441 @@ function PipelineMonitorPage() {
                                             className: `w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 286,
-                                            columnNumber: 13
+                                            lineNumber: 288,
+                                            columnNumber: 17
                                         }, void 0),
                                         "Refresh"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 275,
-                                    columnNumber: 11
+                                    lineNumber: 277,
+                                    columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 238,
+                            lineNumber: 240,
                             columnNumber: 13
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 233,
+                        lineNumber: 235,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                lineNumber: 228,
+                lineNumber: 230,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "grid grid-cols-1 md:grid-cols-4 gap-4",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                        className: "p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 shadow-lg hover:shadow-xl transition-all duration-300",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-between",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-medium text-foreground-muted mb-1",
-                                            children: "Total Events"
+                        className: "p-4 bg-card border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                    className: "w-16 h-16 text-blue-500"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                    lineNumber: 300,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 299,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center gap-3 mb-2 relative z-10",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "p-2 bg-blue-500/10 rounded-lg group-hover:scale-110 transition-transform",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
+                                            className: "w-4 h-4 text-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 299,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent",
-                                            children: pipelineEvents.length
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 300,
+                                            lineNumber: 304,
                                             columnNumber: 15
                                         }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 298,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "p-3 bg-blue-500/20 rounded-lg",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$database$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Database$3e$__["Database"], {
-                                        className: "w-7 h-7 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
                                         lineNumber: 303,
-                                        columnNumber: 15
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-xs font-bold text-blue-500 uppercase tracking-wide",
+                                        children: "Total Events"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 306,
+                                        columnNumber: 13
                                     }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 302,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-baseline gap-2 relative z-10",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-2xl font-bold text-foreground",
+                                    children: pipelineEvents.length
                                 }, void 0, false, {
-                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 302,
-                                    columnNumber: 13
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 297,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 296,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                        className: "p-5 bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 shadow-lg hover:shadow-xl transition-all duration-300",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-between",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-medium text-foreground-muted mb-1",
-                                            children: "Success Rate"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 310,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-3xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent",
-                                            children: [
-                                                pipelineEvents.length > 0 ? Math.round(successCount / pipelineEvents.length * 100) : 0,
-                                                "%"
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 311,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
                                     lineNumber: 309,
                                     columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "p-3 bg-green-500/20 rounded-lg",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
-                                        className: "w-7 h-7 text-green-400"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 318,
-                                        columnNumber: 15
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 317,
-                                    columnNumber: 13
                                 }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 308,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 308,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 307,
+                        lineNumber: 298,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                        className: "p-5 bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20 shadow-lg hover:shadow-xl transition-all duration-300",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-between",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-medium text-foreground-muted mb-1",
-                                            children: "Failed Events"
+                        className: "p-4 bg-card border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                    className: "w-16 h-16 text-green-500"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                    lineNumber: 315,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 314,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center gap-3 mb-2 relative z-10",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "p-2 bg-green-500/10 rounded-lg group-hover:scale-110 transition-transform",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                            className: "w-4 h-4 text-green-500"
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 325,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-3xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent",
-                                            children: failedCount
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 326,
+                                            lineNumber: 319,
                                             columnNumber: 15
                                         }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 318,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-xs font-bold text-green-500 uppercase tracking-wide",
+                                        children: "Success Rate"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 321,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 317,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-baseline gap-2 relative z-10",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-2xl font-bold text-foreground",
+                                    children: [
+                                        pipelineEvents.length > 0 ? Math.round(successCount / pipelineEvents.length * 100) : 0,
+                                        "%"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
                                     lineNumber: 324,
                                     columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "p-3 bg-red-500/20 rounded-lg",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
-                                        className: "w-7 h-7 text-red-400"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 329,
-                                        columnNumber: 15
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 328,
-                                    columnNumber: 13
                                 }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 323,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 323,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 322,
+                        lineNumber: 313,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
-                        className: "p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 shadow-lg hover:shadow-xl transition-all duration-300",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex items-center justify-between",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-sm font-medium text-foreground-muted mb-1",
-                                            children: "Avg Latency"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 336,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            className: "text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent",
-                                            children: avgLatency > 0 ? `${avgLatency.toFixed(0)}ms` : '0ms'
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 337,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 335,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "p-3 bg-purple-500/20 rounded-lg",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
-                                        className: "w-7 h-7 text-purple-400"
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 342,
-                                        columnNumber: 15
-                                    }, this)
+                        className: "p-4 bg-card border-l-4 border-l-red-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                    className: "w-16 h-16 text-red-500"
                                 }, void 0, false, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 341,
+                                    lineNumber: 334,
                                     columnNumber: 13
                                 }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                            lineNumber: 334,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 333,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center gap-3 mb-2 relative z-10",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "p-2 bg-red-500/10 rounded-lg group-hover:scale-110 transition-transform",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
+                                            className: "w-4 h-4 text-red-500"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                            lineNumber: 338,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 337,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-xs font-bold text-red-500 uppercase tracking-wide",
+                                        children: "Failed Events"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 340,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 336,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-baseline gap-2 relative z-10",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-2xl font-bold text-foreground",
+                                    children: failedCount
+                                }, void 0, false, {
+                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                    lineNumber: 343,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 342,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 333,
+                        lineNumber: 332,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                        className: "p-4 bg-card border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all group relative overflow-hidden",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                    className: "w-16 h-16 text-purple-500"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                    lineNumber: 349,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 348,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center gap-3 mb-2 relative z-10",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "p-2 bg-purple-500/10 rounded-lg group-hover:scale-110 transition-transform",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                            className: "w-4 h-4 text-purple-500"
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                            lineNumber: 353,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 352,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-xs font-bold text-purple-500 uppercase tracking-wide",
+                                        children: "Avg Latency"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 355,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 351,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-baseline gap-2 relative z-10",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-2xl font-bold text-foreground",
+                                    children: avgLatency > 0 ? `${avgLatency.toFixed(0)}ms` : '0ms'
+                                }, void 0, false, {
+                                    fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                    lineNumber: 358,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 357,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                        lineNumber: 347,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                lineNumber: 295,
+                lineNumber: 297,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "grid grid-cols-1 lg:grid-cols-2 gap-6",
+                className: "grid grid-cols-1 lg:grid-cols-3 gap-6",
                 children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                        className: "p-6 bg-surface border-border shadow-lg flex flex-col items-center justify-center",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                className: "text-lg font-bold text-foreground mb-4 flex items-center gap-2 self-start",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
+                                        className: "w-5 h-5 text-green-400"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 369,
+                                        columnNumber: 13
+                                    }, this),
+                                    "Sync Health"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 368,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "relative w-full h-[200px] flex items-center justify-center",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
+                                        width: "100%",
+                                        height: "100%",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$PieChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PieChart"], {
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$polar$2f$Pie$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Pie"], {
+                                                data: [
+                                                    {
+                                                        name: 'Progress',
+                                                        value: successCount
+                                                    },
+                                                    {
+                                                        name: 'Remaining',
+                                                        value: Math.max(0, pipelineEvents.length - successCount)
+                                                    }
+                                                ],
+                                                cx: "50%",
+                                                cy: "80%",
+                                                startAngle: 180,
+                                                endAngle: 0,
+                                                innerRadius: 80,
+                                                outerRadius: 100,
+                                                paddingAngle: 0,
+                                                dataKey: "value",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Cell"], {
+                                                        fill: "rgb(34, 197, 94)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                                        lineNumber: 389,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Cell$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Cell"], {
+                                                        fill: "rgba(34, 197, 94, 0.1)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                                        lineNumber: 390,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                                lineNumber: 375,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                            lineNumber: 374,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 373,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "absolute bottom-[20%] text-center",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-3xl font-bold text-foreground",
+                                                children: [
+                                                    pipelineEvents.length > 0 ? Math.round(successCount / pipelineEvents.length * 100) : 0,
+                                                    "%"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                                lineNumber: 395,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-xs text-foreground-muted uppercase tracking-wider font-semibold",
+                                                children: "Success Rate"
+                                            }, void 0, false, {
+                                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                                lineNumber: 398,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                        lineNumber: 394,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                                lineNumber: 372,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
+                        lineNumber: 367,
+                        columnNumber: 9
+                    }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
                         className: "p-6 bg-surface border-border shadow-lg",
                         children: [
@@ -1019,14 +1206,14 @@ function PipelineMonitorPage() {
                                         className: "w-5 h-5 text-teal-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 352,
+                                        lineNumber: 405,
                                         columnNumber: 13
                                     }, this),
                                     "Event Latency (24h)"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 351,
+                                lineNumber: 404,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1040,7 +1227,7 @@ function PipelineMonitorPage() {
                                             stroke: "rgba(100, 116, 139, 0.2)"
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 357,
+                                            lineNumber: 410,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1061,7 +1248,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 358,
+                                            lineNumber: 411,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -1081,7 +1268,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 364,
+                                            lineNumber: 417,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1103,7 +1290,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 369,
+                                            lineNumber: 422,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Legend"], {
@@ -1113,7 +1300,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 380,
+                                            lineNumber: 433,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
@@ -1129,27 +1316,28 @@ function PipelineMonitorPage() {
                                                 r: 6,
                                                 fill: 'rgb(20, 184, 166)'
                                             },
-                                            name: "Latency (ms)"
+                                            name: "Latency (ms)",
+                                            isAnimationActive: false
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 383,
+                                            lineNumber: 437,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 356,
+                                    lineNumber: 409,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 355,
+                                lineNumber: 408,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 350,
+                        lineNumber: 403,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1162,14 +1350,14 @@ function PipelineMonitorPage() {
                                         className: "w-5 h-5 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 398,
+                                        lineNumber: 453,
                                         columnNumber: 13
                                     }, this),
                                     "Event Type Distribution"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 397,
+                                lineNumber: 452,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
@@ -1183,7 +1371,7 @@ function PipelineMonitorPage() {
                                             stroke: "rgba(100, 116, 139, 0.2)"
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 403,
+                                            lineNumber: 458,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
@@ -1204,7 +1392,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 404,
+                                            lineNumber: 459,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
@@ -1224,7 +1412,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 410,
+                                            lineNumber: 465,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1246,7 +1434,7 @@ function PipelineMonitorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 415,
+                                            lineNumber: 470,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Bar$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Bar"], {
@@ -1258,6 +1446,7 @@ function PipelineMonitorPage() {
                                                 0,
                                                 0
                                             ],
+                                            isAnimationActive: false,
                                             label: {
                                                 position: 'top',
                                                 fill: 'rgb(148, 163, 184)',
@@ -1278,7 +1467,7 @@ function PipelineMonitorPage() {
                                                             stopOpacity: 0.8
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                            lineNumber: 439,
+                                                            lineNumber: 496,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
@@ -1287,46 +1476,46 @@ function PipelineMonitorPage() {
                                                             stopOpacity: 0.6
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                            lineNumber: 440,
+                                                            lineNumber: 497,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 438,
+                                                    lineNumber: 495,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 437,
+                                                lineNumber: 494,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 426,
+                                            lineNumber: 482,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                    lineNumber: 402,
+                                    lineNumber: 457,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 401,
+                                lineNumber: 456,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 396,
+                        lineNumber: 451,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                lineNumber: 349,
+                lineNumber: 366,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1339,14 +1528,14 @@ function PipelineMonitorPage() {
                                 className: "w-5 h-5 text-teal-400"
                             }, void 0, false, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 452,
+                                lineNumber: 509,
                                 columnNumber: 11
                             }, this),
                             "Recent CDC Events"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 451,
+                        lineNumber: 508,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1364,7 +1553,7 @@ function PipelineMonitorPage() {
                                                     children: "Time"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 459,
+                                                    lineNumber: 516,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1372,7 +1561,7 @@ function PipelineMonitorPage() {
                                                     children: "Type"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 460,
+                                                    lineNumber: 517,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1380,7 +1569,7 @@ function PipelineMonitorPage() {
                                                     children: "Table"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 461,
+                                                    lineNumber: 518,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1388,7 +1577,7 @@ function PipelineMonitorPage() {
                                                     children: "LSN/Offset"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 462,
+                                                    lineNumber: 519,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1396,7 +1585,7 @@ function PipelineMonitorPage() {
                                                     children: "Status"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 463,
+                                                    lineNumber: 520,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1404,7 +1593,7 @@ function PipelineMonitorPage() {
                                                     children: "Latency"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 464,
+                                                    lineNumber: 521,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1412,18 +1601,18 @@ function PipelineMonitorPage() {
                                                     children: "Error"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 465,
+                                                    lineNumber: 522,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                            lineNumber: 458,
+                                            lineNumber: 515,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 457,
+                                        lineNumber: 514,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -1443,7 +1632,7 @@ function PipelineMonitorPage() {
                                                                     className: "w-12 h-12 mx-auto mb-3 opacity-30"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 481,
+                                                                    lineNumber: 538,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1451,23 +1640,23 @@ function PipelineMonitorPage() {
                                                                     children: "No events yet. Events will appear here in real-time when CDC is active."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 482,
+                                                                    lineNumber: 539,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                            lineNumber: 480,
+                                                            lineNumber: 537,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                        lineNumber: 479,
+                                                        lineNumber: 536,
                                                         columnNumber: 23
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                    lineNumber: 478,
+                                                    lineNumber: 535,
                                                     columnNumber: 21
                                                 }, this);
                                             }
@@ -1491,34 +1680,32 @@ function PipelineMonitorPage() {
                                                                                     className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                    lineNumber: 509,
+                                                                                    lineNumber: 565,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                     className: "absolute inset-0 w-2 h-2 bg-cyan-400/50 rounded-full animate-ping"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                    lineNumber: 510,
+                                                                                    lineNumber: 566,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 508,
+                                                                            lineNumber: 564,
                                                                             columnNumber: 33
                                                                         }, this),
-                                                                        event.created_at ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$formatDistanceToNow$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDistanceToNow"])(new Date(event.created_at), {
-                                                                            addSuffix: true
-                                                                        }) : 'N/A'
+                                                                        event.created_at ? new Date(event.created_at).toLocaleString() : 'N/A'
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 506,
+                                                                    lineNumber: 562,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 505,
+                                                                lineNumber: 561,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1528,12 +1715,12 @@ function PipelineMonitorPage() {
                                                                     children: event.event_type?.toUpperCase() || 'UNKNOWN'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 519,
+                                                                    lineNumber: 575,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 518,
+                                                                lineNumber: 574,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1541,8 +1728,8 @@ function PipelineMonitorPage() {
                                                                 children: event.table_name || 'N/A'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 531,
-                                                                columnNumber: 23
+                                                                lineNumber: 587,
+                                                                columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 className: "p-3 text-sm font-mono",
@@ -1613,8 +1800,8 @@ function PipelineMonitorPage() {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 604,
-                                                                            columnNumber: 31
+                                                                            lineNumber: 660,
+                                                                            columnNumber: 35
                                                                         }, this);
                                                                     } else if (scnValue) {
                                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1626,8 +1813,8 @@ function PipelineMonitorPage() {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 610,
-                                                                            columnNumber: 31
+                                                                            lineNumber: 666,
+                                                                            columnNumber: 35
                                                                         }, this);
                                                                     } else if (binlogFile) {
                                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1639,8 +1826,8 @@ function PipelineMonitorPage() {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 616,
-                                                                            columnNumber: 31
+                                                                            lineNumber: 672,
+                                                                            columnNumber: 35
                                                                         }, this);
                                                                     } else if (event.sql_server_lsn) {
                                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1652,8 +1839,8 @@ function PipelineMonitorPage() {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 622,
-                                                                            columnNumber: 31
+                                                                            lineNumber: 678,
+                                                                            columnNumber: 35
                                                                         }, this);
                                                                     } else {
                                                                         // Last resort: try to find any offset value in run_metadata
@@ -1680,8 +1867,8 @@ function PipelineMonitorPage() {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                lineNumber: 647,
-                                                                                columnNumber: 33
+                                                                                lineNumber: 703,
+                                                                                columnNumber: 37
                                                                             }, this);
                                                                         }
                                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1689,15 +1876,15 @@ function PipelineMonitorPage() {
                                                                             children: "N/A"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 653,
-                                                                            columnNumber: 36
+                                                                            lineNumber: 709,
+                                                                            columnNumber: 40
                                                                         }, this);
                                                                     }
                                                                 })()
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 532,
-                                                                columnNumber: 23
+                                                                lineNumber: 588,
+                                                                columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 className: "p-3",
@@ -1708,34 +1895,34 @@ function PipelineMonitorPage() {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 667,
+                                                                            lineNumber: 723,
                                                                             columnNumber: 45
                                                                         }, this),
                                                                         isFailed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                                             className: "w-3 h-3 mr-1"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 668,
+                                                                            lineNumber: 724,
                                                                             columnNumber: 44
                                                                         }, this),
                                                                         isCaptured && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
                                                                             className: "w-3 h-3 mr-1 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 669,
+                                                                            lineNumber: 725,
                                                                             columnNumber: 46
                                                                         }, this),
                                                                         event.status || 'pending'
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 658,
+                                                                    lineNumber: 714,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 657,
-                                                                columnNumber: 23
+                                                                lineNumber: 713,
+                                                                columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 className: "p-3 text-sm font-medium text-foreground",
@@ -1747,12 +1934,12 @@ function PipelineMonitorPage() {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 675,
+                                                                    lineNumber: 731,
                                                                     columnNumber: 31
                                                                 }, this) : 'N/A'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 673,
+                                                                lineNumber: 729,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1770,7 +1957,7 @@ function PipelineMonitorPage() {
                                                                                             className: "w-4 h-4 flex-shrink-0"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                            lineNumber: 685,
+                                                                                            lineNumber: 741,
                                                                                             columnNumber: 37
                                                                                         }, this),
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1778,13 +1965,13 @@ function PipelineMonitorPage() {
                                                                                             children: "View Error"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                            lineNumber: 686,
+                                                                                            lineNumber: 742,
                                                                                             columnNumber: 37
                                                                                         }, this)
                                                                                     ]
                                                                                 }, void 0, true, {
                                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                    lineNumber: 684,
+                                                                                    lineNumber: 740,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1797,7 +1984,7 @@ function PipelineMonitorPage() {
                                                                                                 children: "Replication Failed"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                                lineNumber: 690,
+                                                                                                lineNumber: 746,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1805,7 +1992,7 @@ function PipelineMonitorPage() {
                                                                                                 children: event.error_message.length > 200 ? event.error_message.substring(0, 200) + '...' : event.error_message
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                                lineNumber: 691,
+                                                                                                lineNumber: 747,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1817,24 +2004,24 @@ function PipelineMonitorPage() {
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                                lineNumber: 696,
+                                                                                                lineNumber: 752,
                                                                                                 columnNumber: 39
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                        lineNumber: 689,
+                                                                                        lineNumber: 745,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                    lineNumber: 688,
+                                                                                    lineNumber: 744,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 683,
+                                                                            lineNumber: 739,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1849,7 +2036,7 @@ function PipelineMonitorPage() {
                                                                                     // Refresh events
                                                                                     if (pipelineId) {
                                                                                         dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$store$2f$slices$2f$monitoringSlice$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchReplicationEvents"])({
-                                                                                            pipeline_id: pipelineId,
+                                                                                            pipelineId: isNaN(Number(pipelineId)) ? String(pipelineId) : Number(pipelineId),
                                                                                             limit: 1000
                                                                                         }));
                                                                                     }
@@ -1865,24 +2052,24 @@ function PipelineMonitorPage() {
                                                                                 className: "w-3 h-3 animate-spin"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                lineNumber: 728,
+                                                                                lineNumber: 784,
                                                                                 columnNumber: 37
                                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$rotate$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RotateCw$3e$__["RotateCw"], {
                                                                                 className: "w-3 h-3"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                                lineNumber: 730,
+                                                                                lineNumber: 786,
                                                                                 columnNumber: 37
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 702,
+                                                                            lineNumber: 758,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 682,
+                                                                    lineNumber: 738,
                                                                     columnNumber: 31
                                                                 }, this) : isApplied ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "flex items-center gap-1 text-green-400",
@@ -1891,20 +2078,20 @@ function PipelineMonitorPage() {
                                                                             className: "w-4 h-4"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 736,
+                                                                            lineNumber: 792,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "Success"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 737,
+                                                                            lineNumber: 793,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 735,
+                                                                    lineNumber: 791,
                                                                     columnNumber: 31
                                                                 }, this) : isCaptured ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "flex items-center gap-1 text-cyan-400",
@@ -1913,38 +2100,38 @@ function PipelineMonitorPage() {
                                                                             className: "w-4 h-4 animate-pulse"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 741,
+                                                                            lineNumber: 797,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             children: "Captured"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                            lineNumber: 742,
+                                                                            lineNumber: 798,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 740,
+                                                                    lineNumber: 796,
                                                                     columnNumber: 31
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     className: "text-foreground-muted",
                                                                     children: "-"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                    lineNumber: 745,
+                                                                    lineNumber: 801,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                                lineNumber: 680,
+                                                                lineNumber: 736,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, event.id, true, {
                                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                        lineNumber: 497,
+                                                        lineNumber: 554,
                                                         columnNumber: 25
                                                     }, this);
                                                 })
@@ -1952,13 +2139,13 @@ function PipelineMonitorPage() {
                                         })()
                                     }, void 0, false, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 468,
+                                        lineNumber: 525,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 456,
+                                lineNumber: 513,
                                 columnNumber: 11
                             }, this),
                             pipelineEvents.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1973,7 +2160,7 @@ function PipelineMonitorPage() {
                                                 children: (currentPage - 1) * itemsPerPage + 1
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 760,
+                                                lineNumber: 816,
                                                 columnNumber: 25
                                             }, this),
                                             " to ",
@@ -1982,7 +2169,7 @@ function PipelineMonitorPage() {
                                                 children: Math.min(currentPage * itemsPerPage, pipelineEvents.length)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 760,
+                                                lineNumber: 816,
                                                 columnNumber: 120
                                             }, this),
                                             " of ",
@@ -1991,14 +2178,14 @@ function PipelineMonitorPage() {
                                                 children: pipelineEvents.length
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 760,
+                                                lineNumber: 816,
                                                 columnNumber: 236
                                             }, this),
                                             " entries"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 759,
+                                        lineNumber: 815,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2013,7 +2200,7 @@ function PipelineMonitorPage() {
                                                 children: "Previous"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 763,
+                                                lineNumber: 819,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2026,7 +2213,7 @@ function PipelineMonitorPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 772,
+                                                lineNumber: 828,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2038,37 +2225,37 @@ function PipelineMonitorPage() {
                                                 children: "Next"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                                lineNumber: 775,
+                                                lineNumber: 831,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                        lineNumber: 762,
+                                        lineNumber: 818,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                                lineNumber: 758,
+                                lineNumber: 814,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                        lineNumber: 455,
+                        lineNumber: 512,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-                lineNumber: 450,
+                lineNumber: 507,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/pipelines/[id]/monitor/page.tsx",
-        lineNumber: 227,
+        lineNumber: 229,
         columnNumber: 5
     }, this);
 }

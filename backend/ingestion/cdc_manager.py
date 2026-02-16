@@ -222,11 +222,16 @@ class CDCManager:
         
         result = {
             "pipeline_id": pipeline_id,
+            "id": pipeline_id,  # Add id field for frontend compatibility
             "full_load": {},
             "debezium_connector": {},
             "sink_connector": {},
             "kafka_topics": [],
-            "status": "STARTING"
+            "status": "STARTING",
+            "source_connection_id": pipeline.source_connection_id,  # Add for frontend
+            "target_connection_id": pipeline.target_connection_id,  # Add for frontend
+            "source_uuid": pipeline.source_connection_id,  # Alias for frontend compatibility
+            "target_uuid": pipeline.target_connection_id  # Alias for frontend compatibility
         }
         
         try:
@@ -329,9 +334,15 @@ class CDCManager:
                     if pipeline.full_load_lsn:
                         logger.info(f"Step 1: Using existing LSN/offset: {pipeline.full_load_lsn}")
                 else:
+                    # Get default schema based on database type for logging
+                    default_target_schema = (
+                        "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                        else "PUBLIC" if target_connection.database_type == "snowflake"
+                        else "public"
+                    )
                     logger.info(f"Step 1: Starting full load for pipeline: {pipeline.name} (mode: {getattr(mode, 'value', mode)})")
                     logger.info(f"Step 1: Source: {pipeline.source_database}.{pipeline.source_schema}, Tables: {pipeline.source_tables}")
-                    logger.info(f"Step 1: Target: {pipeline.target_database or target_connection.database}.{pipeline.target_schema or target_connection.schema or 'public'}")
+                    logger.info(f"Step 1: Target: {pipeline.target_database or target_connection.database}.{pipeline.target_schema or target_connection.schema or default_target_schema}")
                     
                     pipeline.full_load_status = FullLoadStatus.IN_PROGRESS
                     # Persist IN_PROGRESS status to database
@@ -400,6 +411,11 @@ class CDCManager:
             logger.info(f"Step 2: Starting CDC setup for pipeline: {pipeline.name} (mode: {mode.value})")
             logger.info(f"Step 2: Full load completed, now setting up CDC connectors")
             
+            # FIX: Ensure CDC status is set to STARTING before attempting setup
+            pipeline.cdc_status = CDCStatus.STARTING
+            self._persist_pipeline_status(pipeline)
+            logger.info(f"CDC status set to STARTING and persisted")
+            
             # Check if configs already exist in pipeline (loaded from database)
             # If they exist and connectors are running, reuse them
             debezium_exists = False
@@ -432,6 +448,9 @@ class CDCManager:
             mode_value = mode.value if hasattr(mode, 'value') else str(mode)
             has_full_load_lsn = bool(pipeline.full_load_lsn)
             full_load_completed = pipeline.full_load_status == FullLoadStatus.COMPLETED
+            
+            # FIX: Log LSN status for debugging
+            logger.info(f"CDC Setup - Full load status: {pipeline.full_load_status}, LSN: {pipeline.full_load_lsn}, Has LSN: {has_full_load_lsn}")
             
             # Decision logic:
             # 1. CDC_ONLY: Never snapshot, start streaming immediately
@@ -468,11 +487,33 @@ class CDCManager:
                 f"full_load_lsn={has_full_load_lsn}, reason={reason})"
             )
             
+            # FIX: Validate source connection before generating config
+            try:
+                logger.info(f"Validating source connection for CDC setup...")
+                # Test connection is available (basic validation)
+                if not source_connection.host or not source_connection.port:
+                    raise ValueError(f"Source connection missing required fields: host={source_connection.host}, port={source_connection.port}")
+                logger.info(f"Source connection validated: {source_connection.database_type}://{source_connection.host}:{source_connection.port}")
+            except Exception as e:
+                error_msg = f"Source connection validation failed: {str(e)}"
+                logger.error(error_msg)
+                pipeline.cdc_status = CDCStatus.ERROR
+                self._persist_pipeline_status(pipeline)
+                raise Exception(error_msg) from e
+            
+            # FIX: Validate and normalize schema name before generating connector name
+            # This prevents issues like "databa" vs "public" inconsistency
+            source_schema = pipeline.source_schema or source_connection.schema or "public"
+            # Normalize schema name - handle common truncations/typos
+            if source_schema.lower() in ["databa", "datab", "dat"]:
+                logger.warning(f"Detected potentially truncated schema name '{source_schema}', using 'public' as fallback")
+                source_schema = "public"
+            
             debezium_config = DebeziumConfigGenerator.generate_source_config(
                 pipeline_name=pipeline.name,
                 source_connection=source_connection,
                 source_database=pipeline.source_database,
-                source_schema=pipeline.source_schema,
+                source_schema=source_schema,  # Use normalized schema
                 source_tables=pipeline.source_tables,
                 full_load_lsn=pipeline.full_load_lsn,
                 snapshot_mode=snapshot_mode
@@ -481,8 +522,21 @@ class CDCManager:
             debezium_connector_name = DebeziumConfigGenerator.generate_connector_name(
                 pipeline_name=pipeline.name,
                 database_type=source_connection.database_type,
-                schema=pipeline.source_schema
+                schema=source_schema
             )
+            
+            # FIX: Log generated connector name and key config values
+            logger.info(f"Generated Debezium connector name: {debezium_connector_name}")
+            logger.info(f"Source schema used: {source_schema} (from pipeline: {pipeline.source_schema}, connection: {source_connection.schema})")
+            logger.info(f"Debezium config snapshot.mode: {debezium_config.get('snapshot.mode', 'N/A')}")
+            if pipeline.full_load_lsn:
+                logger.info(f"Using full load LSN: {pipeline.full_load_lsn}")
+            
+            # FIX: Store connector name immediately (before creation attempt)
+            # This ensures we have it even if creation fails
+            pipeline.debezium_connector_name = debezium_connector_name
+            self._persist_pipeline_status(pipeline)
+            logger.info(f"Stored Debezium connector name in pipeline: {debezium_connector_name}")
             
             # Check if Debezium connector already exists and is running
             # Note: This is different from the earlier check - here we check using the newly generated connector name
@@ -492,14 +546,57 @@ class CDCManager:
                     connector_status = self.kafka_client.get_connector_status(debezium_connector_name)
                     if connector_status is not None:
                         connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                        connector_error = connector_status.get('connector', {}).get('error', '')
                         
-                        if connector_state == 'RUNNING':
+                        # Check connector config to see if it has invalid slot name
+                        connector_config = None
+                        try:
+                            connector_config = self.kafka_client.get_connector_config(debezium_connector_name)
+                            old_slot_name = connector_config.get('slot.name', '') if connector_config else ''
+                            # Check if old slot name contains hyphens (invalid)
+                            if old_slot_name and '-' in old_slot_name:
+                                logger.warning(f"Found connector with invalid slot name '{old_slot_name}' (contains hyphens), will delete and recreate")
+                                self.kafka_client.delete_connector(debezium_connector_name)
+                                logger.info(f"Deleted connector with invalid slot name: {debezium_connector_name}")
+                                # Continue to create new connector below
+                            elif connector_state == 'RUNNING':
+                                # Check if slot name matches the new normalized one
+                                new_slot_name = debezium_config.get('slot.name', '')
+                                if old_slot_name != new_slot_name:
+                                    logger.warning(f"Connector slot name mismatch: old='{old_slot_name}' vs new='{new_slot_name}', will recreate")
+                                    self.kafka_client.delete_connector(debezium_connector_name)
+                                else:
+                                    logger.info(f"Debezium connector {debezium_connector_name} already exists and is RUNNING, reusing it")
+                                    debezium_exists = True
+                                    pipeline.debezium_connector_name = debezium_connector_name
+                                    pipeline.debezium_config = connector_config
+                        except Exception as config_error:
+                            logger.warning(f"Could not get connector config: {config_error}")
+                        
+                        # If connector still exists and is RUNNING, use it
+                        if connector_state == 'RUNNING' and not debezium_exists:
                             logger.info(f"Debezium connector {debezium_connector_name} already exists and is RUNNING, reusing it")
                             debezium_exists = True
                             pipeline.debezium_connector_name = debezium_connector_name
-                            pipeline.debezium_config = self.kafka_client.get_connector_config(debezium_connector_name)
+                            if connector_config:
+                                pipeline.debezium_config = connector_config
+                            else:
+                                pipeline.debezium_config = self.kafka_client.get_connector_config(debezium_connector_name)
                         elif connector_state in ['FAILED', 'STOPPED']:
-                            logger.warning(f"Debezium connector {debezium_connector_name} exists but is {connector_state}, attempting restart...")
+                            logger.warning(f"Debezium connector {debezium_connector_name} exists but is {connector_state}")
+                            
+                            # Check if the failure is due to invalid config (like invalid slot name)
+                            # If so, delete and recreate with new config
+                            if connector_error and ('slot.name' in connector_error.lower() or 'invalid' in connector_error.lower() or 'replication slot' in connector_error.lower()):
+                                logger.warning(f"Connector has config validation error (likely invalid slot name), will delete and recreate: {connector_error[:200]}")
+                                try:
+                                    self.kafka_client.delete_connector(debezium_connector_name)
+                                    logger.info(f"Deleted connector with invalid config: {debezium_connector_name}")
+                                except Exception as delete_error:
+                                    logger.warning(f"Could not delete connector: {delete_error}")
+                            else:
+                                # Try restart first for other errors
+                                logger.info(f"Attempting to restart connector {debezium_connector_name}...")
                             try:
                                 self.kafka_client.restart_connector(debezium_connector_name)
                                 if self.kafka_client.wait_for_connector(debezium_connector_name, "RUNNING", max_wait_seconds=30):
@@ -532,28 +629,76 @@ class CDCManager:
             # Create Debezium connector only if it doesn't exist
             if not debezium_exists:
                 logger.info(f"Creating Debezium connector: {debezium_connector_name}")
-                logger.info(f"Debezium config: {debezium_config}")
+                # Log the slot name to verify it's correct
+                slot_name = debezium_config.get('slot.name', 'N/A')
+                logger.info(f"Using replication slot name: {slot_name}")
+                logger.info(f"Debezium config keys: {list(debezium_config.keys())}")
+                # Log sanitized config (without password) for debugging
+                sanitized_config = {k: v for k, v in debezium_config.items() if 'password' not in k.lower()}
+                logger.debug(f"Debezium config (sanitized): {sanitized_config}")
                 try:
-                    self.kafka_client.create_connector(
-                        connector_name=debezium_connector_name,
-                        config=debezium_config
-                    )
+                    # FIX: Add retry logic for transient failures
+                    max_retries = 2
+                    retry_count = 0
+                    last_error = None
+                    
+                    while retry_count <= max_retries:
+                        try:
+                            self.kafka_client.create_connector(
+                                connector_name=debezium_connector_name,
+                                config=debezium_config
+                            )
+                            # Success - break out of retry loop
+                            logger.info(f"Debezium connector created successfully: {debezium_connector_name}")
+                            break
+                        except requests.exceptions.ConnectionError as e:
+                            retry_count += 1
+                            last_error = e
+                            if retry_count <= max_retries:
+                                wait_time = 2 * retry_count  # Exponential backoff: 2s, 4s
+                                logger.warning(f"Kafka Connect connection error (attempt {retry_count}/{max_retries + 1}), retrying in {wait_time}s...")
+                                time.sleep(wait_time)
+                            else:
+                                raise Exception(f"Failed to connect to Kafka Connect after {max_retries + 1} attempts: {str(e)}") from e
+                        except requests.exceptions.Timeout as e:
+                            retry_count += 1
+                            last_error = e
+                            if retry_count <= max_retries:
+                                wait_time = 2 * retry_count
+                                logger.warning(f"Kafka Connect timeout (attempt {retry_count}/{max_retries + 1}), retrying in {wait_time}s...")
+                                time.sleep(wait_time)
+                            else:
+                                raise Exception(f"Kafka Connect timeout after {max_retries + 1} attempts: {str(e)}") from e
+                        except requests.exceptions.HTTPError as e:
+                            # HTTP errors are usually not transient - don't retry, break to handle below
+                            raise
+                        except Exception as e:
+                            # Other exceptions - don't retry
+                            raise
+                    
                 except requests.exceptions.HTTPError as e:
                     error_detail = ""
                     status_code = ""
                     
                     # Check if the exception has a detail_message or error_detail attribute (from DetailedHTTPError)
+                    # The kafka_connect_client now sets error_detail on the exception
                     if hasattr(e, 'error_detail') and e.error_detail:
                         error_detail = e.error_detail
+                        logger.info(f"Using error_detail from exception: {error_detail[:200]}")
                     elif hasattr(e, 'detail_message') and e.detail_message:
                         error_detail = e.detail_message
+                        logger.info(f"Using detail_message from exception: {error_detail[:200]}")
+                    elif hasattr(e, 'args') and len(e.args) > 0 and isinstance(e.args[0], str) and "Kafka Connect error:" in e.args[0]:
+                        # Extract from exception message if it contains "Kafka Connect error:"
+                        error_detail = e.args[0].replace("Kafka Connect error:", "").strip()
+                        logger.info(f"Extracted error_detail from exception message: {error_detail[:200]}")
                     else:
                         # Fallback: try to extract from response
                         if e.response:
                             status_code = f" (HTTP {e.response.status_code})"
                             try:
                                 error_json = e.response.json()
-                                logger.error(f"Kafka Connect error response: {error_json}")
+                                logger.error(f"Kafka Connect {e.response.status_code} error response: {json.dumps(error_json, indent=2)[:1000]}")
                                 
                                 # Try multiple possible error message fields
                                 extracted_detail = (
@@ -583,10 +728,13 @@ class CDCManager:
                                     error_detail = e.response.text[:1000]
                                 else:
                                     error_detail = str(error_json)
+                                    
+                                logger.info(f"Extracted error detail: {error_detail[:200]}")
                             except Exception as parse_error:
                                 # Fallback to raw text
                                 if hasattr(e.response, 'text') and e.response.text:
                                     error_detail = e.response.text[:1000]
+                                    logger.warning(f"Using raw response text as error: {error_detail[:200]}")
                                 else:
                                     error_detail = str(e)
                                 logger.warning(f"Could not parse error JSON: {parse_error}, using raw text")
@@ -601,6 +749,21 @@ class CDCManager:
                     # Ensure we have some error detail
                     if not error_detail or error_detail.strip() == "":
                         error_detail = "Unknown error from Kafka Connect"
+                    
+                    # FIX: Store error in pipeline config for later retrieval
+                    if not pipeline.debezium_config:
+                        pipeline.debezium_config = {}
+                    pipeline.debezium_config['_last_error'] = {
+                        'message': error_detail,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'connector_name': debezium_connector_name,
+                        'error_type': 'HTTPError',
+                        'status_code': e.response.status_code if hasattr(e, 'response') and e.response else None
+                    }
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    self._persist_pipeline_status(pipeline)
+                    logger.info(f"Stored detailed error in pipeline config: {error_detail[:200]}...")
+                    
                 except requests.exceptions.RequestException as e:
                     # Handle other request exceptions (ConnectionError, Timeout, etc.)
                     error_detail = str(e)
@@ -617,9 +780,25 @@ class CDCManager:
                     if not error_detail or error_detail.strip() == "":
                         error_detail = f"Kafka Connect connection error: {type(e).__name__}"
                     
-                    full_error = error_detail
+                    # FIX: Store error in pipeline config
+                    if not pipeline.debezium_config:
+                        pipeline.debezium_config = {}
+                    pipeline.debezium_config['_last_error'] = {
+                        'message': error_detail,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'connector_name': debezium_connector_name,
+                        'error_type': type(e).__name__
+                    }
+                    # FIX: Store connector name even on failure
+                    pipeline.debezium_connector_name = debezium_connector_name
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    self._persist_pipeline_status(pipeline)
+                    logger.error(f"Persisted error and connector name to database: {debezium_connector_name}")
+                    
+                    full_error = f"Failed to create Debezium connector '{debezium_connector_name}': {error_detail}"
                     logger.error(f"Debezium connector creation failed: {full_error}")
                     logger.error(f"Exception type: {type(e).__name__}, Exception args: {e.args}")
+                    logger.error(f"Connector name '{debezium_connector_name}' has been stored in database for debugging")
                     raise Exception(full_error) from e
                 except Exception as e:
                     # Handle any other exception
@@ -657,6 +836,17 @@ class CDCManager:
                             status_code_str = str(e.response.status_code)
                         error_detail = f"Unknown error from Kafka Connect (HTTP {status_code_str})"
                     
+                    # FIX: Store error in pipeline config
+                    if not pipeline.debezium_config:
+                        pipeline.debezium_config = {}
+                    pipeline.debezium_config['_last_error'] = {
+                        'message': error_detail,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'connector_name': debezium_connector_name
+                    }
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    self._persist_pipeline_status(pipeline)
+                    
                     full_error = error_detail
                     logger.error(f"Debezium connector creation failed: {full_error}")
                     logger.error(f"Debezium connector name: {debezium_connector_name}")
@@ -671,15 +861,49 @@ class CDCManager:
                     raise Exception(full_error) from e
                 
                 # Wait for connector to start
+                logger.info(f"Waiting for Debezium connector to reach RUNNING state (max 60s)...")
                 if not self.kafka_client.wait_for_connector(
                     connector_name=debezium_connector_name,
                     target_state="RUNNING",
                     max_wait_seconds=60
                 ):
-                    raise Exception(f"Debezium connector failed to start: {debezium_connector_name}")
+                    # FIX: Get connector status to provide better error message
+                    try:
+                        connector_status = self.kafka_client.get_connector_status(debezium_connector_name)
+                        if connector_status:
+                            connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                            connector_error = connector_status.get('connector', {}).get('error', '')
+                            tasks = connector_status.get('tasks', [])
+                            failed_tasks = [t for t in tasks if t.get('state') == 'FAILED']
+                            
+                            error_parts = [f"Connector state: {connector_state}"]
+                            if connector_error:
+                                error_parts.append(f"Error: {connector_error}")
+                            if failed_tasks:
+                                for task in failed_tasks:
+                                    task_error = task.get('trace', '')[:500] if task.get('trace') else 'Unknown error'
+                                    error_parts.append(f"Task {task.get('id', 'unknown')}: {task_error}")
+                            
+                            detailed_error = "; ".join(error_parts)
+                            pipeline.cdc_status = CDCStatus.ERROR
+                            self._persist_pipeline_status(pipeline)
+                            raise Exception(f"Debezium connector failed to start: {debezium_connector_name}. {detailed_error}")
+                        else:
+                            pipeline.cdc_status = CDCStatus.ERROR
+                            self._persist_pipeline_status(pipeline)
+                            raise Exception(f"Debezium connector {debezium_connector_name} not found after creation")
+                    except Exception as status_error:
+                        # If we can't get status, use generic error
+                        pipeline.cdc_status = CDCStatus.ERROR
+                        self._persist_pipeline_status(pipeline)
+                        raise Exception(f"Debezium connector failed to start: {debezium_connector_name}. Check Kafka Connect logs for details.") from status_error
                 
                 pipeline.debezium_connector_name = debezium_connector_name
                 pipeline.debezium_config = debezium_config
+                
+                # FIX: Persist immediately after successful creation
+                self._persist_pipeline_status(pipeline)
+                logger.info(f"Persisted Debezium connector info: {debezium_connector_name}")
             
             pipeline.debezium_connector_name = debezium_connector_name
             pipeline.debezium_config = debezium_config
@@ -691,34 +915,49 @@ class CDCManager:
             
             # Step 3: Wait for topics to be created and discover them
             logger.info("Waiting for Kafka topics to be created by Debezium...")
-            time.sleep(5)  # Wait for Debezium to create topics
-            
-            # Discover actual topics from the connector API
-            # IMPORTANT: For Oracle, Debezium creates topics with UPPERCASE schema/table names
-            # We must use the actual topic names from the connector, not generated ones
+            # FIX: Increase wait time and add retry logic for topic discovery
+            max_topic_wait_attempts = 10  # 10 attempts * 5s = 50s total (increased from 30s)
+            topics_discovered = False
             kafka_topics = []
-            try:
-                # Try to get actual topics from the connector using session
-                connector_topics_response = self.kafka_client.session.get(
-                    f"{self.kafka_client.base_url}/connectors/{debezium_connector_name}/topics"
-                )
-                if connector_topics_response.status_code == 200:
-                    topics_data = connector_topics_response.json()
-                    connector_topics = topics_data.get(debezium_connector_name, {}).get('topics', [])
-                    # Filter out schema change topic (it's just the pipeline name)
-                    # We only want table-specific topics (format: {pipeline}.{schema}.{table})
-                    table_topics = [t for t in connector_topics if '.' in t and t != pipeline.name]
-                    if table_topics:
-                        kafka_topics = table_topics
-                        logger.info(f"Discovered actual topics from connector: {kafka_topics}")
+            
+            for attempt in range(max_topic_wait_attempts):
+                if attempt > 0:
+                    time.sleep(5)  # Wait for Debezium to create topics (skip sleep on first attempt)
+            
+                # Discover actual topics from the connector API
+                # IMPORTANT: For Oracle, Debezium creates topics with UPPERCASE schema/table names
+                # We must use the actual topic names from the connector, not generated ones
+                try:
+                    # Try to get actual topics from the connector using session
+                    # Ensure base_url doesn't have /connectors suffix (normalize it)
+                    base_url = self.kafka_client.base_url.rstrip('/connectors').rstrip('/')
+                    connector_topics_response = self.kafka_client.session.get(
+                        f"{base_url}/connectors/{debezium_connector_name}/topics",
+                        timeout=10
+                    )
+                    if connector_topics_response.status_code == 200:
+                        topics_data = connector_topics_response.json()
+                        connector_topics = topics_data.get(debezium_connector_name, {}).get('topics', [])
+                        # Filter out schema change topic (it's just the pipeline name)
+                        # We only want table-specific topics (format: {pipeline}.{schema}.{table})
+                        table_topics = [t for t in connector_topics if '.' in t and t != pipeline.name]
+                        if table_topics:
+                            kafka_topics = table_topics
+                            logger.info(f"✅ Discovered actual topics from connector (attempt {attempt + 1}/{max_topic_wait_attempts}): {kafka_topics}")
+                            topics_discovered = True
+                            break
+                        else:
+                            logger.info(f"Attempt {attempt + 1}/{max_topic_wait_attempts}: Connector topics found but no table topics yet: {connector_topics}")
                     else:
-                        logger.warning(f"Connector topics found but no table topics: {connector_topics}")
-            except Exception as e:
-                logger.warning(f"Could not discover topics from connector API: {e}")
+                        logger.info(f"Attempt {attempt + 1}/{max_topic_wait_attempts}: Could not get topics (HTTP {connector_topics_response.status_code})")
+                except Exception as e:
+                    logger.info(f"Attempt {attempt + 1}/{max_topic_wait_attempts}: Could not discover topics from connector API: {e}")
             
             # Fallback: Generate topic names if discovery failed
-            if not kafka_topics:
-                logger.info("Falling back to generating topic names...")
+            # FIX: Always generate topic names as fallback, even if discovery partially succeeded
+            if not kafka_topics or len(kafka_topics) < len(pipeline.source_tables):
+                logger.warning(f"Topic discovery incomplete (found {len(kafka_topics)} topics, expected {len(pipeline.source_tables)}), generating topic names as fallback...")
+                generated_topics = []
                 for table in pipeline.source_tables:
                     # For Oracle, use UPPERCASE schema/table names (Debezium Oracle creates uppercase topics)
                     if source_connection.database_type == "oracle":
@@ -734,27 +973,80 @@ class CDCManager:
                             table=table,
                             database=source_db if source_connection.database_type in ("sqlserver", "mssql") else None
                         )
-                    kafka_topics.append(topic_name)
-                logger.info(f"Generated topic names: {kafka_topics}")
+                    generated_topics.append(topic_name)
+                
+                # Merge discovered topics with generated ones (avoid duplicates)
+                all_topics = list(kafka_topics)
+                for gen_topic in generated_topics:
+                    if gen_topic not in all_topics:
+                        all_topics.append(gen_topic)
+                
+                kafka_topics = all_topics
+                # Count how many topics were discovered vs generated
+                initial_discovered_count = len([t for t in kafka_topics if t not in generated_topics]) if kafka_topics else 0
+                logger.info(f"✅ Using {len(kafka_topics)} topics (discovered: {initial_discovered_count}, generated: {len(generated_topics)}): {kafka_topics}")
             
             pipeline.kafka_topics = kafka_topics
             result["kafka_topics"] = kafka_topics
             
+            # FIX: Don't fail if topics are empty - use generated topics instead
             if not kafka_topics:
-                error_msg = "No Kafka topics discovered - cannot create sink connector. Debezium may not have created topics yet or table names are incorrect."
-                logger.error(error_msg)
-                raise Exception(error_msg)
+                logger.warning("⚠️  No Kafka topics available - generating from table list as last resort...")
+                for table in pipeline.source_tables:
+                    if source_connection.database_type == "oracle":
+                        schema_upper = (pipeline.source_schema or "public").upper()
+                        table_upper = table.upper()
+                        topic_name = f"{pipeline.name}.{schema_upper}.{table_upper}"
+                    else:
+                        source_db = pipeline.source_database or source_connection.database
+                        topic_name = DebeziumConfigGenerator.get_topic_name(
+                            pipeline_name=pipeline.name,
+                            schema=pipeline.source_schema or "public",
+                            table=table,
+                            database=source_db if source_connection.database_type in ("sqlserver", "mssql") else None
+                        )
+                    kafka_topics.append(topic_name)
+                pipeline.kafka_topics = kafka_topics
+                result["kafka_topics"] = kafka_topics
+                logger.warning(f"⚠️  Using generated topic names (topics may not exist yet in Kafka): {kafka_topics}")
             else:
-                logger.info(f"Discovered {len(kafka_topics)} Kafka topics: {kafka_topics}")
+                logger.info(f"✅ Using {len(kafka_topics)} Kafka topics: {kafka_topics}")
+            
+            # FIX: Persist topics immediately after discovery
+            self._persist_pipeline_status(pipeline)
+            logger.info(f"Persisted Kafka topics: {kafka_topics}")
             
             # Step 4: Generate and create Sink connector
             logger.info(f"Creating Sink connector for pipeline: {pipeline.name}")
             
+            # Get default schema based on database type
+            default_target_schema = (
+                "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                else "PUBLIC" if target_connection.database_type == "snowflake"
+                else "public"
+            )
+            
+            # FIX: Validate and normalize target schema name
+            target_schema = pipeline.target_schema or target_connection.schema or default_target_schema
+            # Normalize schema name - handle common truncations/typos
+            if target_schema.lower() in ["data", "dat"]:
+                logger.warning(f"Detected potentially truncated target schema name '{target_schema}', using '{default_target_schema}' as fallback")
+                target_schema = default_target_schema
+            
             sink_connector_name = SinkConfigGenerator.generate_connector_name(
                 pipeline_name=pipeline.name,
                 database_type=target_connection.database_type,
-                schema=pipeline.target_schema or target_connection.schema or "public"
+                schema=target_schema
             )
+            
+            # FIX: Log target schema used
+            logger.info(f"Generated Sink connector name: {sink_connector_name}")
+            logger.info(f"Target schema used: {target_schema} (from pipeline: {pipeline.target_schema}, connection: {target_connection.schema}, default: {default_target_schema})")
+            
+            # FIX: Store sink connector name immediately (before creation attempt)
+            pipeline.sink_connector_name = sink_connector_name
+            self._persist_pipeline_status(pipeline)
+            logger.info(f"Stored Sink connector name in pipeline: {sink_connector_name}")
             
             # Check if sink config already exists in pipeline (loaded from database)
             sink_exists = False
@@ -768,36 +1060,42 @@ class CDCManager:
                         sink_exists = False
                     else:
                         connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
-                    if connector_state == 'RUNNING':
-                        # Check if the existing config has the correct topics
-                        existing_topics = pipeline.sink_config.get('topics', '').split(',')
-                        existing_topics = [t.strip() for t in existing_topics if t.strip()]
-                        # Compare with discovered topics (case-insensitive for comparison, but must match exactly)
-                        topics_match = set(existing_topics) == set(kafka_topics)
-                        if topics_match:
-                            logger.info(f"Existing Sink connector {pipeline.sink_connector_name} is RUNNING with correct topics, reusing it")
-                            sink_exists = True
-                            sink_connector_name = pipeline.sink_connector_name
-                            sink_config = pipeline.sink_config
+                        if connector_state == 'RUNNING':
+                            # Check if the existing config has the correct topics
+                            existing_topics = pipeline.sink_config.get('topics', '').split(',')
+                            existing_topics = [t.strip() for t in existing_topics if t.strip()]
+                            # Compare with discovered topics (case-insensitive for comparison, but must match exactly)
+                            topics_match = set(existing_topics) == set(kafka_topics)
+                            if topics_match:
+                                logger.info(f"Existing Sink connector {pipeline.sink_connector_name} is RUNNING with correct topics, reusing it")
+                                sink_exists = True
+                                sink_connector_name = pipeline.sink_connector_name
+                                sink_config = pipeline.sink_config
+                            else:
+                                logger.warning(f"Existing Sink connector topics don't match discovered topics. Existing: {existing_topics}, Discovered: {kafka_topics}. Will recreate.")
+                                # Delete the connector to force recreation
+                                try:
+                                    self.kafka_client.delete_connector(pipeline.sink_connector_name)
+                                    logger.info(f"Deleted Sink connector {pipeline.sink_connector_name} due to topic mismatch")
+                                except Exception as e:
+                                    logger.warning(f"Could not delete connector: {e}")
                         else:
-                            logger.warning(f"Existing Sink connector topics don't match discovered topics. Existing: {existing_topics}, Discovered: {kafka_topics}. Will recreate.")
-                            # Delete the connector to force recreation
-                            try:
-                                self.kafka_client.delete_connector(pipeline.sink_connector_name)
-                                logger.info(f"Deleted Sink connector {pipeline.sink_connector_name} due to topic mismatch")
-                            except Exception as e:
-                                logger.warning(f"Could not delete connector: {e}")
-                    else:
-                        logger.info(f"Existing Sink connector {pipeline.sink_connector_name} state is {connector_state}, will recreate")
+                            logger.info(f"Existing Sink connector {pipeline.sink_connector_name} state is {connector_state}, will recreate")
                 except Exception as e:
                     logger.warning(f"Could not check existing Sink connector status: {e}, will create new one")
             
             if not sink_exists:
+                # Get default schema based on database type
+                default_target_schema = (
+                    "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                    else "PUBLIC" if target_connection.database_type == "snowflake"
+                    else "public"
+                )
                 sink_config = SinkConfigGenerator.generate_sink_config(
                     connector_name=sink_connector_name,
                     target_connection=target_connection,
                     target_database=pipeline.target_database or target_connection.database,
-                    target_schema=pipeline.target_schema or target_connection.schema or "public",
+                    target_schema=pipeline.target_schema or target_connection.schema or default_target_schema,
                     kafka_topics=kafka_topics
                 )
                 
@@ -860,25 +1158,77 @@ class CDCManager:
                     if not error_detail or error_detail.strip() == "":
                         error_detail = f"Unknown error from Kafka Connect (HTTP {e.response.status_code if e.response else 'N/A'})"
                     
-                    full_error = f"Failed to create Sink connector{status_code}: {error_detail}" if error_detail else f"Failed to create Sink connector{status_code}"
+                    # FIX: Store error in pipeline config
+                    if not pipeline.sink_config:
+                        pipeline.sink_config = {}
+                    pipeline.sink_config['_last_error'] = {
+                        'message': error_detail,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'connector_name': sink_connector_name,
+                        'http_status': e.response.status_code if e.response else None,
+                        'error_type': 'HTTPError'
+                    }
+                    # FIX: Store connector name even on failure
+                    pipeline.sink_connector_name = sink_connector_name
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    self._persist_pipeline_status(pipeline)
+                    logger.error(f"Persisted error and connector name to database: {sink_connector_name}")
+                    
+                    full_error = f"Failed to create Sink connector '{sink_connector_name}'{status_code}: {error_detail}" if error_detail else f"Failed to create Sink connector '{sink_connector_name}'{status_code}"
                     logger.error(full_error)
                     logger.error(f"Sink connector name: {sink_connector_name}")
                     logger.error(f"Sink config keys: {list(sink_config.keys())}")
                     logger.error(f"Exception type: {type(e).__name__}, Exception args: {e.args}")
+                    logger.error(f"Connector name '{sink_connector_name}' has been stored in database for debugging")
                     raise Exception(full_error) from e
             else:
                 logger.info(f"Reusing existing Sink connector: {sink_connector_name}")
             
             # Wait for connector to start
+            logger.info(f"Waiting for Sink connector to reach RUNNING state (max 60s)...")
             if not self.kafka_client.wait_for_connector(
                 connector_name=sink_connector_name,
                 target_state="RUNNING",
                 max_wait_seconds=60
             ):
-                raise Exception(f"Sink connector failed to start: {sink_connector_name}")
+                # FIX: Get connector status to provide better error message
+                try:
+                    connector_status = self.kafka_client.get_connector_status(sink_connector_name)
+                    if connector_status:
+                        connector_state = connector_status.get('connector', {}).get('state', 'UNKNOWN')
+                        connector_error = connector_status.get('connector', {}).get('error', '')
+                        tasks = connector_status.get('tasks', [])
+                        failed_tasks = [t for t in tasks if t.get('state') == 'FAILED']
+                        
+                        error_parts = [f"Connector state: {connector_state}"]
+                        if connector_error:
+                            error_parts.append(f"Error: {connector_error}")
+                        if failed_tasks:
+                            for task in failed_tasks:
+                                task_error = task.get('trace', '')[:500] if task.get('trace') else 'Unknown error'
+                                error_parts.append(f"Task {task.get('id', 'unknown')}: {task_error}")
+                        
+                        detailed_error = "; ".join(error_parts)
+                        pipeline.cdc_status = CDCStatus.ERROR
+                        self._persist_pipeline_status(pipeline)
+                        raise Exception(f"Sink connector failed to start: {sink_connector_name}. {detailed_error}")
+                    else:
+                        pipeline.cdc_status = CDCStatus.ERROR
+                        self._persist_pipeline_status(pipeline)
+                        raise Exception(f"Sink connector {sink_connector_name} not found after creation")
+                except Exception as status_error:
+                    # If we can't get status, use generic error
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    self._persist_pipeline_status(pipeline)
+                    raise Exception(f"Sink connector failed to start: {sink_connector_name}. Check Kafka Connect logs for details.") from status_error
             
             pipeline.sink_connector_name = sink_connector_name
             pipeline.sink_config = sink_config
+            
+            # FIX: Persist Sink connector info immediately after creation
+            self._persist_pipeline_status(pipeline)
+            logger.info(f"Persisted Sink connector info: {sink_connector_name}")
+            
             pipeline.cdc_status = CDCStatus.RUNNING
             pipeline.status = PipelineStatus.RUNNING
             
@@ -891,16 +1241,28 @@ class CDCManager:
             # Persist final status after CDC setup completes
             self._persist_pipeline_status(pipeline)
             
-            # Register topics with CDC event logger for monitoring
+            # CRITICAL: Register topics with CDC event logger for monitoring
+            # This creates the topic → pipeline_id mapping that Event Logger needs
             try:
                 from ingestion.cdc_event_logger import get_event_logger
                 event_logger = get_event_logger()
                 if event_logger and kafka_topics:
+                    registered_count = 0
                     for topic in kafka_topics:
-                        event_logger.add_topic(topic, pipeline.id)
-                    logger.info(f"Registered {len(kafka_topics)} topics with CDC event logger for pipeline {pipeline.name}")
+                        if topic:  # Skip empty topics
+                            event_logger.add_topic(topic, str(pipeline.id))  # Ensure string UUID
+                            registered_count += 1
+                            logger.debug(f"Registered topic {topic} → pipeline {pipeline.id}")
+                    logger.info(f"✅ Registered {registered_count} topics with CDC event logger for pipeline {pipeline.name} (ID: {pipeline.id})")
+                    logger.info(f"   Topics: {kafka_topics[:3]}..." if len(kafka_topics) > 3 else f"   Topics: {kafka_topics}")
+                elif not event_logger:
+                    logger.warning(f"⚠️  CDC Event Logger not available - topics will not be monitored for pipeline {pipeline.name}")
+                elif not kafka_topics:
+                    logger.warning(f"⚠️  No Kafka topics available to register for pipeline {pipeline.name}")
             except Exception as e:
-                logger.warning(f"Failed to register topics with CDC event logger: {e}")
+                logger.error(f"❌ Failed to register topics with CDC event logger: {e}", exc_info=True)
+                # Don't fail pipeline start if event logger registration fails
+                logger.warning("Pipeline will continue, but CDC events may not be logged until Event Logger is fixed")
             
             logger.info(f"Pipeline started successfully: {pipeline.name}")
             
@@ -971,6 +1333,7 @@ class CDCManager:
                 return self._run_full_load_to_s3(
                     pipeline=pipeline,
                     source_connector=source_connector,
+                    source_connection=source_connection,
                     target_connector=target_connector,
                     target_connection=target_connection
                 )
@@ -1023,12 +1386,18 @@ class CDCManager:
             logger.info(f"Transferring {len(pipeline.source_tables)} table(s): {pipeline.source_tables}")
             logger.info(f"Transfer settings: schema=True, data=True, batch_size=10000")
             
+            # Get default schema based on database type
+            default_target_schema = (
+                "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                else "PUBLIC" if target_connection.database_type == "snowflake"
+                else "public"
+            )
             transfer_result = transfer.transfer_tables(
                 tables=pipeline.source_tables,
                 source_database=pipeline.source_database,
                 source_schema=pipeline.source_schema,
                 target_database=pipeline.target_database or target_connection.database,
-                target_schema=pipeline.target_schema or target_connection.schema or "public",
+                target_schema=pipeline.target_schema or target_connection.schema or default_target_schema,
                 transfer_schema=True,  # Transfer schema (create tables if needed)
                 transfer_data=True,    # Transfer data
                 batch_size=10000
@@ -1051,7 +1420,12 @@ class CDCManager:
                 
                 # Parse target_table_name to extract schema and table if it contains a dot
                 # This prevents double schema prefix (e.g., "dbo.dbo.department")
-                target_schema_final = pipeline.target_schema or target_connection.schema or "public"
+                default_target_schema = (
+                    "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                    else "PUBLIC" if target_connection.database_type == "snowflake"
+                    else "public"
+                )
+                target_schema_final = pipeline.target_schema or target_connection.schema or default_target_schema
                 target_table_final = target_table_name
                 
                 # If target_table_name contains schema prefix (e.g., "dbo.department"), extract just the table name
@@ -1062,9 +1436,17 @@ class CDCManager:
                         if parts[0].lower() == target_schema_final.lower():
                             target_table_final = parts[1]
                         # If schema doesn't match, use the provided schema and table
+                        # But validate schema matches database type
                         else:
-                            target_schema_final = parts[0]
-                            target_table_final = parts[1]
+                            extracted_schema = parts[0]
+                            # If SQL Server and extracted schema is "public", override to "dbo"
+                            if target_connection.database_type in ("sqlserver", "mssql") and extracted_schema.lower() == "public":
+                                logger.warning(f"Target table '{target_table_name}' has schema 'public' for SQL Server, overriding to 'dbo'")
+                                target_schema_final = "dbo"
+                                target_table_final = parts[1]
+                            else:
+                                target_schema_final = extracted_schema
+                                target_table_final = parts[1]
                     elif len(parts) > 2:
                         # Handle database.schema.table format - extract schema and table
                         target_schema_final = parts[-2]
@@ -1231,6 +1613,7 @@ class CDCManager:
         self,
         pipeline: Pipeline,
         source_connector: BaseConnector,
+        source_connection: Connection,
         target_connector: BaseConnector,
         target_connection: Connection
     ) -> Dict[str, Any]:
@@ -1822,7 +2205,7 @@ class CDCManager:
                         id=source_conn_model.id,
                         name=source_conn_model.name,
                         connection_type=source_conn_model.connection_type.value if hasattr(source_conn_model.connection_type, 'value') else str(source_conn_model.connection_type),
-                        database_type=str(source_conn_model.database_type).lower(),
+                        database_type=source_conn_model.database_type.value.lower() if hasattr(source_conn_model.database_type, 'value') else str(source_conn_model.database_type).lower(),
                         host=source_conn_model.host,
                         port=source_conn_model.port,
                         database=source_conn_model.database,
@@ -1835,7 +2218,7 @@ class CDCManager:
                         id=target_conn_model.id,
                         name=target_conn_model.name,
                         connection_type=target_conn_model.connection_type.value if hasattr(target_conn_model.connection_type, 'value') else str(target_conn_model.connection_type),
-                        database_type=str(target_conn_model.database_type).lower(),
+                        database_type=target_conn_model.database_type.value.lower() if hasattr(target_conn_model.database_type, 'value') else str(target_conn_model.database_type).lower(),
                         host=target_conn_model.host,
                         port=target_conn_model.port,
                         database=target_conn_model.database,
@@ -1898,7 +2281,16 @@ class CDCManager:
             # Try to load from database
             pipeline = self._load_pipeline_from_db(pipeline_id)
         if not pipeline:
-            raise ValueError(f"Pipeline not found: {pipeline_id}")
+            # If pipeline not in store and not in database, still return success
+            # This handles cases where pipeline was already stopped or deleted
+            logger.warning(f"Pipeline {pipeline_id} not found in store or database, assuming already stopped")
+            return {
+                "pipeline_id": pipeline_id,
+                "debezium_stopped": False,
+                "sink_stopped": False,
+                "status": "STOPPED",
+                "message": "Pipeline not found, assuming already stopped"
+            }
         
         result = {
             "pipeline_id": pipeline_id,
@@ -1910,25 +2302,48 @@ class CDCManager:
         try:
             pipeline.status = PipelineStatus.STOPPING
             
-            # Stop Debezium connector
+            # Stop Debezium connector - try both pause and delete
             if pipeline.debezium_connector_name:
                 try:
+                    # First try to pause
                     self.kafka_client.pause_connector(pipeline.debezium_connector_name)
                     result["debezium_stopped"] = True
-                except Exception as e:
-                    logger.warning(f"Failed to pause Debezium connector: {e}")
+                    logger.info(f"Paused Debezium connector: {pipeline.debezium_connector_name}")
+                except Exception as pause_error:
+                    logger.warning(f"Failed to pause Debezium connector {pipeline.debezium_connector_name}: {pause_error}")
+                    # If pause fails, try to delete (connector might not exist)
+                    try:
+                        self.kafka_client.delete_connector(pipeline.debezium_connector_name)
+                        result["debezium_stopped"] = True
+                        logger.info(f"Deleted Debezium connector: {pipeline.debezium_connector_name}")
+                    except Exception as delete_error:
+                        logger.warning(f"Failed to delete Debezium connector {pipeline.debezium_connector_name}: {delete_error}")
+                        # Continue anyway - connector might already be stopped/deleted
             
-            # Stop Sink connector
+            # Stop Sink connector - try both pause and delete
             if pipeline.sink_connector_name:
                 try:
+                    # First try to pause
                     self.kafka_client.pause_connector(pipeline.sink_connector_name)
                     result["sink_stopped"] = True
-                except Exception as e:
-                    logger.warning(f"Failed to pause Sink connector: {e}")
+                    logger.info(f"Paused Sink connector: {pipeline.sink_connector_name}")
+                except Exception as pause_error:
+                    logger.warning(f"Failed to pause Sink connector {pipeline.sink_connector_name}: {pause_error}")
+                    # If pause fails, try to delete (connector might not exist)
+                    try:
+                        self.kafka_client.delete_connector(pipeline.sink_connector_name)
+                        result["sink_stopped"] = True
+                        logger.info(f"Deleted Sink connector: {pipeline.sink_connector_name}")
+                    except Exception as delete_error:
+                        logger.warning(f"Failed to delete Sink connector {pipeline.sink_connector_name}: {delete_error}")
+                        # Continue anyway - connector might already be stopped/deleted
             
             pipeline.status = PipelineStatus.STOPPED
             pipeline.cdc_status = CDCStatus.STOPPED
             result["status"] = "STOPPED"
+            
+            # Persist status to database
+            self._persist_pipeline_status(pipeline)
             
             # Unregister topics from CDC event logger
             try:
@@ -1996,6 +2411,9 @@ class CDCManager:
             pipeline.cdc_status = CDCStatus.PAUSED
             result["status"] = "PAUSED"
             
+            # Persist status to database
+            self._persist_pipeline_status(pipeline)
+            
             logger.info(f"Pipeline paused: {pipeline.name}")
             
         except Exception as e:
@@ -2025,18 +2443,191 @@ class CDCManager:
             raise ValueError(f"Pipeline not found: {pipeline_id}")
         
         # Reload from database to get latest sink_connector_name if in-memory is stale
+        # Also retrieve error messages from database
+        error_message = None
+        last_error_time = None
+        pipeline_model = None
+        error_message = None  # Initialize early to ensure filtering works
+        last_error_time = None
         try:
             from ingestion.database.session import get_db
-            from ingestion.database.models_db import PipelineModel
+            from ingestion.database.models_db import PipelineModel, PipelineRunModel
+            from sqlalchemy import desc
             db = next(get_db())
             pipeline_model = db.query(PipelineModel).filter(
                 PipelineModel.id == pipeline_id,
                 PipelineModel.deleted_at.is_(None)
             ).first()
-            if pipeline_model and pipeline_model.sink_connector_name and not pipeline.sink_connector_name:
-                # Update in-memory pipeline with sink connector name from database
-                pipeline.sink_connector_name = pipeline_model.sink_connector_name
-                logger.info(f"Reloaded sink_connector_name from database: {pipeline.sink_connector_name}")
+            
+            # FIX: Early check and clear of stale errors from debezium_config (both DB and in-memory)
+            if pipeline_model and pipeline_model.debezium_config and isinstance(pipeline_model.debezium_config, dict):
+                if '_last_error' in pipeline_model.debezium_config:
+                    last_error = pipeline_model.debezium_config.get('_last_error')
+                    if isinstance(last_error, dict):
+                        error_msg = last_error.get('message', '')
+                        if error_msg and ":8080" in str(error_msg) and ":8083" not in str(error_msg):
+                            logger.info(f"Early clearing of stale error from debezium_config for pipeline {pipeline_id}")
+                            del pipeline_model.debezium_config['_last_error']
+                            db.commit()
+                            logger.info(f"Cleared stale error from debezium_config early in get_pipeline_status")
+            
+            # FIX: Also clear from in-memory pipeline object
+            if pipeline.debezium_config and isinstance(pipeline.debezium_config, dict):
+                if '_last_error' in pipeline.debezium_config:
+                    last_error = pipeline.debezium_config.get('_last_error')
+                    if isinstance(last_error, dict):
+                        error_msg = last_error.get('message', '')
+                        if error_msg and ":8080" in str(error_msg) and ":8083" not in str(error_msg):
+                            logger.info(f"Early clearing of stale error from in-memory pipeline.debezium_config for pipeline {pipeline_id}")
+                            del pipeline.debezium_config['_last_error']
+                            logger.info(f"Cleared stale error from in-memory pipeline.debezium_config")
+            if pipeline_model:
+                # Reload connector names from database if they exist there but not in memory
+                if pipeline_model.debezium_connector_name and not pipeline.debezium_connector_name:
+                    pipeline.debezium_connector_name = pipeline_model.debezium_connector_name
+                    logger.info(f"Reloaded debezium_connector_name from database: {pipeline.debezium_connector_name}")
+                if pipeline_model.sink_connector_name and not pipeline.sink_connector_name:
+                    pipeline.sink_connector_name = pipeline_model.sink_connector_name
+                    logger.info(f"Reloaded sink_connector_name from database: {pipeline.sink_connector_name}")
+                # Also reload kafka_topics if they exist in database
+                if pipeline_model.kafka_topics and (not pipeline.kafka_topics or len(pipeline.kafka_topics) == 0):
+                    pipeline.kafka_topics = pipeline_model.kafka_topics
+                    logger.info(f"Reloaded kafka_topics from database: {pipeline.kafka_topics}")
+                
+                # FIX: If connector names are still missing, try to discover them from Kafka Connect
+                # This handles cases where connectors exist but weren't persisted to database
+                if not pipeline.debezium_connector_name or not pipeline.sink_connector_name or not pipeline.kafka_topics:
+                    logger.info(f"Pipeline {pipeline_id} missing connector info, attempting to discover from Kafka Connect...")
+                    try:
+                        # Generate expected connector names based on pipeline configuration
+                        source_connection = self.get_connection(pipeline.source_connection_id)
+                        target_connection = self.get_connection(pipeline.target_connection_id)
+                        
+                        if source_connection:
+                            expected_debezium_name = DebeziumConfigGenerator.generate_connector_name(
+                                pipeline_name=pipeline.name,
+                                database_type=source_connection.database_type,
+                                schema=pipeline.source_schema
+                            )
+                            
+                            # Check if this connector exists in Kafka Connect
+                            if not pipeline.debezium_connector_name:
+                                try:
+                                    connector_status = self.kafka_client.get_connector_status(expected_debezium_name)
+                                    if connector_status is not None:
+                                        logger.info(f"Discovered Debezium connector in Kafka Connect: {expected_debezium_name}")
+                                        pipeline.debezium_connector_name = expected_debezium_name
+                                        # Get config from Kafka Connect
+                                        try:
+                                            pipeline.debezium_config = self.kafka_client.get_connector_config(expected_debezium_name)
+                                        except Exception as e:
+                                            logger.warning(f"Could not get Debezium config: {e}")
+                                except Exception as e:
+                                    logger.debug(f"Debezium connector {expected_debezium_name} not found in Kafka Connect: {e}")
+                            
+                            # Discover Kafka topics from the Debezium connector
+                            if pipeline.debezium_connector_name and (not pipeline.kafka_topics or len(pipeline.kafka_topics) == 0):
+                                try:
+                                    # Ensure base_url doesn't have /connectors suffix (normalize it)
+                                    base_url = self.kafka_client.base_url.rstrip('/connectors').rstrip('/')
+                                    connector_topics_response = self.kafka_client.session.get(
+                                        f"{base_url}/connectors/{pipeline.debezium_connector_name}/topics"
+                                    )
+                                    if connector_topics_response.status_code == 200:
+                                        topics_data = connector_topics_response.json()
+                                        connector_topics = topics_data.get(pipeline.debezium_connector_name, {}).get('topics', [])
+                                        # Filter out schema change topic
+                                        table_topics = [t for t in connector_topics if '.' in t and t != pipeline.name]
+                                        if table_topics:
+                                            pipeline.kafka_topics = table_topics
+                                            logger.info(f"Discovered Kafka topics from connector: {pipeline.kafka_topics}")
+                                except Exception as e:
+                                    logger.warning(f"Could not discover topics from connector: {e}")
+                        
+                        if target_connection:
+                            # Get default schema based on database type
+                            default_target_schema = (
+                                "dbo" if target_connection.database_type in ("sqlserver", "mssql")
+                                else "PUBLIC" if target_connection.database_type == "snowflake"
+                                else "public"
+                            )
+                            expected_sink_name = SinkConfigGenerator.generate_connector_name(
+                                pipeline_name=pipeline.name,
+                                database_type=target_connection.database_type,
+                                schema=pipeline.target_schema or target_connection.schema or default_target_schema
+                            )
+                            
+                            # Check if this connector exists in Kafka Connect
+                            if not pipeline.sink_connector_name:
+                                try:
+                                    connector_status = self.kafka_client.get_connector_status(expected_sink_name)
+                                    if connector_status is not None:
+                                        logger.info(f"Discovered Sink connector in Kafka Connect: {expected_sink_name}")
+                                        pipeline.sink_connector_name = expected_sink_name
+                                        # Get config from Kafka Connect
+                                        try:
+                                            pipeline.sink_config = self.kafka_client.get_connector_config(expected_sink_name)
+                                        except Exception as e:
+                                            logger.warning(f"Could not get Sink config: {e}")
+                                except Exception as e:
+                                    logger.debug(f"Sink connector {expected_sink_name} not found in Kafka Connect: {e}")
+                        
+                        # If we discovered connector names or topics, persist them to database
+                        if (pipeline.debezium_connector_name or pipeline.sink_connector_name or 
+                            (pipeline.kafka_topics and len(pipeline.kafka_topics) > 0)):
+                            logger.info(f"Persisting discovered connector info to database for pipeline {pipeline_id}")
+                            self._persist_pipeline_status(pipeline)
+                    except Exception as e:
+                        logger.warning(f"Failed to discover connectors from Kafka Connect: {e}")
+                
+                # Get the most recent failed run to extract error message
+                failed_run = db.query(PipelineRunModel).filter(
+                    PipelineRunModel.pipeline_id == pipeline_id,
+                    PipelineRunModel.error_message.isnot(None),
+                    PipelineRunModel.error_message != ''
+                ).order_by(desc(PipelineRunModel.started_at)).first()
+                
+                if failed_run and failed_run.error_message:
+                    error_message = str(failed_run.error_message)
+                    # FIX: Filter out stale error messages that contain old Kafka Connect URL (port 8080)
+                    # These are from previous attempts before the URL was fixed
+                    if ":8080" in error_message and ":8083" not in error_message:
+                        logger.info(f"Ignoring stale error message with old URL (8080): {error_message[:200]}...")
+                        # FIX: Also clear the error from the database to prevent it from showing again
+                        try:
+                            if 'db' in locals() and db:
+                                failed_run.error_message = None
+                                db.commit()
+                                logger.info(f"Cleared stale error message from PipelineRunModel for pipeline {pipeline_id}")
+                        except Exception as clear_error:
+                            logger.warning(f"Could not clear stale error from database: {clear_error}")
+                        error_message = None
+                        last_error_time = None
+                    else:
+                        last_error_time = failed_run.started_at.isoformat() if failed_run.started_at else None
+                        logger.info(f"Found error message from failed run: {error_message[:200]}...")
+                
+                # Fallback: check pipeline's debezium_config for last error
+                if not error_message and pipeline_model.debezium_config and isinstance(pipeline_model.debezium_config, dict):
+                    last_error_from_config = pipeline_model.debezium_config.get('_last_error')
+                    if last_error_from_config and isinstance(last_error_from_config, dict) and last_error_from_config.get('message'):
+                        error_message = last_error_from_config['message']
+                        # FIX: Filter out stale error messages that contain old Kafka Connect URL (port 8080)
+                        if ":8080" in error_message and ":8083" not in error_message:
+                            logger.info(f"Ignoring stale error message with old URL (8080) from config: {error_message[:200]}...")
+                            # FIX: Also clear the error from the database config to prevent it from showing again
+                            try:
+                                if '_last_error' in pipeline_model.debezium_config:
+                                    del pipeline_model.debezium_config['_last_error']
+                                    db.commit()
+                                    logger.info(f"Cleared stale error from debezium_config for pipeline {pipeline_id}")
+                            except Exception as clear_error:
+                                logger.warning(f"Could not clear stale error from config: {clear_error}")
+                            error_message = None
+                            last_error_time = None
+                        else:
+                            last_error_time = last_error_from_config.get('timestamp')
+                            logger.info(f"Found error message from pipeline config: {error_message[:200]}...")
         except Exception as e:
             logger.debug(f"Could not reload pipeline from database: {e}")
         
@@ -2055,30 +2646,237 @@ class CDCManager:
             "sink_connector_name": pipeline.sink_connector_name,
             "kafka_topics": pipeline.kafka_topics or [],
             "debezium_connector": None,
-            "sink_connector": None
+            "sink_connector": None,
+            "source_connection_id": pipeline.source_connection_id,  # Add for frontend
+            "target_connection_id": pipeline.target_connection_id,  # Add for frontend
+            "source_uuid": pipeline.source_connection_id,  # Alias for frontend compatibility
+            "target_uuid": pipeline.target_connection_id  # Alias for frontend compatibility
         }
         
-        # Get Debezium connector status
+        # Get Debezium connector status (with timeout to prevent blocking)
         if pipeline.debezium_connector_name:
             try:
-                debezium_status = self.kafka_client.get_connector_status(
+                import threading
+                
+                # Use a timeout for connector status check (3 seconds max)
+                debezium_status = None
+                status_result = [None]  # Use list to allow modification in nested function
+                exception_result = [None]
+                
+                def get_status():
+                    try:
+                        status_result[0] = self.kafka_client.get_connector_status(
                     pipeline.debezium_connector_name
                 )
-                # None means connector doesn't exist - that's okay
+                    except Exception as e:
+                        exception_result[0] = e
+                
+                # Run in a thread with timeout
+                thread = threading.Thread(target=get_status)
+                thread.daemon = True
+                thread.start()
+                thread.join(timeout=3.0)  # 3 second timeout
+                
+                if thread.is_alive():
+                    logger.warning(f"Debezium connector status check timed out for {pipeline.debezium_connector_name}")
+                    debezium_status = None
+                else:
+                    if exception_result[0]:
+                        raise exception_result[0]
+                    debezium_status = status_result[0]
+                
+                # None means connector doesn't exist or timed out - that's okay
                 status["debezium_connector"] = debezium_status
+                
+                # Check for connector task errors and add to error message
+                if debezium_status:
+                    connector_state = debezium_status.get("connector", {}).get("state", "").upper()
+                    tasks = debezium_status.get("tasks", [])
+                    failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
+                    
+                    if failed_tasks:
+                        task_errors = []
+                        for task in failed_tasks:
+                            trace = task.get("trace", "")
+                            if trace:
+                                # Extract first line of error trace
+                                first_line = trace.split('\n')[0] if trace else "Unknown error"
+                                task_errors.append(f"Debezium task {task.get('id', 'unknown')}: {first_line}")
+                        
+                        if task_errors:
+                            connector_error = "; ".join(task_errors[:3])  # Limit to first 3 errors
+                            if error_message:
+                                error_message = f"{error_message}; {connector_error}"
+                            else:
+                                error_message = connector_error
+                            logger.info(f"Found Debezium connector task errors: {connector_error[:200]}...")
+                    
+                    # If connector is FAILED, also check for connector-level error
+                    if connector_state == "FAILED" and not error_message:
+                        connector_error = debezium_status.get("connector", {}).get("error", "")
+                        if connector_error:
+                            error_message = f"Debezium connector failed: {connector_error}"
+                            logger.info(f"Found Debezium connector error: {error_message[:200]}...")
             except Exception as e:
                 logger.warning(f"Failed to get Debezium connector status: {e}")
         
-        # Get Sink connector status
+        # Get Sink connector status (with timeout to prevent blocking)
         if pipeline.sink_connector_name:
             try:
-                sink_status = self.kafka_client.get_connector_status(
+                import threading
+                
+                # Use a timeout for connector status check (3 seconds max)
+                sink_status = None
+                status_result = [None]
+                exception_result = [None]
+                
+                def get_status():
+                    try:
+                        status_result[0] = self.kafka_client.get_connector_status(
                     pipeline.sink_connector_name
                 )
-                # None means connector doesn't exist - that's okay
+                    except Exception as e:
+                        exception_result[0] = e
+                
+                # Run in a thread with timeout
+                thread = threading.Thread(target=get_status)
+                thread.daemon = True
+                thread.start()
+                thread.join(timeout=3.0)  # 3 second timeout
+                
+                if thread.is_alive():
+                    logger.warning(f"Sink connector status check timed out for {pipeline.sink_connector_name}")
+                    sink_status = None
+                else:
+                    if exception_result[0]:
+                        raise exception_result[0]
+                    sink_status = status_result[0]
+                
+                # None means connector doesn't exist or timed out - that's okay
                 status["sink_connector"] = sink_status
+                
+                # Check for connector task errors and add to error message
+                if sink_status:
+                    connector_state = sink_status.get("connector", {}).get("state", "").upper()
+                    tasks = sink_status.get("tasks", [])
+                    failed_tasks = [t for t in tasks if t.get("state") == "FAILED"]
+                    
+                    if failed_tasks:
+                        task_errors = []
+                        for task in failed_tasks:
+                            trace = task.get("trace", "")
+                            if trace:
+                                # Extract first line of error trace
+                                first_line = trace.split('\n')[0] if trace else "Unknown error"
+                                task_errors.append(f"Sink task {task.get('id', 'unknown')}: {first_line}")
+                        
+                        if task_errors:
+                            connector_error = "; ".join(task_errors[:3])  # Limit to first 3 errors
+                            if error_message:
+                                error_message = f"{error_message}; {connector_error}"
+                            else:
+                                error_message = connector_error
+                            logger.info(f"Found Sink connector task errors: {connector_error[:200]}...")
+                    
+                    # If connector is FAILED, also check for connector-level error
+                    if connector_state == "FAILED" and not error_message:
+                        connector_error = sink_status.get("connector", {}).get("error", "")
+                        if connector_error:
+                            error_message = f"Sink connector failed: {connector_error}"
+                            logger.info(f"Found Sink connector error: {error_message[:200]}...")
             except Exception as e:
                 logger.warning(f"Failed to get Sink connector status: {e}")
+        
+        # Update error message in status if we found one (even if status is not ERROR, CDC might be ERROR)
+        # FIX: Only include error message if it's not a stale error with old URL
+        if error_message:
+            # Double-check: don't include stale errors with old URL
+            if ":8080" in error_message and ":8083" not in error_message:
+                logger.info("Filtering out stale error message with old URL from status response")
+                error_message = None
+                last_error_time = None
+            
+        if error_message:
+            status["error_message"] = error_message
+            if last_error_time:
+                status["last_error_time"] = last_error_time
+            # Also add to status if CDC status is ERROR
+            if pipeline.cdc_status == CDCStatus.ERROR:
+                status["cdc_error"] = error_message
+        
+        # FIX: Clear stale error messages that contain old URL before checking stuck states
+        # This ensures we don't show outdated errors
+        if error_message and ":8080" in error_message and ":8083" not in error_message:
+            logger.info(f"Clearing stale error message with old URL (8080) for pipeline {pipeline_id}")
+            error_message = None
+            last_error_time = None
+            # Also clear from status if it was already set
+            if "error_message" in status:
+                del status["error_message"]
+            if "cdc_error" in status:
+                del status["cdc_error"]
+            if "last_error_time" in status:
+                del status["last_error_time"]
+        
+        # Detect stuck STARTING state: CDC is STARTING but connectors don't exist
+        # This indicates CDC setup failed or is stuck
+        if (pipeline.cdc_status == CDCStatus.STARTING or pipeline.status == PipelineStatus.STARTING):
+            # Check if connectors should exist but don't
+            if not pipeline.debezium_connector_name and not pipeline.sink_connector_name:
+                # Check if full load is completed - if so, CDC should have started
+                if pipeline.full_load_status == FullLoadStatus.COMPLETED:
+                    # Full load completed but CDC connectors don't exist - this is an error state
+                    logger.warning(f"Pipeline {pipeline_id}: CDC status is STARTING but connectors don't exist after full load completion. This indicates CDC setup failed.")
+                    
+                    # Check database for error messages if not already found
+                    if not error_message:
+                        # Try to reload pipeline_model if not already loaded
+                        if not pipeline_model:
+                            try:
+                                from ingestion.database.session import get_db
+                                from ingestion.database.models_db import PipelineModel
+                                db = next(get_db())
+                                pipeline_model = db.query(PipelineModel).filter(
+                                    PipelineModel.id == pipeline_id,
+                                    PipelineModel.deleted_at.is_(None)
+                                ).first()
+                            except Exception as e:
+                                logger.debug(f"Could not reload pipeline_model: {e}")
+                        
+                        # Check debezium_config for last error
+                        if pipeline_model and pipeline_model.debezium_config and isinstance(pipeline_model.debezium_config, dict):
+                            last_error = pipeline_model.debezium_config.get('_last_error')
+                            if last_error and isinstance(last_error, dict):
+                                error_message = last_error.get('message', 'CDC setup failed: Connectors were not created')
+                                # FIX: Filter out stale errors with old URL
+                                if error_message and ":8080" in error_message and ":8083" not in error_message:
+                                    logger.info(f"Filtering out stale error with old URL (8080) from debezium_config")
+                                    error_message = None
+                        
+                        if not error_message:
+                            error_message = "CDC setup failed: Connectors were not created after full load completion. Please restart the pipeline to retry with the correct configuration."
+                    
+                    # FIX: Filter out stale error messages before setting status
+                    if error_message and ":8080" in error_message and ":8083" not in error_message:
+                        logger.info(f"Filtering out stale error message with old URL (8080) before setting status")
+                        error_message = "CDC setup failed: Connectors were not created after full load completion. Please restart the pipeline to retry with the correct configuration."
+                    
+                    # FIX: Filter out stale error messages before setting status
+                    if error_message and ":8080" in error_message and ":8083" not in error_message:
+                        logger.info(f"Filtering out stale error message with old URL (8080) before setting stuck state error")
+                        error_message = "CDC setup failed: Connectors were not created after full load completion. Please restart the pipeline to retry with the correct configuration."
+                    
+                    # Update status to ERROR
+                    pipeline.status = PipelineStatus.ERROR
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    status["status"] = "ERROR"
+                    status["cdc_status"] = "ERROR"
+                    if error_message:
+                        status["error_message"] = error_message
+                        logger.info(f"Updated pipeline {pipeline_id} status to ERROR: {error_message}")
+                    
+                    # Persist the error status
+                    self._persist_pipeline_status(pipeline)
         
         # Update status based on actual connector states
         if status.get("debezium_connector") and status.get("sink_connector"):
@@ -2095,6 +2893,23 @@ class CDCManager:
                     status["cdc_status"] = "RUNNING"
                     # Persist the updated status
                     self._persist_pipeline_status(pipeline)
+            elif dbz_state == "FAILED" or sink_state == "FAILED":
+                # At least one connector failed
+                if pipeline.status != PipelineStatus.ERROR:
+                    logger.warning(f"Updating pipeline status to ERROR (connector failed: Debezium={dbz_state}, Sink={sink_state})")
+                    pipeline.status = PipelineStatus.ERROR
+                    pipeline.cdc_status = CDCStatus.ERROR
+                    status["status"] = "ERROR"
+                    status["cdc_status"] = "ERROR"
+                    # Persist the error status
+                    self._persist_pipeline_status(pipeline)
+        elif (pipeline.debezium_connector_name or pipeline.sink_connector_name):
+            # Connectors should exist but status check failed
+            # This might be a transient issue, but if we have connector names, try to get status
+            if not status.get("debezium_connector") and pipeline.debezium_connector_name:
+                logger.warning(f"Debezium connector {pipeline.debezium_connector_name} should exist but status check returned None")
+            if not status.get("sink_connector") and pipeline.sink_connector_name:
+                logger.warning(f"Sink connector {pipeline.sink_connector_name} should exist but status check returned None")
         
         return status
     

@@ -829,22 +829,30 @@ class ConnectionService:
             
             target_db = database or connection.database
             # Default schema based on database type (especially for target connections in pipelines)
-            if not schema:
-                db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
-                if db_type in ["sqlserver", "mssql"]:
-                    target_schema = connection.schema or "dbo"  # SQL Server default is dbo
-                elif db_type == "snowflake":
-                    target_schema = connection.schema or "PUBLIC"  # Snowflake default is PUBLIC
-                else:
-                    target_schema = connection.schema or "public"  # PostgreSQL and others default to public
+            # Always determine default based on database type to ensure SQL Server uses "dbo" not "public"
+            db_type = connection.database_type.value.lower() if hasattr(connection.database_type, 'value') else str(connection.database_type).lower()
+            if db_type in ["sqlserver", "mssql"]:
+                default_schema = "dbo"  # SQL Server default is dbo
+            elif db_type == "snowflake":
+                default_schema = "PUBLIC"  # Snowflake default is PUBLIC
             else:
+                default_schema = "public"  # PostgreSQL and others default to public
+            
+            # Use provided schema, or connection schema, or default
+            # But if schema is provided and doesn't match database type default, validate it
+            if schema:
                 target_schema = schema
+                # Warn if schema doesn't match expected default for database type
+                if db_type in ["sqlserver", "mssql"] and schema.lower() == "public":
+                    logger.warning(f"[get_table_data] SQL Server connection using 'public' schema. Expected 'dbo'. Using provided schema: {schema}")
+            else:
+                target_schema = connection.schema or default_schema
             
             # Clean table name - remove schema prefix if present (e.g., "public.projects_simple" -> "projects_simple")
             # Define in outer scope so it's available in error handling
             clean_table_name = table_name
             original_table_name = table_name  # Keep original for error messages
-            logger.info(f"[get_table_data] Original table_name: {table_name}, target_schema: {target_schema}, database: {target_db}")
+            logger.info(f"[get_table_data] Original table_name: {table_name}, target_schema: {target_schema}, database: {target_db}, db_type: {db_type}")
             if '.' in clean_table_name and target_schema:
                 parts = clean_table_name.split('.', 1)
                 logger.info(f"[get_table_data] Table name has dot, parts: {parts}, comparing '{parts[0]}' == '{target_schema}'")

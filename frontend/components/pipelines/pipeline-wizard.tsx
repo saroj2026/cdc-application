@@ -365,7 +365,7 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.sourceConnection || !formData.targetConnection || selectedTables.length === 0) {
       alert("Please complete all required fields and select at least one table")
       return
@@ -376,12 +376,21 @@ export function PipelineWizard({ isOpen, onClose, onSave, editingPipeline }: Pip
       target: tableMapping[table] || table,
     }))
 
-    onSave({
-      ...formData,
-      tables: selectedTables,
-      tableMapping: mappedTables,
-    })
-    resetWizard()
+    try {
+      // Call onSave and wait for it to complete
+      await onSave({
+        ...formData,
+        tables: selectedTables,
+        tableMapping: mappedTables,
+      })
+      // Only reset and close if save was successful
+      resetWizard()
+      onClose() // Close the wizard after successful save
+    } catch (error) {
+      // If save fails, don't close the wizard so user can fix errors
+      console.error("Failed to save pipeline:", error)
+      // Error handling is done in the onSave callback (handleAddPipeline/handleEditPipeline)
+    }
   }
 
   const resetWizard = () => {

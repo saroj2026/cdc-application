@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, Pause, Square, Download, CheckCircle, Eye, X, Loader2, ChevronLeft, ChevronRight, Activity, Database, AlertCircle, RefreshCw, RotateCw } from "lucide-react"
+import { ArrowLeft, Play, Pause, Square, Download, CheckCircle, Eye, X, Loader2, ChevronLeft, ChevronRight, Activity, Database, AlertCircle, RefreshCw, RotateCw, Zap, Clock } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
@@ -18,6 +18,7 @@ import { wsClient } from "@/lib/websocket/client"
 import { CheckpointManager } from "./checkpoint-manager"
 import { useConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useErrorToast } from "@/components/ui/error-toast"
+import { cn } from "@/lib/utils"
 
 interface Pipeline {
   id: string | number
@@ -46,6 +47,7 @@ interface Pipeline {
   tableCount?: number
   recordsProcessed?: number
   lagSeconds?: number
+  consumerLag?: any
   created_at?: string
   updated_at?: string
   current_lsn?: string
@@ -109,6 +111,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       last_event_time?: string
       error_message?: string
     }
+    consumer_lag?: Record<string, any>
   } | null>(null)
   const progressPollIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [retryingEventId, setRetryingEventId] = useState<string | null>(null)
@@ -127,7 +130,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     if (pipeline?.id) {
       // Always fetch latest pipeline status from backend
       dispatch(fetchPipelines())
-      
+
       import("@/lib/api/client").then(({ apiClient }) => {
         // Fetch individual pipeline to get latest status and UUIDs
         apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
@@ -153,11 +156,11 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
   // Auto-refresh pipeline status every 10 seconds to keep it updated
   useEffect(() => {
     if (!pipeline?.id) return
-    
+
     const interval = setInterval(() => {
       // Refresh pipeline status from backend
       dispatch(fetchPipelines())
-      
+
       import("@/lib/api/client").then(({ apiClient }) => {
         apiClient.getPipeline(pipeline.id).then((updatedPipeline) => {
           if (updatedPipeline) {
@@ -168,7 +171,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         })
       })
     }, 10000) // Refresh every 10 seconds
-    
+
     return () => clearInterval(interval)
   }, [pipeline?.id, dispatch])
 
@@ -176,15 +179,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
   const stablePipelineId = useMemo(() => {
     if (!pipeline?.id) return null
     const pipelineIdStr = String(pipeline.id)
-    const numId = Number(pipeline.id)
-    const pipelineId = !isNaN(numId) && isFinite(numId) ? numId : pipelineIdStr
+    const numId = pipeline.id
+    const pipelineId = !isNaN(Number(numId)) && isFinite(Number(numId)) ? numId : pipelineIdStr
     // Validate pipeline ID is not NaN or undefined
     if (!pipelineId || pipelineId === 'NaN' || pipelineId === 'undefined' || (typeof pipelineId === 'number' && isNaN(pipelineId))) {
       return null
     }
     return pipelineId
   }, [pipeline?.id])
-  
+
   const pipelineStatus = useMemo(() => pipeline?.status || null, [pipeline?.status])
 
   // Fetch real-time metrics and events for this pipeline
@@ -200,7 +203,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
 
     // Subscribe to WebSocket for real-time updates
     wsClient.subscribePipeline(stablePipelineId)
-    
+
     // Auto-refresh events every 5 seconds for real-time updates
     const refreshInterval = setInterval(() => {
       dispatch(fetchReplicationEvents({ pipelineId: stablePipelineId, limit: 10000, todayOnly: false }))
@@ -217,7 +220,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
   const lastPipelineIdRef = useRef<string | number | null>(null)
   const lastPipelineStatusRef = useRef<string | null>(null)
   const fetchProgressRef = useRef<(() => Promise<void>) | null>(null)
-  
+
   useEffect(() => {
     if (!stablePipelineId) return
 
@@ -237,7 +240,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     const fetchProgress = async () => {
       try {
         const progress = await apiClient.getPipelineProgress(stablePipelineId)
-        
+
         // Map backend response to expected format (handle both nested and flat formats)
         const mappedProgress: any = {
           full_load: progress.full_load || {
@@ -252,7 +255,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             status: progress.cdc_status?.toLowerCase() || "unknown"
           }
         }
-        
+
         // Normalize status values
         if (mappedProgress.full_load.status === "completed" || mappedProgress.full_load.status === "COMPLETED") {
           mappedProgress.full_load.status = "completed"
@@ -262,7 +265,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         } else if (mappedProgress.full_load.status === "failed" || mappedProgress.full_load.status === "FAILED") {
           mappedProgress.full_load.status = "failed"
         }
-        
+
         setReplicationProgress(mappedProgress)
         progressRetryCountRef.current = 0 // Reset retry count on success
       } catch (error: any) {
@@ -327,7 +330,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     if (!pipeline?.id) return null
 
     const pipelineIdStr = String(pipeline.id)
-    const pipelineId = !isNaN(Number(pipeline.id)) ? Number(pipeline.id) : pipelineIdStr
+    const pipelineId = !isNaN(Number(pipeline.id)) ? pipeline.id : pipelineIdStr
     const pipelineEvents = events.filter(e => {
       const eventPipelineId = String(e.pipeline_id || '')
       const currentPipelineId = String(pipelineId)
@@ -341,7 +344,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     // Only calculate from events that have been applied (have latency_ms > 0)
     const eventsWithLatency = pipelineEvents.filter(e => e.latency_ms != null && e.latency_ms !== undefined && e.latency_ms > 0)
     if (eventsWithLatency.length === 0) return null // No latency data available
-    
+
     const avgLatencyMs = eventsWithLatency.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / eventsWithLatency.length
     return Math.round(avgLatencyMs / 1000) // Convert to seconds
   }, [events, pipeline?.id])
@@ -352,20 +355,20 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     const safeMetrics = Array.isArray(metrics) ? metrics : []
     const safeEvents = Array.isArray(events) ? events : []
     const pipelineIdStr = String(pipeline?.id || '')
-    
+
     // Filter events by pipeline ID first
     const pipelineEvents = safeEvents.filter(e => {
       if (!e || !e.created_at) return false
       const eventPipelineId = String(e.pipeline_id || '')
       return eventPipelineId === pipelineIdStr
     })
-    
+
     // Filter metrics by pipeline ID
     const pipelineMetrics = safeMetrics.filter(m => {
       const metricPipelineId = String(m.pipeline_id || '')
       return metricPipelineId === pipelineIdStr
     })
-    
+
     // If we have metrics, use them (preferred source)
     if (pipelineMetrics.length > 0) {
       const metricsData = pipelineMetrics.slice(-7).map(metric => {
@@ -373,17 +376,17 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
         return {
           time,
-          records: metric.total_events || metric.throughput_events_per_sec || 0,
-          latency: Math.round(metric.avg_latency_ms || metric.lag_seconds * 1000 || 0),
+          records: (metric as any).total_events || (metric as any).throughput_events_per_sec || 0,
+          latency: Math.round((metric as any).avg_latency_ms || ((metric as any).lag_seconds || 0) * 1000 || 0),
         }
       })
-      
+
       // If we have data, return it
       if (metricsData.length > 0) {
         return metricsData
       }
     }
-    
+
     // If no metrics, create from events grouped by hour
     if (pipelineEvents.length > 0) {
       const now = new Date()
@@ -402,20 +405,20 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           const eventType = String(e.event_type || '').toLowerCase()
           return eventType === 'insert' || eventType === 'update' || eventType === 'delete'
         }).length
-        
+
         const latency = hourEvents.length > 0
           ? hourEvents.reduce((sum, e) => sum + (e.latency_ms || 0), 0) / hourEvents.length
           : 0
 
         return { time, records, latency: Math.round(latency) }
       })
-      
+
       // If we have any data, return it
       if (hourlyData.some(d => d.records > 0 || d.latency > 0)) {
         return hourlyData
       }
     }
-    
+
     // Fallback: Return empty data structure so graph still renders
     const now = new Date()
     return Array.from({ length: 7 }, (_, i) => {
@@ -451,18 +454,18 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     setDataError(null)
     setSourceData(null)
     setTargetData(null)
-    
+
     // Check if pipeline has orphaned connections and fix them automatically before comparing
     if (pipeline?.id && (pipeline.source_connection_uuid || pipeline.target_connection_uuid)) {
       try {
         // Try to verify connections exist by attempting to get connection details
-        const sourceConn = pipeline.source_connection_uuid 
+        const sourceConn = pipeline.source_connection_uuid
           ? connections.find(c => String(c.id) === String(pipeline.source_connection_uuid))
           : null
         const targetConn = pipeline.target_connection_uuid
           ? connections.find(c => String(c.id) === String(pipeline.target_connection_uuid))
           : null
-        
+
         // If connections don't exist in the local list, try to fix orphaned connections
         if ((pipeline.source_connection_uuid && !sourceConn) || (pipeline.target_connection_uuid && !targetConn)) {
           console.log("[Compare] Detected orphaned connections, attempting to fix...")
@@ -496,7 +499,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         cleanSourceTable = parts[1]
       }
     }
-    
+
     let cleanTargetTable = tm.target_table
     let cleanTargetSchema = tm.target_schema
     if (cleanTargetTable.includes('.') && !cleanTargetSchema) {
@@ -506,7 +509,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         cleanTargetTable = parts[1]
       }
     }
-    
+
     // Also remove schema from table name if it's already in the schema field
     if (cleanTargetTable.includes('.') && cleanTargetSchema) {
       const parts = cleanTargetTable.split('.')
@@ -515,7 +518,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         console.log(`[Compare] Removed duplicate schema from target table name: "${tm.target_table}" -> "${cleanTargetTable}"`)
       }
     }
-    
+
     if (cleanSourceTable.includes('.') && cleanSourceSchema) {
       const parts = cleanSourceTable.split('.')
       if (parts.length === 2 && parts[0] === cleanSourceSchema) {
@@ -523,7 +526,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         console.log(`[Compare] Removed duplicate schema from source table name: "${tm.source_table}" -> "${cleanSourceTable}"`)
       }
     }
-    
+
     setSelectedTable({
       source: cleanSourceTable,
       target: cleanTargetTable,
@@ -538,7 +541,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
     try {
       // Get connection types to determine if Oracle (for timeout adjustments)
       // Try to find by UUID first, then by numeric ID
-      const sourceConn = pipeline.source_connection_uuid 
+      const sourceConn = pipeline.source_connection_uuid
         ? connections.find(c => String(c.id) === String(pipeline.source_connection_uuid))
         : connections.find(c => String(c.id) === String(pipeline.source_connection_id))
       const targetConn = pipeline.target_connection_uuid
@@ -548,33 +551,31 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       const isTargetOracle = targetConn?.connection_type?.toLowerCase() === 'oracle'
 
       // Fetch source data first (sequential to avoid overwhelming backend)
+      let sourceTableName = tm.source_table
+      let sourceSchema = tm.source_schema && tm.source_schema !== "undefined" && tm.source_schema.trim() !== ""
+        ? tm.source_schema.trim()
+        : undefined
+      const sourceLimit = isSourceOracle ? 100 : 1000
+
+      // Split table name if it contains schema (e.g., "public.employees" -> schema: "public", table: "employees")
+      // Check if table name contains schema (format: "schema.table")
+      if (sourceTableName.includes('.') && !sourceSchema) {
+        const parts = sourceTableName.split('.')
+        if (parts.length === 2) {
+          sourceSchema = parts[0]
+          sourceTableName = parts[1]
+          console.log(`[Compare] Split table name: "${tm.source_table}" -> schema: "${sourceSchema}", table: "${sourceTableName}"`)
+        }
+      }
+
+      // Handle "undefined" schema string - convert to undefined/null
+      if (sourceSchema === "undefined" || sourceSchema?.trim() === "") {
+        sourceSchema = undefined
+      }
+
       try {
-        // Split table name if it contains schema (e.g., "public.employees" -> schema: "public", table: "employees")
-        let sourceTableName = tm.source_table
-        let sourceSchema = tm.source_schema && tm.source_schema !== "undefined" && tm.source_schema.trim() !== ""
-          ? tm.source_schema.trim()
-          : undefined
-        
-        // Check if table name contains schema (format: "schema.table")
-        if (sourceTableName.includes('.') && !sourceSchema) {
-          const parts = sourceTableName.split('.')
-          if (parts.length === 2) {
-            sourceSchema = parts[0]
-            sourceTableName = parts[1]
-            console.log(`[Compare] Split table name: "${tm.source_table}" -> schema: "${sourceSchema}", table: "${sourceTableName}"`)
-          }
-        }
-        
-        // Handle "undefined" schema string - convert to undefined/null
-        if (sourceSchema === "undefined" || sourceSchema?.trim() === "") {
-          sourceSchema = undefined
-        }
-        
         console.log(`[Compare] Fetching source table: ${sourceTableName} (schema: ${sourceSchema || 'default'}, connection type: ${sourceConn?.connection_type || 'unknown'})`)
 
-        // Fetch all records (backend supports up to 1000)
-        // For Oracle connections, use smaller limit to avoid timeouts, but still fetch more records
-        const sourceLimit = isSourceOracle ? 100 : 1000 // Increased from 20/25 to 100/1000
         // Use UUID if available, otherwise fall back to numeric ID
         const sourceConnectionId = pipeline.source_connection_uuid || pipeline.source_connection_id!
         console.log(`[Compare] Using source connection ID: ${sourceConnectionId} (UUID: ${pipeline.source_connection_uuid || 'not available'}, numeric: ${pipeline.source_connection_id})`)
@@ -607,7 +608,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       } catch (sourceError: any) {
         console.error("[Compare] Failed to fetch source table:", sourceError)
         let sourceErrMsg = sourceError?.message || sourceError?.response?.data?.detail || "Failed to fetch source table data"
-        
+
         // Improve error messages for common error codes
         // 08001 is PostgreSQL connection error code
         if (sourceErrMsg.includes('08001') || (sourceError?.code && String(sourceError.code).includes('08001'))) {
@@ -619,18 +620,18 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             `4. Database credentials are incorrect\n` +
             `Please verify the source database connection configuration and ensure the database server is accessible.`
         }
-        
+
         // Remove misleading prefixes like "Oracle Database Error:" if it's not actually an Oracle error
         const sourceErrMsgLower = sourceErrMsg.toLowerCase()
-        if (sourceErrMsgLower.includes('oracle database error:') && 
-            !sourceErrMsgLower.includes('ora-') &&
-            (sourceErrMsgLower.includes('08001') || 
-             sourceErrMsgLower.includes('postgresql') ||
-             sourceErrMsgLower.includes('connection refused'))) {
+        if (sourceErrMsgLower.includes('oracle database error:') &&
+          !sourceErrMsgLower.includes('ora-') &&
+          (sourceErrMsgLower.includes('08001') ||
+            sourceErrMsgLower.includes('postgresql') ||
+            sourceErrMsgLower.includes('connection refused'))) {
           // This is incorrectly labeled as Oracle error - remove the prefix
           sourceErrMsg = sourceErrMsg.replace(/^Oracle Database Error:\s*/i, '').trim()
         }
-        
+
         // Check if it's a connection not found error - try to fix automatically
         if (sourceErrMsg.includes('Connection not found') && pipeline?.id) {
           console.log("[Compare] Source connection not found, attempting to fix orphaned connections...")
@@ -679,7 +680,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         let targetSchema = tm.target_schema && tm.target_schema !== "undefined" && tm.target_schema.trim() !== ""
           ? tm.target_schema.trim()
           : undefined
-        
+
         // Check if table name contains schema (format: "schema.table")
         if (targetTableName.includes('.') && !targetSchema) {
           const parts = targetTableName.split('.')
@@ -689,7 +690,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             console.log(`[Compare] Split target table name: "${tm.target_table}" -> schema: "${targetSchema}", table: "${targetTableName}"`)
           }
         }
-        
+
         // Handle "undefined" schema string - convert to undefined/null
         if (targetSchema === "undefined" || targetSchema?.trim() === "") {
           targetSchema = undefined
@@ -717,7 +718,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           schema: targetSchema,
           limit: targetLimit
         })
-        
+
         const targetResult = await apiClient.getTableData(
           targetConnectionId,
           targetTableName, // Use cleaned table name (without schema prefix)
@@ -726,9 +727,9 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           isTargetOracle ? 1 : 2, // Fewer retries for Oracle
           isTargetOracle // Pass Oracle flag
         )
-        
+
         console.log(`[Compare] Raw target result:`, targetResult)
-        
+
         // Validate and set target data
         if (targetResult && typeof targetResult === 'object') {
           // Check if it's an error response
@@ -736,24 +737,24 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             console.error('[Compare] Target result indicates failure:', targetResult)
             throw new Error(targetResult.error || 'Failed to fetch target table data')
           }
-          
+
           // Ensure records is an array (default to empty array if missing)
           if (!Array.isArray(targetResult.records)) {
             console.warn('[Compare] Target result records is not an array, setting to empty array:', targetResult.records)
             targetResult.records = []
           }
-          
+
           // Ensure columns is an array (default to empty array if missing)
           if (!Array.isArray(targetResult.columns)) {
             console.warn('[Compare] Target result columns is not an array, setting to empty array:', targetResult.columns)
             targetResult.columns = []
           }
-          
+
           // Ensure count is a number
           if (typeof targetResult.count !== 'number') {
             targetResult.count = targetResult.records?.length || 0
           }
-          
+
           // Validate that we actually got data
           if (targetResult.success === true && Array.isArray(targetResult.records) && targetResult.records.length === 0 && targetResult.count > 0) {
             console.warn(`[Compare] WARNING: Target table has count=${targetResult.count} but records array is empty! This may indicate a data fetching issue.`)
@@ -765,14 +766,14 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
               result: targetResult
             })
           }
-          
+
           // If records are empty and count is 0, check if table exists
           if (targetResult?.count === 0 && (!Array.isArray(targetResult?.records) || targetResult.records.length === 0)) {
             console.warn(`[Compare] Target table appears to be empty. This could mean: 1) Table doesn't exist, 2) Table exists but has no data, 3) Wrong table/schema name`)
             console.warn(`[Compare] Table mapping: source="${tm.source_table}" -> target="${tm.target_table}" (schema: ${tm.target_schema || 'default'})`)
             console.warn(`[Compare] Using table name: "${targetTableName}" with schema: "${targetSchema || 'default'}"`)
           }
-          
+
           setTargetData(targetResult)
           console.log(`[Compare] Target table loaded: ${targetResult?.records?.length || 0} records (count: ${targetResult?.count || 0})`, {
             fullResponse: targetResult,
@@ -793,7 +794,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
               target_schema: tm.target_schema
             }
           })
-          
+
           // Log warning if records are empty but count > 0
           if (targetResult?.count > 0 && (!Array.isArray(targetResult?.records) || targetResult.records.length === 0)) {
             console.warn(`[Compare] Target table has ${targetResult.count} records but records array is empty. This may indicate a data fetching issue.`)
@@ -845,12 +846,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         // Remove misleading prefixes like "Oracle Database Error:" if it's not actually an Oracle error
         // This can happen if error detection is too broad
         const targetErrMsgLower = targetErrMsg.toLowerCase()
-        if (targetErrMsgLower.includes('oracle database error:') && 
-            !targetErrMsgLower.includes('ora-') &&
-            (targetErrMsgLower.includes('aws_s3') || 
-             targetErrMsgLower.includes('s3') || 
-             targetErrMsgLower.includes('object storage') ||
-             targetErrMsgLower.includes('table comparison is not supported'))) {
+        if (targetErrMsgLower.includes('oracle database error:') &&
+          !targetErrMsgLower.includes('ora-') &&
+          (targetErrMsgLower.includes('aws_s3') ||
+            targetErrMsgLower.includes('s3') ||
+            targetErrMsgLower.includes('object storage') ||
+            targetErrMsgLower.includes('table comparison is not supported'))) {
           // This is incorrectly labeled as Oracle error - remove the prefix
           targetErrMsg = targetErrMsg.replace(/^Oracle Database Error:\s*/i, '').trim()
         }
@@ -930,18 +931,18 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
 
   // Separate pagination calculations for source and target
   // Handle different response formats: records array or data array
-  const sourceRecords = Array.isArray(sourceData?.records) 
-    ? sourceData.records 
-    : Array.isArray(sourceData?.data) 
-      ? sourceData.data 
+  const sourceRecords = Array.isArray(sourceData?.records)
+    ? sourceData.records
+    : Array.isArray(sourceData?.data)
+      ? sourceData.data
       : []
   // Extract records from targetData - backend returns {success, records, columns, count}
-  const targetRecords = Array.isArray(targetData?.records) 
-    ? targetData.records 
-    : Array.isArray(targetData?.data) 
-      ? targetData.data 
+  const targetRecords = Array.isArray(targetData?.records)
+    ? targetData.records
+    : Array.isArray(targetData?.data)
+      ? targetData.data
       : []
-  
+
   // Calculate pagination
   const sourceTotalPages = Math.max(1, Math.ceil(sourceRecords.length / recordsPerPage))
   const targetTotalPages = Math.max(1, Math.ceil(targetRecords.length / recordsPerPage))
@@ -951,7 +952,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
   const targetEndIndex = targetStartIndex + recordsPerPage
   const paginatedSourceRecords = sourceRecords.slice(sourceStartIndex, sourceEndIndex)
   const paginatedTargetRecords = targetRecords.slice(targetStartIndex, targetEndIndex)
-  
+
   // Debug logging - after variables are defined
   if (process.env.NODE_ENV === 'development' && (sourceData || targetData)) {
     console.log('[Table Data] Source data structure:', {
@@ -1008,29 +1009,93 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
       {/* Header */}
       <div className="space-y-4">
         {/* First Line: Back Button, Title, Connections, Status Badge */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onBack}
-            className="bg-transparent border-border hover:bg-surface-hover text-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground mb-2">{pipeline.name}</h1>
-            <div className="flex items-center gap-2 text-foreground-muted">
-              <span className="text-sm">{sourceConn}</span>
-              <span className="text-info">→</span>
-              <span className="text-sm">{targetConn}</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="bg-white/5 border-border hover:bg-white/10 text-foreground transition-all h-10 px-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">{pipeline.name}</h1>
+              <div className="flex items-center gap-3 text-foreground-muted">
+                <div className="flex items-center gap-2 px-2 py-0.5 bg-muted rounded-md border border-border/50">
+                  <Database className="w-3.5 h-3.5 text-primary/70" />
+                  <span className="text-xs font-bold">{sourceConn}</span>
+                </div>
+                <Zap className="w-3.5 h-3.5 text-info animate-pulse" />
+                <div className="flex items-center gap-2 px-2 py-0.5 bg-muted rounded-md border border-border/50">
+                  <Database className="w-3.5 h-3.5 text-info/70" />
+                  <span className="text-xs font-bold">{targetConn}</span>
+                </div>
+              </div>
             </div>
           </div>
-          {(pipeline.status === "active" || pipeline.status === "running") && (
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-success/20 text-success animate-pulse">
-              Running
-            </span>
-          )}
+
+          {/* Deep Status Card - From User Request */}
+          <Card className={cn(
+            "relative overflow-hidden border-none shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_40px_-10px_rgba(0,0,0,0.5)]",
+            "rounded-3xl min-w-[240px] h-24 flex flex-col justify-center px-8 transition-all duration-500 group",
+            (pipeline.status === "active" || pipeline.status === "running") ? "bg-emerald-500/5 ring-1 ring-emerald-500/20" :
+              (pipeline.status === "paused") ? "bg-amber-500/5 ring-1 ring-amber-500/20" :
+                "bg-red-500/5 ring-1 ring-red-500/20"
+          )}>
+            {/* Background Heartbeat Animation */}
+            <div className="absolute inset-0 opacity-[0.15] group-hover:opacity-[0.25] transition-opacity">
+              <svg viewBox="0 0 100 40" className="w-full h-full" preserveAspectRatio="none">
+                {/* Static Base Line */}
+                <path d="M0,20 L15,20 L20,20 L22,10 L28,30 L30,20 L45,20 L50,20 L52,-5 L58,45 L60,20 L80,20 L82,15 L88,25 L90,20 L100,20"
+                  fill="none"
+                  stroke={(pipeline.status === "active" || pipeline.status === "running") ? "rgb(16, 185, 129)" :
+                    (pipeline.status === "paused") ? "rgb(245, 158, 11)" : "rgb(239, 68, 68)"}
+                  strokeWidth="0.5"
+                  className="opacity-20"
+                />
+                {/* Animated Pulse Line */}
+                <path d="M0,20 L15,20 L20,20 L22,10 L28,30 L30,20 L45,20 L50,20 L52,-5 L58,45 L60,20 L80,20 L82,15 L88,25 L90,20 L100,20"
+                  fill="none"
+                  stroke={(pipeline.status === "active" || pipeline.status === "running") ? "rgb(16, 185, 129)" :
+                    (pipeline.status === "paused") ? "rgb(245, 158, 11)" : "rgb(239, 68, 68)"}
+                  strokeWidth="0.8"
+                  className="animate-heart-pulse"
+                />
+              </svg>
+            </div>
+
+            {/* Very Deep Background Icon */}
+            <div className="absolute -right-6 -bottom-6 transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+              <Activity className={cn(
+                "w-36 h-36 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-[0.1] transition-opacity",
+                (pipeline.status === "active" || pipeline.status === "running") ? "text-emerald-500" :
+                  (pipeline.status === "paused") ? "text-amber-500" : "text-red-500"
+              )} />
+            </div>
+
+            <div className="relative z-10 flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-1">STATUS</span>
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "text-3xl font-black tracking-tighter drop-shadow-md transition-transform duration-500 group-hover:scale-105 origin-left",
+                  (pipeline.status === "active" || pipeline.status === "running") ? "text-emerald-500" :
+                    (pipeline.status === "paused") ? "text-amber-500" : "text-red-500"
+                )}>
+                  {(pipeline.status || 'UNKNOWN').toUpperCase()}
+                </span>
+                <div className={cn(
+                  "w-3 h-3 rounded-full animate-ping shadow-[0_0_10px_currentColor]",
+                  (pipeline.status === "active" || pipeline.status === "running") ? "bg-emerald-500 text-emerald-400" :
+                    (pipeline.status === "paused") ? "bg-amber-500 text-amber-400" : "bg-red-500 text-red-400"
+                )}></div>
+              </div>
+            </div>
+
+            {/* Reflection Shine */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+          </Card>
         </div>
 
         {/* Second Line: Replication Mode and Action Buttons */}
@@ -1065,24 +1130,24 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     full_load_type: full_load_type,
                     cdc_enabled: cdc_enabled,
                   }
-                  
+
                   // Only include optional fields if they have values
                   if (pipeline.description !== undefined && pipeline.description !== null) {
                     updateData.description = pipeline.description
                   }
-                  
+
                   if (pipeline.source_connection_id !== undefined && pipeline.source_connection_id !== null) {
                     updateData.source_connection_id = String(pipeline.source_connection_id)
                   }
-                  
+
                   if (pipeline.target_connection_id !== undefined && pipeline.target_connection_id !== null) {
                     updateData.target_connection_id = String(pipeline.target_connection_id)
                   }
-                  
+
                   if (pipeline.cdc_filters && Array.isArray(pipeline.cdc_filters) && pipeline.cdc_filters.length > 0) {
                     updateData.cdc_filters = pipeline.cdc_filters
                   }
-                  
+
                   if (pipeline.table_mappings && Array.isArray(pipeline.table_mappings) && pipeline.table_mappings.length > 0) {
                     updateData.table_mappings = pipeline.table_mappings
                   }
@@ -1096,14 +1161,14 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   if (updatedPipeline) {
                     dispatch(setSelectedPipeline(updatedPipeline))
                   }
-                  
+
                   // Also refresh the pipelines list
                   await dispatch(fetchPipelines())
                 } catch (error: any) {
                   console.error("Failed to update replication mode:", error)
                   // Extract detailed error message
                   let errorMessage = "Failed to update replication mode"
-                  
+
                   // Handle Pydantic validation errors (array format)
                   if (error?.response?.data?.detail) {
                     const detail = error.response.data.detail
@@ -1145,7 +1210,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   } else if (typeof error === 'object') {
                     errorMessage = JSON.stringify(error)
                   }
-                  
+
                   showError(errorMessage, "Error")
                 }
               }}
@@ -1175,7 +1240,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            {(pipeline.status === "active" || pipeline.status === "running") ? (
+            {(pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting") ? (
               <>
                 <Button
                   variant="outline"
@@ -1196,10 +1261,10 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         }
                       } catch (error: any) {
                         console.error("Failed to pause pipeline:", error)
-                        const errorMessage = error?.payload || 
-                                           error?.message || 
-                                           error?.response?.data?.detail ||
-                                           "Failed to pause pipeline"
+                        const errorMessage = error?.payload ||
+                          error?.message ||
+                          error?.response?.data?.detail ||
+                          "Failed to pause pipeline"
                         showError(errorMessage, "Failed to Pause Pipeline")
                       }
                     }
@@ -1219,7 +1284,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         `Are you sure you want to stop "${pipeline.name}"? This will pause the pipeline and stop all ongoing replication processes. Any in-progress operations will be halted.`,
                         async () => {
                           try {
-                            await dispatch(stopPipeline(pipeline.id!)).unwrap()
+                            await dispatch(stopPipeline(pipeline.id)).unwrap()
                             await dispatch(fetchPipelines())
                             // Also fetch the specific pipeline to update selectedPipeline
                             if (pipeline.id) {
@@ -1235,9 +1300,9 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           } catch (error: any) {
                             console.error("Failed to stop pipeline:", error)
                             // Show more detailed error message
-                            const errorMessage = error?.message || 
-                                               error?.payload || 
-                                               (typeof error === 'string' ? error : 'Failed to stop pipeline')
+                            const errorMessage = error?.message ||
+                              error?.payload ||
+                              (typeof error === 'string' ? error : 'Failed to stop pipeline')
                             showError(errorMessage, "Failed to Stop Pipeline")
                           }
                         },
@@ -1267,12 +1332,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       }
                       // Reset progress before starting
                       setReplicationProgress(null)
-                      
+
                       await dispatch(triggerPipeline({ id: pipeline.id, runType })).unwrap()
-                      
+
                       // Refresh pipelines to get updated status
                       await dispatch(fetchPipelines())
-                      
+
                       // Also fetch the specific pipeline to update selectedPipeline
                       if (pipeline.id) {
                         try {
@@ -1282,7 +1347,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           console.error("Failed to fetch updated pipeline:", error)
                         }
                       }
-                      
+
                       // Progress polling is handled by the useEffect hook
                       // Trigger an immediate fetch after pipeline starts
                       if (fetchProgressRef.current) {
@@ -1310,7 +1375,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       }
                       // Extract actual error from Debezium connector error
                       let displayError = errorMessage
-                      
+
                       // Remove common wrapper messages
                       if (displayError.includes("Failed to create Debezium connector")) {
                         // Extract the actual Kafka Connect error after the colon
@@ -1319,7 +1384,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           displayError = match[1].trim()
                         }
                       }
-                      
+
                       // Remove HTTP error wrapper if present
                       if (displayError.includes("400 Client Error") || displayError.includes("Bad Request")) {
                         // Try to extract the actual error message
@@ -1333,12 +1398,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                           displayError = error.response.data.detail
                         }
                       }
-                      
+
                       // If still generic, try to get from response
                       if (displayError.includes("400") && error?.response?.data?.detail) {
                         displayError = error.response.data.detail
                       }
-                      
+
                       showError(displayError, "Failed to Start Pipeline")
                     }
                   }
@@ -1392,7 +1457,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
         let currentLsn: string | undefined = pipeline?.current_lsn
         let currentOffset: string | undefined = pipeline?.current_offset
         let currentScn: string | undefined = pipeline?.current_scn
-        
+
         // Check full_load.lsn (format: "SCN:17026643" or "LSN:...")
         if ((pipeline as any)?.full_load?.lsn) {
           const fullLoadLsn = (pipeline as any).full_load.lsn
@@ -1412,7 +1477,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             }
           }
         }
-        
+
         // Check debezium_connector for offset information
         if ((pipeline as any)?.debezium_connector?.offset) {
           const offset = (pipeline as any).debezium_connector.offset
@@ -1431,12 +1496,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             }
           }
         }
-        
+
         // Only show if we have at least one value
         if (!currentLsn && !currentOffset && !currentScn) {
           return null
         }
-        
+
         return (
           <Card className="bg-surface border-border p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Replication Offset</h3>
@@ -1541,19 +1606,18 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   {/* Progress Bar with Gradient */}
                   <div className="relative h-2.5 bg-gradient-to-r from-border via-border to-border rounded-full overflow-hidden shadow-inner">
                     <div
-                      className={`h-full transition-all duration-500 ease-out rounded-full relative ${
-                        (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
-                          ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-400'
-                          : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400'
-                      }`}
+                      className={`h-full transition-all duration-500 ease-out rounded-full relative ${(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed"))
+                        ? 'bg-gradient-to-r from-green-400 via-emerald-500 to-green-400'
+                        : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400'
+                        }`}
                       style={{ width: `${Math.min(100, Math.max(0, replicationProgress?.full_load?.progress_percent || 0))}%` }}
                     >
-                      {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
+                      {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"
                           style={{ backgroundSize: '200% 100%' }}
                         />
                       )}
-                      {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                      {(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"
                           style={{ backgroundSize: '200% 100%' }}
                         />
@@ -1562,7 +1626,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   </div>
 
                   {/* Animated File Icons Transferring */}
-                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
+                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && (
                     <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none">
                       {[...Array(5)].map((_, i) => (
                         <div
@@ -1587,7 +1651,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     </div>
                   )}
                   {/* Success animation when completed */}
-                  {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                  {(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                       <div className="relative">
                         <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full shadow-xl flex items-center justify-center animate-bounce">
@@ -1599,13 +1663,13 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   )}
 
                   {/* Speed Indicator */}
-                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
+                  {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && (
                     <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-cyan-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/30">
                       <Activity className="w-3.5 h-3.5" />
                       <span>Transferring Data...</span>
                     </div>
                   )}
-                  {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                  {(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
                     <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 flex items-center gap-1.5 animate-pulse px-3 py-1 bg-green-500/10 rounded-full border border-green-500/30">
                       <CheckCircle className="w-3.5 h-3.5" />
                       <span>Transfer Complete - 100%</span>
@@ -1616,22 +1680,20 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 {/* Target Database - Enhanced */}
                 <div className="flex flex-col items-center gap-3 z-10">
                   <div className="relative group">
-                    <div className={`p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${
-                      (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
-                        ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20'
-                        : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
+                    <div className={`p-4 rounded-2xl border-2 shadow-lg transition-all duration-500 group-hover:scale-105 ${(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed"))
+                      ? 'bg-gradient-to-br from-green-500/20 to-emerald-600/10 border-green-500/30 group-hover:shadow-2xl group-hover:shadow-green-500/20'
+                      : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
                         ? 'bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border-blue-500/30 group-hover:shadow-2xl group-hover:shadow-blue-500/20'
                         : 'bg-gradient-to-br from-gray-500/20 to-gray-600/10 border-gray-500/30'
                       }`}>
-                      <Database className={`w-14 h-14 transition-colors duration-500 ${
-                        (replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed"))
-                          ? 'text-green-400'
-                          : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
+                      <Database className={`w-14 h-14 transition-colors duration-500 ${(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed"))
+                        ? 'text-green-400'
+                        : (replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running")
                           ? 'text-blue-400 animate-pulse'
                           : 'text-gray-400'
-                      }`} />
+                        }`} />
                     </div>
-                    {(replicationProgress?.full_load?.status === "completed" || (replicationProgress?.full_load?.progress_percent >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
+                    {(replicationProgress?.full_load?.status === "completed" || ((replicationProgress?.full_load?.progress_percent ?? 0) >= 100 && replicationProgress?.full_load?.status !== "failed")) && (
                       <>
                         <div className="absolute -top-2 -right-2 w-9 h-9 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce">
                           <CheckCircle className="w-6 h-6 text-white" />
@@ -1639,7 +1701,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         <div className="absolute inset-0 bg-green-400 rounded-2xl blur-xl opacity-40 animate-pulse" />
                       </>
                     )}
-                    {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !(replicationProgress?.full_load?.progress_percent >= 100) && (
+                    {(replicationProgress?.full_load?.status === "running" || pipeline?.status === "starting" || pipeline?.status === "running") && !((replicationProgress?.full_load?.progress_percent ?? 0) >= 100) && (
                       <>
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping" />
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
@@ -1740,32 +1802,32 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-base font-bold text-foreground">CDC Monitoring</span>
-                  {(replicationProgress?.cdc?.status === "watching" || 
-                    replicationProgress?.cdc?.status === "active" || 
+                  {(replicationProgress?.cdc?.status === "watching" ||
+                    replicationProgress?.cdc?.status === "active" ||
                     (pipeline.cdc_enabled && !replicationProgress?.cdc) ||
                     (pipeline.status === "active" || pipeline.status === "running")) && (
-                    <div className="relative flex items-center justify-center">
-                      {/* Animated Eye/Watching Indicator */}
-                      <div className="relative">
-                        <Eye className="w-6 h-6 text-cyan-400 animate-pulse" />
-                        {/* Pulsing rings around the eye */}
-                        <div className="absolute inset-0 -m-2">
-                          <div className="w-10 h-10 rounded-full border-2 border-cyan-400/30 animate-ping" />
-                        </div>
-                        <div className="absolute inset-0 -m-2">
-                          <div className="w-10 h-10 rounded-full border-2 border-cyan-400/20 animate-ping" style={{ animationDelay: '0.5s' }} />
-                        </div>
-                        {/* Scanning beam effect */}
-                        <div className="absolute inset-0 -m-1">
-                          <div className="w-8 h-8 rounded-full border border-cyan-400/40" style={{
-                            clipPath: 'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%)',
-                            animation: 'radar-scan 3s linear infinite',
-                            transformOrigin: '50% 50%'
-                          }} />
+                      <div className="relative flex items-center justify-center">
+                        {/* Animated Eye/Watching Indicator */}
+                        <div className="relative">
+                          <Eye className="w-6 h-6 text-cyan-400 animate-pulse" />
+                          {/* Pulsing rings around the eye */}
+                          <div className="absolute inset-0 -m-2">
+                            <div className="w-10 h-10 rounded-full border-2 border-cyan-400/30 animate-ping" />
+                          </div>
+                          <div className="absolute inset-0 -m-2">
+                            <div className="w-10 h-10 rounded-full border-2 border-cyan-400/20 animate-ping" style={{ animationDelay: '0.5s' }} />
+                          </div>
+                          {/* Scanning beam effect */}
+                          <div className="absolute inset-0 -m-1">
+                            <div className="w-8 h-8 rounded-full border border-cyan-400/40" style={{
+                              clipPath: 'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%)',
+                              animation: 'radar-scan 3s linear infinite',
+                              transformOrigin: '50% 50%'
+                            }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                   {replicationProgress?.cdc?.status === "stopped" && (
                     <Square className="w-5 h-5 text-foreground-muted" />
                   )}
@@ -1774,62 +1836,62 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   )}
                 </div>
                 <span className="text-sm font-bold text-green-400 capitalize px-3 py-1 bg-green-500/10 rounded-full border border-green-500/30 flex items-center gap-2">
-                  {(replicationProgress?.cdc?.status === "active" || 
+                  {(replicationProgress?.cdc?.status === "active" ||
                     replicationProgress?.cdc?.status === "watching" ||
                     (pipeline.cdc_enabled && !replicationProgress?.cdc) ||
                     (pipeline.status === "active" || pipeline.status === "running")) && (
-                    <div className="relative">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <div className="absolute inset-0 w-2 h-2 bg-green-400/50 rounded-full animate-ping" />
-                    </div>
-                  )}
+                      <div className="relative">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                        <div className="absolute inset-0 w-2 h-2 bg-green-400/50 rounded-full animate-ping" />
+                      </div>
+                    )}
                   {replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching" ||
-                   (pipeline.cdc_enabled && !replicationProgress?.cdc) ||
-                   (pipeline.status === "active" || pipeline.status === "running")
+                    (pipeline.cdc_enabled && !replicationProgress?.cdc) ||
+                    (pipeline.status === "active" || pipeline.status === "running")
                     ? "Watching CDC Events"
                     : replicationProgress?.cdc?.status || "Ready"}
                 </span>
               </div>
 
               {/* CDC Status Bar - Enhanced with continuous watching indicator */}
-              {(replicationProgress?.cdc?.status === "active" || 
+              {(replicationProgress?.cdc?.status === "active" ||
                 replicationProgress?.cdc?.status === "watching" ||
                 (pipeline.cdc_enabled && !replicationProgress?.cdc) ||
                 (pipeline.status === "active" || pipeline.status === "running")) && (
-                <div className="relative h-4 bg-gradient-to-r from-cyan-500/10 via-cyan-400/20 to-cyan-500/10 rounded-full overflow-hidden border border-cyan-500/30">
-                  {/* Animated shimmer effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-[shimmer_2s_infinite]" 
-                    style={{ backgroundSize: '200% 100%' }} />
-                  {/* Pulsing dots to show continuous activity */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-1">
-                    {[...Array(3)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"
-                        style={{ animationDelay: `${i * 0.3}s` }}
-                      />
-                    ))}
+                  <div className="relative h-4 bg-gradient-to-r from-cyan-500/10 via-cyan-400/20 to-cyan-500/10 rounded-full overflow-hidden border border-cyan-500/30">
+                    {/* Animated shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-[shimmer_2s_infinite]"
+                      style={{ backgroundSize: '200% 100%' }} />
+                    {/* Pulsing dots to show continuous activity */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-1">
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"
+                          style={{ animationDelay: `${i * 0.3}s` }}
+                        />
+                      ))}
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-bold text-cyan-400 drop-shadow-lg flex items-center gap-2">
+                        <div className="relative">
+                          <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                          <div className="absolute inset-0 w-1.5 h-1.5 bg-cyan-400/50 rounded-full animate-ping" />
+                        </div>
+                        Real-time CDC Active - Always Watching
+                      </span>
+                    </div>
                   </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-cyan-400 drop-shadow-lg flex items-center gap-2">
-                      <div className="relative">
-                        <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                        <div className="absolute inset-0 w-1.5 h-1.5 bg-cyan-400/50 rounded-full animate-ping" />
-                      </div>
-                      Real-time CDC Active - Always Watching
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative group overflow-hidden">
                   {/* Animated background indicator when capturing */}
                   {(replicationProgress?.cdc?.status === "active" || replicationProgress?.cdc?.status === "watching") && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent animate-[shimmer_2s_infinite]" 
-                         style={{ backgroundSize: '200% 100%' }} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent animate-[shimmer_2s_infinite]"
+                      style={{ backgroundSize: '200% 100%' }} />
                   )}
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1850,8 +1912,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   >
                     <RefreshCw className="w-3 h-3" />
                   </Button>
-                  
-                  <div className="flex items-center gap-2 mb-2">
+
+                  <div className="flex items-center gap-2 mb-2 relative z-10">
                     <span className="text-foreground-muted text-xs font-semibold uppercase tracking-wide" title="Total events captured from PostgreSQL (includes applied and failed)">
                       Captured
                     </span>
@@ -1862,8 +1924,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       </div>
                     )}
                   </div>
-                  
-                  <div className="flex items-baseline gap-2">
+
+                  <div className="flex items-baseline gap-2 relative z-10">
                     <span className="text-foreground font-extrabold text-2xl bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
                       {replicationProgress?.cdc?.events_captured || 0}
                     </span>
@@ -1871,27 +1933,30 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       <span className="text-xs text-cyan-400 font-medium animate-pulse">Live</span>
                     )}
                   </div>
-                  
-                  <p className="text-xs text-foreground-muted mt-1">All events from source</p>
+
+                  <p className="text-xs text-foreground-muted mt-1 relative z-10">All events from source</p>
+                  <Database className="absolute -right-4 -bottom-4 w-20 h-20 text-blue-500/10 group-hover:text-blue-500/15 transition-colors transform rotate-12" />
                 </div>
-                <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all">
-                  <span className="text-foreground-muted block mb-2 text-xs font-semibold uppercase tracking-wide" title="Events successfully applied to target database">
+
+                <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative group overflow-hidden">
+                  <span className="text-foreground-muted block mb-2 text-xs font-semibold uppercase tracking-wide relative z-10" title="Events successfully applied to target database">
                     Applied
                   </span>
-                  <span className="text-green-400 font-extrabold text-2xl">
+                  <span className="text-green-400 font-extrabold text-2xl relative z-10">
                     {replicationProgress?.cdc?.events_applied || 0}
                   </span>
-                  <p className="text-xs text-foreground-muted mt-1">Successfully replicated</p>
+                  <p className="text-xs text-foreground-muted mt-1 relative z-10">Successfully replicated</p>
+                  <CheckCircle className="absolute -right-4 -bottom-4 w-20 h-20 text-green-500/10 group-hover:text-green-500/15 transition-colors transform rotate-12" />
                 </div>
-                <div className={`bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative overflow-hidden ${
-                  (replicationProgress?.cdc?.events_failed || 0) > 0 ? 'border-red-500/40' : ''
-                }`}>
+
+                <div className={`bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 p-4 rounded-lg shadow-md hover:shadow-lg transition-all relative group overflow-hidden ${(replicationProgress?.cdc?.events_failed || 0) > 0 ? 'border-red-500/40' : ''
+                  }`}>
                   {/* Pulsing indicator when there are failures */}
                   {(replicationProgress?.cdc?.events_failed || 0) > 0 && (
                     <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent animate-[shimmer_2s_infinite]" 
-                           style={{ backgroundSize: '200% 100%' }} />
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent animate-[shimmer_2s_infinite]"
+                        style={{ backgroundSize: '200% 100%' }} />
+                      <div className="absolute top-2 right-2 z-20">
                         <div className="relative">
                           <AlertCircle className="w-4 h-4 text-red-400 animate-pulse" />
                           <div className="absolute inset-0 w-4 h-4 text-red-400/50 animate-ping" />
@@ -1899,8 +1964,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       </div>
                     </>
                   )}
-                  
-                  <div className="flex items-center gap-2 mb-2">
+
+                  <div className="flex items-center gap-2 mb-2 relative z-10">
                     <span className="text-foreground-muted text-xs font-semibold uppercase tracking-wide" title="Events that failed to apply to target database (but were still captured)">
                       Failed
                     </span>
@@ -1911,15 +1976,16 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       </div>
                     )}
                   </div>
-                  
-                  <span className="text-red-400 font-extrabold text-2xl">
+
+                  <span className="text-red-400 font-extrabold text-2xl relative z-10">
                     {replicationProgress?.cdc?.events_failed || 0}
                   </span>
-                  <p className="text-xs text-foreground-muted mt-1">
-                    {(replicationProgress?.cdc?.events_failed || 0) > 0 
-                      ? 'Needs attention' 
+                  <p className="text-xs text-foreground-muted mt-1 relative z-10">
+                    {(replicationProgress?.cdc?.events_failed || 0) > 0
+                      ? 'Needs attention'
                       : 'All events applied'}
                   </p>
+                  <AlertCircle className="absolute -right-4 -bottom-4 w-20 h-20 text-red-500/10 group-hover:text-red-500/15 transition-colors transform rotate-12" />
                 </div>
               </div>
               {replicationProgress?.cdc?.last_event_time && (
@@ -1933,7 +1999,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                   <span>{replicationProgress.cdc.error_message}</span>
                 </div>
               )}
-              
+
               {/* Recent Failed Events Section */}
               {(() => {
                 if (!pipeline?.id) return null
@@ -1941,15 +2007,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 const failedEvents = events
                   .filter(e => {
                     const eventPipelineId = String(e.pipeline_id || '')
-                    return eventPipelineId === pipelineIdStr && 
-                           (e.status === 'failed' || e.status === 'error') &&
-                           e.error_message
+                    return eventPipelineId === pipelineIdStr &&
+                      (e.status === 'failed' || e.status === 'error') &&
+                      e.error_message
                   })
                   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                   .slice(0, 5) // Show top 5 recent failures
-                
+
                 if (failedEvents.length === 0) return null
-                
+
                 return (
                   <div className="mt-4 space-y-2 border-t border-red-500/20 pt-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -1958,8 +2024,8 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     </div>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {failedEvents.map((event) => (
-                        <div 
-                          key={event.id} 
+                        <div
+                          key={event.id}
                           className="bg-red-500/5 border border-red-500/20 rounded-lg p-3 hover:bg-red-500/10 transition-colors group"
                         >
                           <div className="flex items-start justify-between gap-2 mb-1">
@@ -1988,9 +2054,9 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                     if (pipeline.id) {
                                       const progress = await apiClient.getPipelineProgress(pipeline.id)
                                       setReplicationProgress(progress)
-                                      dispatch(fetchReplicationEvents({ 
+                                      dispatch(fetchReplicationEvents({
                                         pipelineId: String(pipeline.id),
-                                        limit: 1000 
+                                        limit: 1000
                                       }))
                                     }
                                   } catch (error: any) {
@@ -2035,9 +2101,27 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           {
             label: "Status",
             value: pipeline.status || "Unknown",
-            gradient: "from-emerald-500/10 to-green-600/5",
-            borderColor: "border-emerald-500/20",
-            textGradient: "from-emerald-400 to-green-500"
+            gradient: (pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting")
+              ? "from-cyan-500/10 to-cyan-600/5"
+              : (pipeline.status === "paused")
+                ? "from-amber-500/10 to-amber-600/5"
+                : (pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error")
+                  ? "from-red-500/10 to-red-600/5"
+                  : "from-emerald-500/10 to-green-600/5",
+            borderColor: (pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting")
+              ? "border-cyan-500/20"
+              : (pipeline.status === "paused")
+                ? "border-amber-500/20"
+                : (pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error")
+                  ? "border-red-500/20"
+                  : "border-emerald-500/20",
+            textGradient: (pipeline.status === "active" || pipeline.status === "running" || pipeline.status === "starting")
+              ? "from-cyan-400 to-cyan-600"
+              : (pipeline.status === "paused")
+                ? "from-amber-400 to-amber-600"
+                : (pipeline.status === "stopped" || pipeline.status === "failed" || pipeline.status === "error")
+                  ? "from-red-400 to-red-600"
+                  : "from-emerald-400 to-green-500"
           },
           {
             label: "Tables",
@@ -2055,17 +2139,33 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
           },
           {
             label: "Replication Lag",
-            value: replicationLag !== null ? replicationLag + "s" : "N/A",
+            value: replicationLag !== null ? replicationLag + "s" : (pipeline.lagSeconds !== undefined && pipeline.lagSeconds !== null ? pipeline.lagSeconds + "s" : "N/A"),
             gradient: "from-cyan-500/10 to-cyan-600/5",
             borderColor: "border-cyan-500/20",
-            textGradient: "from-cyan-400 to-cyan-600"
+            textGradient: "from-cyan-400 to-cyan-600",
+            // Add Consumer Lag details if available
+            subValue: replicationProgress?.consumer_lag?.['cdc-event-logger'] !== undefined
+              ? `Consumer Lag: ${replicationProgress.consumer_lag['cdc-event-logger']}`
+              : (pipeline.consumerLag ? `Consumer Lag: ${pipeline.consumerLag}` : null)
           },
-        ].map((stat, i) => (
-          <Card key={i} className={`bg-gradient-to-br ${stat.gradient} ${stat.borderColor} p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
-            <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">{stat.label}</p>
-            <p className={`text-3xl font-extrabold bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`}>{stat.value}</p>
-          </Card>
-        ))}
+        ].map((stat, i) => {
+          const Icon = i === 0 ? Activity : i === 1 ? Database : i === 2 ? Zap : Clock;
+          return (
+            <Card key={i} className={`bg-gradient-to-br ${stat.gradient} ${stat.borderColor} p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group relative overflow-hidden`}>
+              <div className="relative z-10">
+                <p className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">{stat.label}</p>
+                <p className={`text-3xl font-extrabold bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`}>{stat.value}</p>
+                {/* Display subValue if it exists (e.g. Consumer Lag) */}
+                {stat.subValue && (
+                  <p className="text-xs font-medium text-foreground-muted mt-1 opacity-80">
+                    {stat.subValue}
+                  </p>
+                )}
+              </div>
+              <Icon className={`absolute -right-4 -bottom-4 w-24 h-24 ${stat.borderColor.replace('border-', 'text-').replace('/20', '/10')} group-hover:${stat.borderColor.replace('border-', 'text-').replace('/20', '/15')} transition-colors transform rotate-12`} />
+            </Card>
+          );
+        })}
       </div>
 
       {/* Charts - Enhanced visibility */}
@@ -2161,13 +2261,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
               <Activity className="w-6 h-6 text-indigo-400" />
               Continuous Replication Status
             </h3>
-            <Badge 
-              variant="outline" 
-              className={`${
-                pipeline.status === "active" 
-                  ? "bg-success/20 text-success border-success/30" 
-                  : "bg-warning/20 text-warning border-warning/30"
-              }`}
+            <Badge
+              variant="outline"
+              className={`${pipeline.status === "active"
+                ? "bg-success/20 text-success border-success/30"
+                : "bg-warning/20 text-warning border-warning/30"
+                }`}
             >
               {pipeline.status === "active" ? (
                 <>
@@ -2191,42 +2290,42 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
             const failedEvents = pipelineEvents.filter(e => e.status === 'failed' || e.status === 'error').length
             const pendingEvents = totalEvents - successEvents - failedEvents
             const successRate = totalEvents > 0 ? Math.round((successEvents / totalEvents) * 100) : 0
-            
+
             // Get latest LSN/Offset from events
-            const latestEvent = pipelineEvents.length > 0 
+            const latestEvent = pipelineEvents.length > 0
               ? pipelineEvents.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
               : null
-            
+
             const sourceConn = connections.find(c => String(c.id) === String(pipeline.source_connection_id))
             const dbType = sourceConn?.connection_type?.toLowerCase() || ""
-            
+
             // Calculate data transfer (estimate based on events)
             const insertEvents = pipelineEvents.filter(e => e.event_type === 'insert').length
             const updateEvents = pipelineEvents.filter(e => e.event_type === 'update').length
             const deleteEvents = pipelineEvents.filter(e => e.event_type === 'delete').length
-            
+
             // Get LSN/Offset display
             const getLsnDisplay = () => {
               if (!latestEvent) return null
-              
+
               if (dbType === "postgresql" && latestEvent.source_lsn) {
                 return { type: "LSN", value: latestEvent.source_lsn, label: "PostgreSQL LSN" }
               } else if (dbType === "oracle" && latestEvent.source_scn) {
                 return { type: "SCN", value: latestEvent.source_scn.toString(), label: "Oracle SCN" }
               } else if (dbType === "mysql" && latestEvent.source_binlog_file) {
-                return { 
-                  type: "Binlog", 
-                  value: `${latestEvent.source_binlog_file}:${latestEvent.source_binlog_position || 0}`, 
-                  label: "MySQL Binlog" 
+                return {
+                  type: "Binlog",
+                  value: `${latestEvent.source_binlog_file}:${latestEvent.source_binlog_position || 0}`,
+                  label: "MySQL Binlog"
                 }
               } else if (dbType === "sqlserver" && latestEvent.sql_server_lsn) {
                 return { type: "LSN", value: latestEvent.sql_server_lsn, label: "SQL Server LSN" }
               }
               return null
             }
-            
+
             const lsnDisplay = getLsnDisplay()
-            
+
             return (
               <div className="space-y-6">
                 {/* Animated Data Transfer Progress Bar */}
@@ -2237,15 +2336,15 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       {successRate}% Success Rate
                     </span>
                   </div>
-                  
+
                   {/* Enhanced Animated Progress Bar with Data Flow */}
                   <div className="relative h-12 bg-gradient-to-r from-surface-hover via-surface-hover/80 to-surface-hover rounded-xl overflow-hidden border-2 border-border/50 shadow-inner">
                     {/* Animated background shimmer */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_3s_infinite] bg-[length:200%_100%]"></div>
-                    
+
                     {/* Success segment with animated data flow */}
                     {successEvents > 0 && (
-                      <div 
+                      <div
                         className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 flex items-center justify-end pr-3 transition-all duration-700 ease-out relative overflow-hidden"
                         style={{ width: `${totalEvents > 0 ? (successEvents / totalEvents) * 100 : 0}%` }}
                       >
@@ -2277,10 +2376,10 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                             ></div>
                           ))}
                         </div>
-                        
+
                         {/* Shimmer effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite] bg-[length:200%_100%]"></div>
-                        
+
                         {/* Success count badge */}
                         <div className="relative z-10 flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-white animate-pulse" />
@@ -2288,19 +2387,19 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Failed segment with warning animation */}
                     {failedEvents > 0 && (
-                      <div 
+                      <div
                         className="absolute h-full bg-gradient-to-r from-red-500 via-rose-400 to-red-500 flex items-center justify-end pr-3 transition-all duration-700 ease-out relative overflow-hidden"
-                        style={{ 
+                        style={{
                           left: `${totalEvents > 0 ? (successEvents / totalEvents) * 100 : 0}%`,
                           width: `${totalEvents > 0 ? (failedEvents / totalEvents) * 100 : 0}%`
                         }}
                       >
                         {/* Pulsing error indicator */}
                         <div className="absolute inset-0 bg-red-600/30 animate-pulse"></div>
-                        
+
                         {/* Failed count badge */}
                         <div className="relative z-10 flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-white animate-pulse" />
@@ -2308,12 +2407,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Pending segment with loading animation */}
                     {pendingEvents > 0 && (
-                      <div 
+                      <div
                         className="absolute h-full bg-gradient-to-r from-amber-500/60 via-yellow-400/50 to-amber-500/60 flex items-center justify-end pr-3 transition-all duration-700 ease-out relative overflow-hidden"
-                        style={{ 
+                        style={{
                           left: `${totalEvents > 0 ? ((successEvents + failedEvents) / totalEvents) * 100 : 0}%`,
                           width: `${totalEvents > 0 ? (pendingEvents / totalEvents) * 100 : 0}%`
                         }}
@@ -2328,7 +2427,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                             ></div>
                           ))}
                         </div>
-                        
+
                         {/* Pending count badge */}
                         <div className="relative z-10 flex items-center gap-2">
                           <Loader2 className="w-4 h-4 text-white animate-spin" />
@@ -2336,7 +2435,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Empty state with animated waiting indicator */}
                     {totalEvents === 0 && (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -2348,13 +2447,13 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Animated border glow when active */}
                     {pipeline.status === "active" && totalEvents > 0 && (
                       <div className="absolute inset-0 rounded-xl border-2 border-indigo-400/50 animate-pulse pointer-events-none"></div>
                     )}
                   </div>
-                  
+
                   {/* Data Transfer Speed Indicator */}
                   {pipeline.status === "active" && totalEvents > 0 && (
                     <div className="flex items-center gap-2 text-xs text-foreground-muted">
@@ -2366,7 +2465,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                       <span>{totalEvents.toLocaleString()} events processed</span>
                     </div>
                   )}
-                  
+
                   {/* Progress labels */}
                   <div className="flex items-center justify-between text-xs text-foreground-muted">
                     <div className="flex items-center gap-4">
@@ -2413,54 +2512,87 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                 )}
 
                 {/* Data Transfer Metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Database className="w-4 h-4 text-blue-400" />
-                      <span className="text-xs text-foreground-muted">Captured</span>
+                {/* Data Transfer Metrics */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Captured */}
+                  <Card className="relative overflow-hidden p-6 border-none bg-blue-500/5 shadow-[0_15px_30px_-5px_rgba(59,130,246,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-blue-500/10">
+                    <div className="absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+                      <Database className="w-32 h-32 text-blue-500" />
                     </div>
-                    <p className="text-2xl font-bold text-blue-400">{totalEvents.toLocaleString()}</p>
-                    <p className="text-xs text-foreground-muted mt-1">Total Events</p>
-                  </div>
-                  
-                  <div className="p-4 bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      <span className="text-xs text-foreground-muted">Applied</span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-400">{successEvents.toLocaleString()}</p>
-                    <p className="text-xs text-foreground-muted mt-1">Successfully Synced</p>
-                  </div>
-                  
-                  <div className="p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="w-4 h-4 text-red-400" />
-                      <span className="text-xs text-foreground-muted">Errors</span>
-                    </div>
-                    <p className="text-2xl font-bold text-red-400">{failedEvents.toLocaleString()}</p>
-                    <p className="text-xs text-foreground-muted mt-1">Failed Events</p>
-                  </div>
-                  
-                  <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Activity className="w-4 h-4 text-purple-400" />
-                      <span className="text-xs text-foreground-muted">Operations</span>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-foreground-muted">Inserts:</span>
-                        <span className="text-purple-400 font-semibold">{insertEvents.toLocaleString()}</span>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-blue-400/10 rounded-lg">
+                          <Database className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <span className="text-[10px] font-black text-blue-400/80 uppercase tracking-[0.2em]">Captured</span>
                       </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-foreground-muted">Updates:</span>
-                        <span className="text-purple-400 font-semibold">{updateEvents.toLocaleString()}</span>
+                      <p className="text-4xl font-black text-blue-500 tracking-tighter drop-shadow-sm">{totalEvents.toLocaleString()}</p>
+                      <p className="text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60">Total Pipeline Events</p>
+                    </div>
+                  </Card>
+
+                  {/* Applied */}
+                  <Card className="relative overflow-hidden p-6 border-none bg-emerald-500/5 shadow-[0_15px_30px_-5px_rgba(16,185,129,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-emerald-500/10">
+                    <div className="absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+                      <CheckCircle className="w-32 h-32 text-emerald-500" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-emerald-400/10 rounded-lg">
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <span className="text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]">Applied</span>
                       </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-foreground-muted">Deletes:</span>
-                        <span className="text-purple-400 font-semibold">{deleteEvents.toLocaleString()}</span>
+                      <p className="text-4xl font-black text-emerald-500 tracking-tighter drop-shadow-sm">{successEvents.toLocaleString()}</p>
+                      <p className="text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60">Successfully Synced</p>
+                    </div>
+                  </Card>
+
+                  {/* Errors */}
+                  <Card className="relative overflow-hidden p-6 border-none bg-red-500/5 shadow-[0_15px_30px_-5px_rgba(239,68,68,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-red-500/10">
+                    <div className="absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+                      <AlertCircle className="w-32 h-32 text-red-500" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-red-400/10 rounded-lg">
+                          <AlertCircle className="w-4 h-4 text-red-400" />
+                        </div>
+                        <span className="text-[10px] font-black text-red-400/80 uppercase tracking-[0.2em]">Errors</span>
+                      </div>
+                      <p className="text-4xl font-black text-red-500 tracking-tighter drop-shadow-sm">{failedEvents.toLocaleString()}</p>
+                      <p className="text-[10px] text-foreground-muted font-black uppercase mt-2 opacity-60">Failed Event Batches</p>
+                    </div>
+                  </Card>
+
+                  {/* Operations */}
+                  <Card className="relative overflow-hidden p-6 border-none bg-purple-500/5 shadow-[0_15px_30px_-5px_rgba(168,85,247,0.15)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] rounded-[2rem] group transition-all duration-500 hover:translate-y-[-2px] hover:bg-purple-500/10">
+                    <div className="absolute -right-6 -bottom-6 opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.12] transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 pointer-events-none">
+                      <Activity className="w-32 h-32 text-purple-500" />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-purple-400/10 rounded-lg">
+                          <Activity className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <span className="text-[10px] font-black text-purple-400/80 uppercase tracking-[0.2em]">Ops Mix</span>
+                      </div>
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] font-black text-foreground-muted opacity-80 uppercase">INS</span>
+                          <span className="text-xl font-black text-purple-500 tracking-tighter">{insertEvents.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] font-black text-foreground-muted opacity-80 uppercase">UPD</span>
+                          <span className="text-xl font-black text-purple-500 tracking-tighter">{updateEvents.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] font-black text-foreground-muted opacity-80 uppercase">DEL</span>
+                          <span className="text-xl font-black text-purple-500 tracking-tighter">{deleteEvents.toLocaleString()}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 </div>
 
                 {/* Real-time Status Indicator */}
@@ -2472,7 +2604,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                     </div>
                     {replicationProgress?.cdc && (
                       <div className="text-xs text-foreground-muted">
-                        Last event: {replicationProgress.cdc.last_event_time 
+                        Last event: {replicationProgress.cdc.last_event_time
                           ? new Date(replicationProgress.cdc.last_event_time).toLocaleTimeString()
                           : "N/A"}
                       </div>
@@ -2618,7 +2750,12 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                         // Clear error and retry
                         setDataError(null)
                         if (selectedTable) {
-                          handleCompareTable(selectedTable).catch(console.error)
+                          handleCompareTable({
+                            source_table: selectedTable.source,
+                            target_table: selectedTable.target,
+                            source_schema: selectedTable.sourceSchema,
+                            target_schema: selectedTable.targetSchema
+                          }).catch(console.error)
                         }
                       } catch (err: any) {
                         showError(err?.message || 'Unknown error', "Failed to Fix Connections")
@@ -2808,32 +2945,32 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                     sourceData: sourceData
                                   })
                                 }
-                                
+
                                 if (paginatedSourceRecords.length > 0 && sourceData?.columns && sourceData.columns.length > 0) {
                                   return paginatedSourceRecords.map((record: any, rowIdx: number) => {
                                     if (!record || typeof record !== 'object') {
                                       console.warn('[Source] Invalid record at index', rowIdx, ':', record)
                                       return null
                                     }
-                                    
+
                                     const recordKeys = Object.keys(record)
-                                    
+
                                     return (
                                       <tr key={`source-row-${rowIdx}`} className="border-b border-border/50 hover:bg-surface transition-colors">
                                         {sourceData.columns.map((col: any, colIdx: number) => {
                                           // Try multiple ways to access the value
                                           let value = record[col.name]
-                                          
+
                                           // If not found, try case variations
                                           if (value === undefined || value === null) {
                                             value = record[col.name.toLowerCase()] ?? record[col.name.toUpperCase()] ?? null
                                           }
-                                          
+
                                           // If still null and record is array-like, try by index
                                           if (value === null && Array.isArray(record)) {
                                             value = record[colIdx] ?? null
                                           }
-                                          
+
                                           return (
                                             <td key={`source-cell-${rowIdx}-${colIdx}`} className="px-3 py-2 text-foreground text-xs whitespace-nowrap">
                                               {value !== null && value !== undefined
@@ -2849,7 +2986,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                   // If we have records but no columns, use record keys as columns
                                   const firstRecord = paginatedSourceRecords[0]
                                   const recordKeys = firstRecord ? Object.keys(firstRecord) : []
-                                  
+
                                   return paginatedSourceRecords.map((record: any, rowIdx: number) => (
                                     <tr key={`source-row-${rowIdx}`} className="border-b border-border/50 hover:bg-surface transition-colors">
                                       {recordKeys.map((key: string, colIdx: number) => (
@@ -2865,7 +3002,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                   return (
                                     <tr>
                                       <td colSpan={sourceData?.columns?.length || 1} className="px-3 py-8 text-center text-foreground-muted">
-                                        {sourceRecords.length > 0 
+                                        {sourceRecords.length > 0
                                           ? `No records on page ${sourcePage} of ${sourceTotalPages} (Total: ${sourceRecords.length} records)`
                                           : "No data available"}
                                       </td>
@@ -3022,24 +3159,24 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                     console.log('[Target Record] Record keys:', Object.keys(record))
                                     console.log('[Target Record] Columns:', targetData.columns)
                                   }
-                                  
+
                                   // Get all record keys if columns don't match
                                   const recordKeys = Object.keys(record)
-                                  const columnsToUse = targetData.columns.length > 0 
-                                    ? targetData.columns 
+                                  const columnsToUse = targetData.columns.length > 0
+                                    ? targetData.columns
                                     : recordKeys.map((key, idx) => ({ name: key, type: 'unknown', index: idx }))
-                                  
+
                                   return (
                                     <tr key={rowIdx} className="border-b border-primary/20 hover:bg-primary/10 transition-colors">
                                       {columnsToUse.map((col: any, colIdx: number) => {
                                         // Try multiple ways to access the value
                                         let value = record[col.name] ?? record[col.name.toLowerCase()] ?? record[col.name.toUpperCase()] ?? null
-                                        
+
                                         // If still null, try accessing by index if record is array-like
                                         if (value === null && Array.isArray(record)) {
                                           value = record[colIdx] ?? null
                                         }
-                                        
+
                                         return (
                                           <td key={colIdx} className="px-3 py-2 text-foreground text-xs whitespace-nowrap">
                                             {value !== null && value !== undefined
@@ -3060,24 +3197,24 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                     console.log('[Target Record] Record keys:', Object.keys(record))
                                     console.log('[Target Record] Columns:', targetData.columns)
                                   }
-                                  
+
                                   // Get all record keys if columns don't match
                                   const recordKeys = Object.keys(record)
-                                  const columnsToUse = targetData.columns.length > 0 
-                                    ? targetData.columns 
+                                  const columnsToUse = targetData.columns.length > 0
+                                    ? targetData.columns
                                     : recordKeys.map((key, idx) => ({ name: key, type: 'unknown', index: idx }))
-                                  
+
                                   return (
                                     <tr key={rowIdx} className="border-b border-primary/20 hover:bg-primary/10 transition-colors">
                                       {columnsToUse.map((col: any, colIdx: number) => {
                                         // Try multiple ways to access the value
                                         let value = record[col.name] ?? record[col.name.toLowerCase()] ?? record[col.name.toUpperCase()] ?? null
-                                        
+
                                         // If still null, try accessing by index if record is array-like
                                         if (value === null && Array.isArray(record)) {
                                           value = record[colIdx] ?? null
                                         }
-                                        
+
                                         return (
                                           <td key={colIdx} className="px-3 py-2 text-foreground text-xs whitespace-nowrap">
                                             {value !== null && value !== undefined
@@ -3093,7 +3230,7 @@ export function PipelineDetail({ pipeline, onBack }: { pipeline?: Pipeline; onBa
                                 <tr>
                                   <td colSpan={targetData?.columns?.length || 1} className="px-3 py-8 text-center text-foreground-muted">
                                     {targetData?.count === 0 || (targetRecords.length === 0 && (!targetData?.count || targetData.count === 0))
-                                      ? "No data available in target table" 
+                                      ? "No data available in target table"
                                       : targetRecords.length === 0 && targetData?.count > 0
                                         ? `Table exists with ${targetData.count} records, but none loaded. Please check the table structure.`
                                         : `Showing ${targetRecords.length} records (page ${targetPage} of ${targetTotalPages})`}
